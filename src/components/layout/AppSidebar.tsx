@@ -2,11 +2,12 @@ import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard, Map, MapPin, Users, FileText, MousePointerClick,
-  UserCheck, Radio, Download, Settings, LogOut, Flame, ChevronLeft, ChevronRight,
+  UserCheck, Radio, Download, Settings, LogOut, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import chamaRosaLogo from "@/assets/chama-rosa-logo.png";
 
 const modules = [
   { path: "/", icon: LayoutDashboard, label: "Visão Geral" },
@@ -49,9 +50,7 @@ export function AppSidebar() {
       >
         {/* Header */}
         <div className="flex h-16 items-center gap-3 px-4 border-b border-border">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-            <Flame className="h-5 w-5 text-primary" />
-          </div>
+          <img src={chamaRosaLogo} alt="Chama Rosa" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
           {!collapsed && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-w-0">
               <h2 className="font-display text-lg font-bold leading-none text-foreground">Chama Rosa</h2>
