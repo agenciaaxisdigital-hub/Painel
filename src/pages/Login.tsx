@@ -10,7 +10,7 @@ import fernandaPhoto from "@/assets/fernanda-sarelli.jpeg";
 export default function Login() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -19,6 +19,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    const email = `${username.toLowerCase().replace(/\s+/g, ".")}@chamarosa.app`;
     const { error } = await signIn(email, password);
     if (error) {
       setError("Credenciais inválidas. Tente novamente.");
@@ -120,13 +121,13 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  E-mail
+                  Usuário
                 </label>
                 <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="seu.usuario"
                   required
                   className="bg-white/[0.03] border-white/[0.08] focus:border-primary/50"
                 />
