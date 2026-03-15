@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const GEMINI_MODEL = "gemini-2.5-flash";
 
-const SYSTEM_PROMPT = `Você é Sarelli, a assistente virtual inteligente da campanha política Chama Rosa para Deputada Estadual em Goiás 2026.
+const SYSTEM_PROMPT = `Você é Fernanda Sarelli, a assistente virtual inteligente da campanha política Chama Rosa para Deputada Estadual em Goiás 2026.
 
 Você tem acesso a todos os dados do painel de campanha em tempo real. Você é especialista em:
 - Estratégia de campanha política

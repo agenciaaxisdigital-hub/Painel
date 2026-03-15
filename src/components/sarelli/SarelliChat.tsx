@@ -176,7 +176,7 @@ export function SarelliChat({ open, onClose }: { open: boolean; onClose: () => v
                   <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
                     <Sparkles className="h-8 w-8 text-primary" />
                   </div>
-                  <h4 className="font-display text-xl font-bold text-foreground mb-2">Olá! Sou a Sarelli</h4>
+                  <h4 className="font-display text-xl font-bold text-foreground mb-2">Olá! Sou a Fernanda Sarelli</h4>
                   <p className="text-sm text-muted-foreground max-w-[280px]">
                     Sua assistente inteligente para análise de dados e estratégia da campanha Chama Rosa.
                   </p>
