@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     console.log("Count result:", count, "Error:", countError);
     const isFirstUser = count === null || count === 0;
 
-    if (!isFirstUser && setup_key !== "SETUP_CHAMA_2026") {
+    if (!isFirstUser) {
       // Verificar auth do chamador
       const authHeader = req.headers.get("authorization");
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
