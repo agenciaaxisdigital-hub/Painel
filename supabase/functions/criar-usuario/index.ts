@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       .from("roles_usuarios")
       .select("*", { count: "exact", head: true });
 
-    const isFirstUser = count === 0;
+    const isFirstUser = !count || count === 0;
 
     if (!isFirstUser) {
       if (!authHeader) {
