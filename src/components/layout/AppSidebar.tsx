@@ -1,23 +1,17 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  LayoutDashboard, Map, MapPin, Users, FileText, MousePointerClick,
-  UserCheck, Radio, Download, Settings, LogOut, ChevronLeft, ChevronRight,
+  BarChart3, Map, Download, Settings, LogOut, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { AlertBell } from "@/components/shared/AlertBell";
 import chamaRosaLogo from "@/assets/chama-rosa-logo.png";
 
 const modules = [
-  { path: "/", icon: LayoutDashboard, label: "Visão Geral" },
-  { path: "/mapa-goias", icon: Map, label: "Mapa Goiás" },
-  { path: "/zonas-eleitorais", icon: MapPin, label: "Zonas Eleitorais" },
-  { path: "/eleitores", icon: Users, label: "Eleitores" },
-  { path: "/formularios", icon: FileText, label: "Formulários" },
-  { path: "/engajamento", icon: MousePointerClick, label: "Engajamento" },
-  { path: "/visitantes-frequentes", icon: UserCheck, label: "Visitantes Frequentes" },
-  { path: "/tempo-real", icon: Radio, label: "Tempo Real" },
+  { path: "/", icon: BarChart3, label: "Dados do Site" },
+  { path: "/mapas", icon: Map, label: "Mapas" },
   { path: "/exportar", icon: Download, label: "Exportar" },
   { path: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
@@ -31,7 +25,7 @@ export function AppSidebar() {
     <>
       {/* Mobile bottom nav */}
       <div className="fixed inset-x-0 bottom-0 z-50 flex border-t border-border bg-background/95 backdrop-blur-xl md:hidden">
-        {modules.slice(0, 5).map((m) => {
+        {modules.map((m) => {
           const active = location.pathname === m.path;
           return (
             <NavLink key={m.path} to={m.path} className="flex flex-1 flex-col items-center gap-0.5 py-2">
@@ -52,7 +46,7 @@ export function AppSidebar() {
         <div className="flex h-16 items-center gap-3 px-4 border-b border-border">
           <img src={chamaRosaLogo} alt="Dra. Fernanda Sarelli" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
           {!collapsed && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-w-0">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-w-0 flex-1">
               <h2 className="font-display text-lg font-bold leading-none text-foreground">Dra. Fernanda Sarelli</h2>
               <div className="mt-0.5 flex items-center gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
@@ -60,6 +54,7 @@ export function AppSidebar() {
               </div>
             </motion.div>
           )}
+          {!collapsed && <AlertBell />}
         </div>
 
         {/* Nav items */}
@@ -94,7 +89,7 @@ export function AppSidebar() {
         <div className="border-t border-border p-3">
           {!collapsed && user && (
             <div className="mb-2 truncate rounded-lg bg-white/[0.03] px-3 py-2 text-xs text-muted-foreground">
-              {user.email}
+              {user.user_metadata?.username || user.email}
             </div>
           )}
           <div className="flex items-center gap-2">
@@ -115,7 +110,7 @@ export function AppSidebar() {
         </div>
       </motion.aside>
 
-      {/* Spacer for layout */}
+      {/* Spacer */}
       <motion.div
         animate={{ width: collapsed ? 72 : 260 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
