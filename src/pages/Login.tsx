@@ -121,13 +121,13 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  E-mail
+                  Usuário
                 </label>
                 <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="seu.usuario"
                   required
                   className="bg-white/[0.03] border-white/[0.08] focus:border-primary/50"
                 />
