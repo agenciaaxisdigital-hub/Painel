@@ -131,8 +131,11 @@ export type Database = {
           longitude: number | null
           pagina_origem: string | null
           pais: string | null
+          secao_pagina: string | null
           telefone_destino: string | null
+          texto_botao: string | null
           tipo_clique: string | null
+          url_destino: string | null
           user_agent: string | null
         }
         Insert: {
@@ -146,8 +149,11 @@ export type Database = {
           longitude?: number | null
           pagina_origem?: string | null
           pais?: string | null
+          secao_pagina?: string | null
           telefone_destino?: string | null
+          texto_botao?: string | null
           tipo_clique?: string | null
+          url_destino?: string | null
           user_agent?: string | null
         }
         Update: {
@@ -161,8 +167,11 @@ export type Database = {
           longitude?: number | null
           pagina_origem?: string | null
           pais?: string | null
+          secao_pagina?: string | null
           telefone_destino?: string | null
+          texto_botao?: string | null
           tipo_clique?: string | null
+          url_destino?: string | null
           user_agent?: string | null
         }
         Relationships: []
@@ -197,6 +206,7 @@ export type Database = {
           atualizado_em: string
           criado_em: string
           criado_por: string | null
+          destaque_home: boolean
           evento: string | null
           id: string
           legenda: string | null
@@ -210,6 +220,7 @@ export type Database = {
           atualizado_em?: string
           criado_em?: string
           criado_por?: string | null
+          destaque_home?: boolean
           evento?: string | null
           id?: string
           legenda?: string | null
@@ -223,6 +234,7 @@ export type Database = {
           atualizado_em?: string
           criado_em?: string
           criado_por?: string | null
+          destaque_home?: boolean
           evento?: string | null
           id?: string
           legenda?: string | null
