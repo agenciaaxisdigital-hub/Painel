@@ -2,11 +2,12 @@ import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard, Map, MapPin, Users, FileText, MousePointerClick,
-  UserCheck, Radio, Download, Settings, LogOut, Flame, ChevronLeft, ChevronRight,
+  UserCheck, Radio, Download, Settings, LogOut, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import chamaRosaLogo from "@/assets/chama-rosa-logo.png";
 
 const modules = [
   { path: "/", icon: LayoutDashboard, label: "Visão Geral" },
