@@ -28,7 +28,7 @@ export const zonasEleitorais = [
 
 export const totalEleitoresGoiania = 1036218;
 
-// ============ TIME SERIES DATA (30 days) ============
+// ============ TIME SERIES DATA ============
 export function generateTimeSeriesData(days = 30) {
   const data = [];
   for (let i = days - 1; i >= 0; i--) {
@@ -151,6 +151,13 @@ export function generateVisitors(count = 100) {
     if (Math.random() > 0.7) actions.push("Formulário");
     if (Math.random() > 0.5) actions.push("WhatsApp");
     if (Math.random() > 0.6) actions.push("Instagram");
+
+    // Calculate eleitor score (flames)
+    let flames = 1; // visited once
+    if (totalVisitas > 1) flames = 2;
+    if (actions.includes("Formulário")) flames = 3;
+    if (actions.includes("Formulário") && actions.includes("WhatsApp")) flames = 4;
+
     return {
       id: `vis-${i}`,
       cookieId: `ck_${Math.random().toString(36).substring(2, 10)}`,
@@ -167,6 +174,12 @@ export function generateVisitors(count = 100) {
       ultimaVisita: subDays(new Date(), Math.floor(Math.random() * 7)),
       acoes: actions,
       paginasVisitadas: ["/", "/propostas", "/sobre", "/contato"].slice(0, 1 + Math.floor(Math.random() * 3)),
+      flames,
+      sessions: Array.from({ length: Math.min(totalVisitas, 5) }, (_, j) => ({
+        date: subDays(new Date(), j * 2 + Math.floor(Math.random() * 3)),
+        pages: ["/", "/propostas", "/sobre"].slice(0, 1 + Math.floor(Math.random() * 2)),
+        duration: 30 + Math.floor(Math.random() * 300),
+      })),
     };
   });
 }
@@ -209,3 +222,43 @@ export function generateClickData(count = 80) {
     };
   }).sort((a, b) => b.criadoEm.getTime() - a.criadoEm.getTime());
 }
+
+// ============ BEHAVIOR DATA ============
+export const behaviorData = {
+  paginaMaisVisitada: "/propostas",
+  tempoMedioPagina: "2m 34s",
+  taxaRejeicao: 32.5,
+  scrollMedio: 68,
+  visitantesRetorno: 3420,
+  scrollDepth: [
+    { depth: "25%", percentage: 92 },
+    { depth: "50%", percentage: 74 },
+    { depth: "75%", percentage: 51 },
+    { depth: "100%", percentage: 28 },
+  ],
+};
+
+// ============ ALERTS ============
+export function generateAlerts() {
+  return [
+    { id: "a1", type: "warning" as const, message: "134ª Zona com penetração abaixo de 0.35% — priorizar tráfego pago", time: "há 2h", read: false },
+    { id: "a2", type: "success" as const, message: "127ª Zona atingiu marco de 0.46% de penetração", time: "há 5h", read: false },
+    { id: "a3", type: "danger" as const, message: "Taxa de conversão caiu para 1.8% nas últimas 24h no Setor Bueno", time: "há 8h", read: true },
+    { id: "a4", type: "info" as const, message: "Spike de 250% em acessos do Jardim América — investigar origem", time: "há 12h", read: true },
+    { id: "a5", type: "warning" as const, message: "147ª Zona com 3 dias consecutivos de queda de acessos", time: "há 1d", read: true },
+  ];
+}
+
+// ============ TOP CITIES ============
+export const topCities = [
+  { cidade: "Goiânia", visitantes: 4520 },
+  { cidade: "Aparecida de Goiânia", visitantes: 856 },
+  { cidade: "Anápolis", visitantes: 634 },
+  { cidade: "Senador Canedo", visitantes: 412 },
+  { cidade: "Valparaíso de Goiás", visitantes: 389 },
+  { cidade: "Rio Verde", visitantes: 312 },
+  { cidade: "Trindade", visitantes: 287 },
+  { cidade: "Catalão", visitantes: 245 },
+  { cidade: "Luziânia", visitantes: 198 },
+  { cidade: "Caldas Novas", visitantes: 176 },
+];
