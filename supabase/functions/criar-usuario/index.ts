@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { username, password, cargo } = await req.json();
+    const { username, password, cargo, setup_key } = await req.json();
 
     if (!username || !password) {
       return new Response(
@@ -20,6 +20,8 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const SETUP_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
