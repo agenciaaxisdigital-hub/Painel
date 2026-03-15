@@ -26,20 +26,20 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verificar se quem está chamando é admin (exceto se não houver nenhum usuário ainda)
-    const authHeader = req.headers.get("authorization");
-    
     // Checar se já existem admins
-    const { count } = await supabaseAdmin
+    const { count, error: countError } = await supabaseAdmin
       .from("roles_usuarios")
       .select("*", { count: "exact", head: true });
 
-    const isFirstUser = !count || count === 0;
+    console.log("Count result:", count, "Error:", countError);
+    const isFirstUser = count === null || count === 0;
 
     if (!isFirstUser) {
-      if (!authHeader) {
+      // Verificar auth do chamador
+      const authHeader = req.headers.get("authorization");
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return new Response(
-          JSON.stringify({ error: "Não autorizado" }),
+          JSON.stringify({ error: "Não autorizado - admin necessário" }),
           { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
