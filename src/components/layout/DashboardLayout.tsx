@@ -3,9 +3,13 @@ import { Navigate, Outlet } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { SarelliButton } from "@/components/sarelli/SarelliButton";
+import { SarelliChat } from "@/components/sarelli/SarelliChat";
 
 export function DashboardLayout() {
   const { session, loading } = useAuth();
+  const [sarelliOpen, setSarelliOpen] = useState(false);
 
   if (loading) {
     return (
@@ -35,6 +39,9 @@ export function DashboardLayout() {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {!sarelliOpen && <SarelliButton onClick={() => setSarelliOpen(true)} />}
+      <SarelliChat open={sarelliOpen} onClose={() => setSarelliOpen(false)} />
     </div>
   );
 }
