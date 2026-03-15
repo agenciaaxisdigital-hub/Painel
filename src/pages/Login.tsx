@@ -19,6 +19,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    const email = `${username.toLowerCase().replace(/\s+/g, ".")}@chamarosa.app`;
     const { error } = await signIn(email, password);
     if (error) {
       setError("Credenciais inválidas. Tente novamente.");
