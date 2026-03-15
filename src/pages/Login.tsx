@@ -45,9 +45,9 @@ export default function Login() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 rose-glow"
+            className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full overflow-hidden rose-glow"
           >
-            <Flame className="h-8 w-8 text-primary" />
+            <img src={chamaRosaLogo} alt="Chama Rosa" className="h-full w-full object-cover" />
           </motion.div>
           <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">Chama Rosa</h1>
           <p className="mt-1 text-sm text-muted-foreground">Painel de Inteligência da Campanha</p>
