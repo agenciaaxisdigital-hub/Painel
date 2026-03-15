@@ -50,9 +50,7 @@ export function AppSidebar() {
       >
         {/* Header */}
         <div className="flex h-16 items-center gap-3 px-4 border-b border-border">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-            <Flame className="h-5 w-5 text-primary" />
-          </div>
+          <img src={chamaRosaLogo} alt="Chama Rosa" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
           {!collapsed && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-w-0">
               <h2 className="font-display text-lg font-bold leading-none text-foreground">Chama Rosa</h2>

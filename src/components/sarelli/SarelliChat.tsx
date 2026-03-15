@@ -142,7 +142,7 @@ export function SarelliChat({ open, onClose }: { open: boolean; onClose: () => v
                   <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-emerald-500 animate-pulse" />
                 </div>
                 <div>
-                  <h3 className="font-display text-lg font-bold text-foreground">Sarelli</h3>
+                  <h3 className="font-display text-lg font-bold text-foreground">Fernanda Sarelli</h3>
                   <span className="text-[11px] text-muted-foreground">Assistente IA da campanha</span>
                 </div>
               </div>
