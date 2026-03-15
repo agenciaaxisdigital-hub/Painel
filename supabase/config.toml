@@ -1,1 +1,4 @@
 project_id = "yvdfdmyusdhgtzfguxbj"
+
+[functions.sarelli]
+verify_jwt = false
