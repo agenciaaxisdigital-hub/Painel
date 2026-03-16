@@ -350,7 +350,13 @@ export function identifyZone(params: {
     return { zona: cidade, nome: cidade, cor: "#9CA3AF", eleitores: 0, method: "cidade_fallback", categoria: "interior" };
   }
 
-  return { zona: "Sem localização", nome: "", cor: "#6B7280", eleitores: 0, method: "unknown", categoria: "unknown" };
+  // NEVER return "unknown" — if we have any state info, classify as interior
+  if (estado) {
+    return { zona: estado, nome: estado, cor: "#6B7280", eleitores: 0, method: "cidade_fallback", categoria: "interior" };
+  }
+
+  // Absolute last resort: classify as "Brasil" interior (IP always captures something)
+  return { zona: "Brasil", nome: "Brasil", cor: "#6B7280", eleitores: 0, method: "cidade_fallback", categoria: "interior" };
 }
 
 // ── Goiânia zone identification ──
