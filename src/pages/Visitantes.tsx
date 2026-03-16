@@ -128,7 +128,7 @@ export default function Visitantes() {
                       <td className="px-4 py-2 text-foreground/80">{v.estado || "—"}</td>
                       <td className="px-4 py-2"><DeviceIcon className="h-3.5 w-3.5 text-muted-foreground" /></td>
                       <td className="px-4 py-2 text-foreground/80">{v.navegador || "—"}</td>
-                      <td className="px-4 py-2 font-mono text-foreground/60">{v.pagina}</td>
+                      <td className="px-4 py-2 font-mono text-foreground/60">{formatPageName(v.pagina)}</td>
                       <td className="px-4 py-2 text-right tabular-nums">{v.contador_visitas ?? 1}</td>
                       <td className="px-4 py-2 text-muted-foreground">{format(new Date(v.criado_em), "dd/MM HH:mm")}</td>
                     </tr>
