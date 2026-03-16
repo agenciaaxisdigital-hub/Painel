@@ -606,6 +606,48 @@ export default function Interacoes() {
   );
 }
 
+// ── Mobile Card ──
+function MobileInteractionCard({ row, expanded, onToggle, toast }: { row: UnifiedInteraction; expanded: boolean; onToggle: () => void; toast: any }) {
+  const cfg = TIPO_CONFIG[row.tipo];
+  const origin = row.utm_source || (row.referrer?.includes("google") ? "Google" : row.referrer?.includes("instagram") ? "Instagram" : row.referrer?.includes("whatsapp") ? "WhatsApp" : row.referrer?.includes("facebook") ? "Facebook" : row.referrer ? "Outro" : "Direto");
+
+  return (
+    <div className="p-3" onClick={onToggle}>
+      <div className="flex items-start gap-3">
+        <div className={`rounded-lg p-2 ${cfg.bgColor} shrink-0`}>
+          <cfg.Icon className={`h-4 w-4 ${cfg.color}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className={`text-[10px] font-medium ${cfg.color}`}>{cfg.label}</span>
+            <span className="text-[10px] text-muted-foreground tabular-nums">{format(parseISO(row.data_hora), "dd/MM HH:mm")}</span>
+          </div>
+          <div className="mt-0.5 text-xs text-foreground/80">
+            {row.nome ? <span className="font-medium">{row.nome}</span> : <CompactLocation data={row} />}
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
+            {row.dispositivo && (
+              <span className="flex items-center gap-1"><DeviceIcon device={row.dispositivo} />{row.sistema_operacional || ""}</span>
+            )}
+            <span className="rounded-full bg-white/[0.04] px-1.5 py-0.5">{origin}</span>
+            {row.utm_campaign && <span className="rounded bg-primary/5 px-1.5 py-0.5 text-primary/70">{row.utm_campaign}</span>}
+          </div>
+        </div>
+        <ChevronDown className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
+      </div>
+      <AnimatePresence>
+        {expanded && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+            <div className="mt-3 pt-3 border-t border-border/20">
+              <ExpandedDetail row={row} toast={toast} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ── Row ──
 function InteractionRow({ row, expanded, onToggle, toast }: { row: UnifiedInteraction; expanded: boolean; onToggle: () => void; toast: any }) {
   const cfg = TIPO_CONFIG[row.tipo];
