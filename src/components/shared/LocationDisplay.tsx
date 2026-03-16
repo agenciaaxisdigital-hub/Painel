@@ -99,7 +99,8 @@ export function CompactLocation({ data }: { data: LocationData }) {
 export function FullLocationDetail({ data, onCopy }: { data: LocationData; onCopy?: (text: string) => void }) {
   const precision = getLocationPrecision(data);
   const zone = identifyZone(data);
-  const geocode = useReverseGeocode();
+  const hasAddr = !!data.endereco_completo;
+  const geocode = useReverseGeocode(data.latitude, data.longitude, hasAddr);
 
   const copyText = (text: string) => {
     navigator.clipboard.writeText(text);
