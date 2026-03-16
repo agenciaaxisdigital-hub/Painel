@@ -176,17 +176,6 @@ export default function UserManagement() {
                   <Input id="password" type="password" placeholder="Mínimo 6 caracteres" value={password}
                     onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cargo">Cargo</Label>
-                  <Select value={cargo} onValueChange={setCargo}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="editor">Editor</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="super_admin">Super Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <DialogFooter>
                   <DialogClose asChild><Button type="button" variant="outline">Cancelar</Button></DialogClose>
                   <Button type="submit" disabled={createUser.isPending}>
