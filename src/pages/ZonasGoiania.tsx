@@ -405,7 +405,7 @@ export default function ZonasGoiania() {
   const totalGeral = data?.totalGeral || 0;
 
   const regionList = useMemo(() => {
-    return ["goiania", "aparecida", "restante", "nao_identificado"]
+    return ["goiania", "aparecida", "restante"]
       .map((key) => ({ key, ...regions[key] }))
       .filter((r) => r.nome);
   }, [regions]);
