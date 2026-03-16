@@ -9,7 +9,6 @@ import Login from "./pages/Login";
 import VisaoGeral from "./pages/VisaoGeral";
 import Visitantes from "./pages/Visitantes";
 import Formularios from "./pages/Formularios";
-import TodasInteracoes from "./pages/TodasInteracoes";
 import Interacoes from "./pages/TodasInteracoes";
 import ZonasGoiania from "./pages/ZonasGoiania";
 import MapaGoias from "./pages/MapaGoias";
