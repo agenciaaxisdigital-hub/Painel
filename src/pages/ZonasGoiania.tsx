@@ -130,7 +130,7 @@ function useRegionDistribution(days: number) {
 
         if (result.categoria === "goiania") {
           addToRegion("goiania", field);
-          const zona = result.zona in goianiaZoneCounts ? result.zona : "Não identificada";
+          const zona = result.zona in goianiaZoneCounts ? result.zona : "Sem localização";
           addToZone(goianiaZoneCounts, zona, field);
         } else if (result.categoria === "aparecida") {
           addToRegion("aparecida", field);
