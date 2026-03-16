@@ -111,11 +111,11 @@ export default function VisaoGeral() {
   const v = variation.data;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Visão Geral</h1>
-          <p className="text-sm text-muted-foreground">Saúde completa do Site Principal</p>
+          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Visão Geral</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Saúde completa do Site Principal</p>
         </div>
         <DateRangeSelector selectedDays={days} onChange={setDays} />
       </div>
