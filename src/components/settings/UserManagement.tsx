@@ -314,6 +314,10 @@ export default function UserManagement() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setRenameTarget(u); setNewUsername(u.username); }}
+                              className="gap-2 text-xs">
+                              <Pencil className="h-3.5 w-3.5" /> Editar Nome
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => { setResetTarget(u); setNewPassword(""); }}
                               className="gap-2 text-xs">
                               <KeyRound className="h-3.5 w-3.5" /> Redefinir Senha
