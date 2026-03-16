@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { REGIOES_GOIAS } from "@/lib/constants";
-import { useTableCounts } from "@/hooks/use-supabase-data";
+import { useRegionCounts } from "@/hooks/use-supabase-data";
 import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
 import { X, Download } from "lucide-react";
 import { format } from "date-fns";
@@ -10,33 +10,41 @@ import * as XLSX from "xlsx";
 export default function MapaGoias() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [mode, setMode] = useState<"visitantes" | "formularios" | "engajamento">("visitantes");
-  const counts = useTableCounts(30);
-  
+  const regionCounts = useRegionCounts(30);
 
-  const totalVisitantes = counts.data?.visitantes ?? 0;
-  const totalForms = counts.data?.formularios ?? 0;
-  const totalClicks = (counts.data?.whatsapp ?? 0) + (counts.data?.instagram ?? 0) + (counts.data?.facebook ?? 0);
-
-  // Distribute data proportionally by region (placeholder until regiao_planejamento column exists)
+  // Merge real data with defined regions
   const regionsWithData = useMemo(() => {
-    const weights = [0.45, 0.15, 0.08, 0.05, 0.03, 0.04, 0.1, 0.1]; // approximate distribution
-    return REGIOES_GOIAS.map((r, i) => {
-      const w = weights[i] || 0.05;
-      return {
-        ...r,
-        visitantes: Math.round(totalVisitantes * w),
-        formularios: Math.round(totalForms * w),
-        cliques: Math.round(totalClicks * w),
-      };
+    const data = regionCounts.data || {};
+    return REGIOES_GOIAS.map((r) => {
+      const match = data[r.nome] || { visitantes: 0, formularios: 0, cliques: 0 };
+      return { ...r, ...match };
     });
-  }, [totalVisitantes, totalForms, totalClicks]);
+  }, [regionCounts.data]);
 
-  const getValue = (r: typeof regionsWithData[0]) => mode === "visitantes" ? r.visitantes : mode === "formularios" ? r.formularios : r.cliques;
-  const maxValue = Math.max(1, ...regionsWithData.map(getValue));
-  const selectedData = selectedRegion ? regionsWithData.find((r) => r.nome === selectedRegion) : null;
+  // Totals from real data
+  const totalVisitantes = regionsWithData.reduce((s, r) => s + r.visitantes, 0);
+  const totalForms = regionsWithData.reduce((s, r) => s + r.formularios, 0);
+  const totalClicks = regionsWithData.reduce((s, r) => s + r.cliques, 0);
+
+  // Regions with data that don't match any defined region
+  const extraRegions = useMemo(() => {
+    const data = regionCounts.data || {};
+    const definedNames = new Set(REGIOES_GOIAS.map((r) => r.nome) as unknown as string[]);
+    return Object.entries(data)
+      .filter(([name]) => !definedNames.has(name) && name !== "Não identificada")
+      .map(([nome, counts]) => ({ nome, cor: "#6B7280", ...counts }));
+  }, [regionCounts.data]);
+
+  const naoIdentificada = regionCounts.data?.["Não identificada"] || { visitantes: 0, formularios: 0, cliques: 0 };
+
+  const getValue = (r: { visitantes: number; formularios: number; cliques: number }) =>
+    mode === "visitantes" ? r.visitantes : mode === "formularios" ? r.formularios : r.cliques;
+  const allRegions = [...regionsWithData, ...extraRegions];
+  const maxValue = Math.max(1, ...allRegions.map(getValue));
+  const selectedData = selectedRegion ? allRegions.find((r) => r.nome === selectedRegion) : null;
 
   const handleExport = () => {
-    const ws = XLSX.utils.json_to_sheet(regionsWithData.map((r) => ({
+    const ws = XLSX.utils.json_to_sheet(allRegions.map((r) => ({
       Região: r.nome, Visitantes: r.visitantes, Formulários: r.formularios, Cliques: r.cliques,
     })));
     const wb = XLSX.utils.book_new();
@@ -49,7 +57,7 @@ export default function MapaGoias() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl font-bold tracking-tight">Mapa Goiás</h1>
-          <p className="text-sm text-muted-foreground">Alcance da campanha nas 8 regiões de planejamento</p>
+          <p className="text-sm text-muted-foreground">Alcance da campanha por região de planejamento — dados reais do banco</p>
         </div>
         <div className="flex gap-1">
           {(["visitantes", "formularios", "engajamento"] as const).map((m) => (
@@ -66,12 +74,12 @@ export default function MapaGoias() {
         <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Visitantes GO</span><div className="text-xl font-bold"><AnimatedNumber value={totalVisitantes} /></div></div>
         <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Formulários GO</span><div className="text-xl font-bold"><AnimatedNumber value={totalForms} /></div></div>
         <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Cliques GO</span><div className="text-xl font-bold"><AnimatedNumber value={totalClicks} /></div></div>
-        <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Regiões</span><div className="text-xl font-bold">8</div></div>
+        <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Não identificados</span><div className="text-xl font-bold"><AnimatedNumber value={getValue(naoIdentificada)} /></div></div>
       </div>
 
       {/* Regions Grid */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {regionsWithData.map((r, i) => {
+        {allRegions.map((r, i) => {
           const val = getValue(r);
           const intensity = val / maxValue;
           return (
@@ -110,13 +118,9 @@ export default function MapaGoias() {
               <div><span className="text-xs text-muted-foreground">Formulários</span><div className="text-lg font-bold">{selectedData.formularios}</div></div>
               <div><span className="text-xs text-muted-foreground">Cliques</span><div className="text-lg font-bold">{selectedData.cliques}</div></div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Dados detalhados por município aparecerão quando a coluna <code className="text-primary">regiao_planejamento</code> estiver ativa nas tabelas do Supabase.
-            </p>
           </motion.div>
         )}
       </AnimatePresence>
-
 
       {/* Regions Table */}
       <div className="glass-card overflow-hidden">
@@ -137,7 +141,7 @@ export default function MapaGoias() {
               </tr>
             </thead>
             <tbody>
-              {regionsWithData.map((r) => (
+              {allRegions.map((r) => (
                 <tr key={r.nome} className="border-b border-border/50 hover:bg-white/[0.02] cursor-pointer" onClick={() => setSelectedRegion(r.nome)}>
                   <td className="px-4 py-2.5"><span className="h-2.5 w-2.5 rounded-sm inline-block mr-2" style={{ backgroundColor: r.cor }} />{r.nome}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums">{r.visitantes}</td>
