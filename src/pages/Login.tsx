@@ -117,7 +117,7 @@ export default function Login() {
             Dra. Fernanda Sarelli
           </h1>
           <p className="mt-2 text-sm font-semibold uppercase tracking-[0.25em] text-white/80">
-            Chama a Doutora
+            Painel de Dados
           </p>
           <p className="mt-4 max-w-sm text-sm text-white/70 leading-relaxed">
             Pré-candidata a Deputada Estadual por Goiás, com compromisso real com a defesa da mulher e da criança.
@@ -163,7 +163,7 @@ export default function Login() {
               Dra. Fernanda Sarelli
             </h1>
             <p className="mt-1 text-xs uppercase tracking-[0.2em] text-primary font-medium">
-              Chama a Doutora
+              Painel de Dados
             </p>
           </div>
 
