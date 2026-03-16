@@ -38,11 +38,13 @@ function useGeographicBreakdown(days: number) {
 
       (data || []).forEach((r) => {
         const result = identifyZone(r);
-        if (result.categoria === "goiania" && goianiaZoneNames.includes(result.zona)) {
-          goianiaZones[result.zona] = (goianiaZones[result.zona] || 0) + 1;
-        } else if (result.categoria === "aparecida" && aparecidaZoneNames.includes(result.zona)) {
-          aparecidaZones[result.zona] = (aparecidaZones[result.zona] || 0) + 1;
-        } else if (result.categoria === "interior" && result.zona) {
+        if (result.categoria === "goiania") {
+          const zona = goianiaZoneNames.includes(result.zona) ? result.zona : goianiaZoneNames[0];
+          goianiaZones[zona] = (goianiaZones[zona] || 0) + 1;
+        } else if (result.categoria === "aparecida") {
+          const zona = aparecidaZoneNames.includes(result.zona) ? result.zona : aparecidaZoneNames[aparecidaZoneNames.length - 1];
+          aparecidaZones[zona] = (aparecidaZones[zona] || 0) + 1;
+        } else if ((result.categoria === "interior" || result.categoria === "fora_goias") && result.zona) {
           otherCities[result.zona] = (otherCities[result.zona] || 0) + 1;
         }
       });

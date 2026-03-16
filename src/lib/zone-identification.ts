@@ -237,7 +237,7 @@ export function identifyZone(params: {
   }
 
   // ── STEP 2: Aparecida de Goiânia ──
-  if (cidadeNorm === "aparecida de goiania" || cidadeNorm.includes("aparecida de goian")) {
+  if (cidadeNorm === "aparecida de goiania" || cidadeNorm.includes("aparecida") && cidadeNorm.includes("goian") || cidadeNorm === "aparecida de goiania") {
     return identifyAparecidaZone({ bairro, latitude, longitude });
   }
 
@@ -323,11 +323,14 @@ function identifyGoianiaZone(params: {
     if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "database" as const, categoria: "goiania" as const };
   }
 
-  // 2. Bairro matching
+  // 2. Bairro matching — use includes for fuzzy match
   if (bairro && bairro.trim()) {
     const normalizedBairro = normalize(bairro);
     for (const [zona, neighborhoods] of Object.entries(GOIANIA_ZONE_NEIGHBORHOODS)) {
-      if (neighborhoods.some((n) => normalize(n) === normalizedBairro)) {
+      if (neighborhoods.some((n) => {
+        const nn = normalize(n);
+        return nn === normalizedBairro || normalizedBairro.includes(nn) || nn.includes(normalizedBairro);
+      })) {
         const z = ZONAS_ELEITORAIS.find((zz) => zz.zona === zona);
         if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "bairro" as const, categoria: "goiania" as const };
       }
@@ -355,11 +358,14 @@ function identifyAparecidaZone(params: {
 }): ZoneResult {
   const { bairro, latitude, longitude } = params;
 
-  // 1. Bairro matching
+  // 1. Bairro matching — use includes for fuzzy match
   if (bairro && bairro.trim()) {
     const normalizedBairro = normalize(bairro);
     for (const [zona, neighborhoods] of Object.entries(APARECIDA_ZONE_NEIGHBORHOODS)) {
-      if (neighborhoods.some((n) => normalize(n) === normalizedBairro)) {
+      if (neighborhoods.some((n) => {
+        const nn = normalize(n);
+        return nn === normalizedBairro || normalizedBairro.includes(nn) || nn.includes(normalizedBairro);
+      })) {
         const z = ZONAS_APARECIDA.find((zz) => zz.zona === zona);
         if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "bairro" as const, categoria: "aparecida" as const };
       }
@@ -375,8 +381,9 @@ function identifyAparecidaZone(params: {
     }
   }
 
-  // Fallback
-  return { zona: "Aparecida de Goiânia — Zona não identificada", nome: "", cor: "#9333EA", eleitores: 0, method: "unknown", categoria: "aparecida" };
+  // Fallback — default to 4ª Zona Aparecida (largest zone)
+  const fallbackZone = ZONAS_APARECIDA.find((z) => z.zona === "4ª Zona Aparecida") || ZONAS_APARECIDA[3];
+  return { zona: fallbackZone.zona, nome: fallbackZone.nome, cor: fallbackZone.cor, eleitores: fallbackZone.eleitores, method: "unknown", categoria: "aparecida" };
 }
 
 // ── Find nearest zone by coordinates ──
