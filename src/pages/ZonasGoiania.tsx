@@ -47,9 +47,9 @@ function useRegionDistribution(days: number) {
       const since = subDays(new Date(), days).toISOString();
 
       const [acessos, cliques, mensagens] = await Promise.all([
-        supabase.from("acessos_site").select("zona_eleitoral, bairro, cidade, latitude, longitude").gte("criado_em", since).limit(5000),
-        supabase.from("cliques_whatsapp").select("zona_eleitoral, bairro, cidade, latitude, longitude, tipo_clique").gte("criado_em", since).limit(5000),
-        supabase.from("mensagens_contato").select("zona_eleitoral, bairro, cidade, latitude, longitude").gte("criado_em", since).limit(5000),
+        supabase.from("acessos_site").select("zona_eleitoral, bairro, cidade, estado, latitude, longitude").gte("criado_em", since).limit(5000),
+        supabase.from("cliques_whatsapp").select("zona_eleitoral, bairro, cidade, estado, latitude, longitude, tipo_clique").gte("criado_em", since).limit(5000),
+        supabase.from("mensagens_contato").select("zona_eleitoral, bairro, cidade, estado, latitude, longitude").gte("criado_em", since).limit(5000),
       ]);
 
       const regions: Record<string, RegionData> = {
