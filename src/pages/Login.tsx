@@ -48,11 +48,11 @@ function VantaBackground() {
         minWidth: 200,
         scale: 1.0,
         scaleMobile: 1.0,
-        color: 0xe8567a,        // rose/primary
-        backgroundColor: 0x0a0a0f, // dark bg
-        points: 8,
-        maxDistance: 23,
-        spacing: 18,
+        color: 0xe8567a,
+        backgroundColor: 0x0a0a0f,
+        points: 20,
+        maxDistance: 30,
+        spacing: 12,
         showDots: true,
       });
     }
