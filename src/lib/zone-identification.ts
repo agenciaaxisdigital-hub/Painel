@@ -268,14 +268,14 @@ export function identifyZone(params: {
   // ── STEP 5: No cidade — try zona_eleitoral or coordinates ──
   if (zona_eleitoral && zona_eleitoral.trim() && zona_eleitoral !== "Não identificada") {
     // Check if it's a known Goiânia zone
-    if (GOIANIA_ZONE_SET.has(zona_eleitoral)) {
-      const z = ZONAS_ELEITORAIS.find((z) => z.zona === zona_eleitoral)!;
-      return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "database", categoria: "goiania" };
+    const gzMatch = ZONAS_ELEITORAIS.find((z) => z.zona === zona_eleitoral);
+    if (gzMatch) {
+      return { zona: gzMatch.zona, nome: gzMatch.nome, cor: gzMatch.cor, eleitores: gzMatch.eleitores, method: "database" as const, categoria: "goiania" as const };
     }
     // Check if it's a known Aparecida zone
-    if (APARECIDA_ZONE_SET.has(zona_eleitoral)) {
-      const z = ZONAS_APARECIDA.find((z) => z.zona === zona_eleitoral)!;
-      return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "database", categoria: "aparecida" };
+    const azMatch = ZONAS_APARECIDA.find((z) => z.zona === zona_eleitoral);
+    if (azMatch) {
+      return { zona: azMatch.zona, nome: azMatch.nome, cor: azMatch.cor, eleitores: azMatch.eleitores, method: "database" as const, categoria: "aparecida" as const };
     }
   }
 
