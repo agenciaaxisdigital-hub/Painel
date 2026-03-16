@@ -35,7 +35,7 @@ export default function Exportar() {
         let query = supabase.from("acessos_site").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(5000);
         if (since) query = query.gte("criado_em", since);
         const { data } = await query;
-        const validData = filterValidLocationRecords(data);
+        const validData = data || [];
         if (validData.length > 0) sheets.push({ name: "Visitantes", data: validData.map(mapVisitante) });
       }
 
