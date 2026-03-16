@@ -1,0 +1,210 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
+import { Users, Plus, Shield, ShieldCheck, Pencil, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+
+type UserData = {
+  user_id: string;
+  cargo: string;
+  criado_em: string;
+  username: string;
+  email: string;
+};
+
+const cargoLabels: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+  super_admin: { label: "Super Admin", variant: "default" },
+  admin: { label: "Admin", variant: "secondary" },
+  editor: { label: "Editor", variant: "outline" },
+};
+
+const cargoIcon = (cargo: string) => {
+  if (cargo === "super_admin") return <ShieldCheck className="h-3.5 w-3.5" />;
+  if (cargo === "admin") return <Shield className="h-3.5 w-3.5" />;
+  return <Pencil className="h-3.5 w-3.5" />;
+};
+
+export default function UserManagement() {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [cargo, setCargo] = useState("editor");
+
+  const { data: users, isLoading } = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      if (!token) throw new Error("Não autenticado");
+
+      const { data, error } = await supabase.functions.invoke("listar-usuarios", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (error) throw error;
+      return (data as { users: UserData[] }).users;
+    },
+  });
+
+  const createUser = useMutation({
+    mutationFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      if (!token) throw new Error("Não autenticado");
+
+      const { data, error } = await supabase.functions.invoke("criar-usuario", {
+        body: { username, password, cargo },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Usuário criado com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      setOpen(false);
+      setUsername("");
+      setPassword("");
+      setCargo("editor");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erro ao criar usuário");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username.trim()) return toast.error("Nome é obrigatório");
+    if (password.length < 6) return toast.error("Senha deve ter no mínimo 6 caracteres");
+    createUser.mutate();
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Users className="h-5 w-5 text-primary" />
+            <h3 className="text-sm font-medium">Usuários do Sistema</h3>
+          </div>
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" /> Novo Usuário
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Criar Novo Usuário</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Nome de usuário</Label>
+                  <Input
+                    id="username"
+                    placeholder="Ex: joao.silva"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="off"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Login será: <span className="font-mono text-primary">{username.toLowerCase().replace(/\s+/g, ".") || "..."}</span>
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cargo">Cargo</Label>
+                  <Select value={cargo} onValueChange={setCargo}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="editor">Editor</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="super_admin">Super Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button type="button" variant="outline">Cancelar</Button>
+                  </DialogClose>
+                  <Button type="submit" disabled={createUser.isPending}>
+                    {createUser.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Criar Usuário
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
+            <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando...
+          </div>
+        ) : !users?.length ? (
+          <div className="text-center py-12 text-muted-foreground text-sm">
+            Nenhum usuário encontrado
+          </div>
+        ) : (
+          <div className="rounded-lg border border-white/[0.06] overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Usuário</TableHead>
+                  <TableHead>Cargo</TableHead>
+                  <TableHead className="hidden sm:table-cell">Criado em</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((u) => (
+                  <TableRow key={u.user_id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium text-sm">{u.username}</div>
+                        <div className="text-[11px] text-muted-foreground font-mono">{u.email}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={cargoLabels[u.cargo]?.variant || "outline"} className="gap-1">
+                        {cargoIcon(u.cargo)}
+                        {cargoLabels[u.cargo]?.label || u.cargo}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
+                      {new Date(u.criado_em).toLocaleDateString("pt-BR")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}

@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.criar-usuario]
 verify_jwt = false
+
+[functions.listar-usuarios]
+verify_jwt = false
