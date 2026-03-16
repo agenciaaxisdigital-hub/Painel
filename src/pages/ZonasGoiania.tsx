@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Target, Download, MapPin, Trophy, BarChart3, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { mapRegiao, exportXlsx, exportFilename } from "@/lib/export-utils";
-import { filterValidLocationRecords } from "@/lib/location-validity";
+
 
 interface RegionData {
   nome: string;
