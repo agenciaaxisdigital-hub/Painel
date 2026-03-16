@@ -33,7 +33,6 @@ export default function UserManagement() {
   const [open, setOpen] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [cargo, setCargo] = useState("editor");
 
   // Delete dialog
   const [deleteTarget, setDeleteTarget] = useState<UserData | null>(null);
