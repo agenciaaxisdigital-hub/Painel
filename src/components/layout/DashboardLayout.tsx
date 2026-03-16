@@ -30,7 +30,7 @@ export function DashboardLayout() {
       </div>
       <div className="ambient-glow" />
       <AppSidebar />
-      <main className="flex-1 min-w-0 pb-20 md:pb-0">
+      <main className="relative z-10 flex-1 min-w-0 pb-20 md:pb-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
