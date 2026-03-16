@@ -122,7 +122,7 @@ export default function ZonasGoiania() {
     const ws = XLSX.utils.json_to_sheet(sorted.map((z) => ({
       Zona: `${z.zona} Zona`, Nome: z.nome, Eleitores: z.eleitores, Visitantes: z.visitors,
       Formulários: z.forms, "Cliques WhatsApp": z.whatsapp, "Cliques Instagram": z.instagram,
-      "Cliques Facebook": z.facebook, "Total Cliques": z.clicks, "Penetração %": z.penetracao, "Conversão %": z.conversao,
+      "Cliques Facebook": z.facebook, "Total Cliques": z.clicks, "Acesso %": z.penetracao, "Conversão %": z.conversao,
     })));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Zonas");
