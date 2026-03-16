@@ -116,8 +116,55 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ─── RENAME USER ───
+    if (action === "rename") {
+      if (!user_id || !new_username) {
+        return new Response(
+          JSON.stringify({ error: "user_id e new_username são obrigatórios" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const trimmed = new_username.trim();
+      if (!trimmed) {
+        return new Response(
+          JSON.stringify({ error: "Nome de usuário não pode ser vazio" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const newEmail = `${trimmed.toLowerCase().replace(/\s+/g, ".")}@chamarosa.app`;
+
+      // Check if new email already taken by another user
+      const { data: { users: allUsers } } = await supabaseAdmin.auth.admin.listUsers();
+      const taken = allUsers?.find(u => u.email === newEmail && u.id !== user_id);
+      if (taken) {
+        return new Response(
+          JSON.stringify({ error: `Usuário "${trimmed}" já existe` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
+        email: newEmail,
+        user_metadata: { username: trimmed },
+      });
+
+      if (updateError) {
+        return new Response(
+          JSON.stringify({ error: updateError.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, message: `Usuário renomeado para "${trimmed}"` }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
-      JSON.stringify({ error: "Ação inválida. Use 'delete' ou 'reset_password'" }),
+      JSON.stringify({ error: "Ação inválida. Use 'delete', 'reset_password' ou 'rename'" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
