@@ -3,15 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { subDays, format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import {
   Eye, Phone, Camera, Facebook, FileText, Search, Download, X, ChevronDown, ChevronRight,
-  Smartphone, Monitor, Tablet, Copy, ExternalLink, Flame, Filter, ArrowUpDown,
+  Smartphone, Monitor, Tablet, Copy, ExternalLink, Flame, Filter,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
-import { ZONAS_ELEITORAIS, ZONE_COLOR_MAP, EMPTY_STATE_MESSAGE } from "@/lib/constants";
+import { EMPTY_STATE_MESSAGE } from "@/lib/constants";
+import { CompactLocation, FullLocationDetail, PrecisionBadge } from "@/components/shared/LocationDisplay";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,6 +28,12 @@ interface UnifiedInteraction {
   mensagem?: string | null;
   cidade?: string | null;
   estado?: string | null;
+  bairro?: string | null;
+  cep?: string | null;
+  endereco_completo?: string | null;
+  rua?: string | null;
+  zona_eleitoral?: string | null;
+  regiao_planejamento?: string | null;
   endereco_ip?: string | null;
   dispositivo?: string | null;
   sistema_operacional?: string | null;
@@ -55,45 +61,74 @@ interface UnifiedInteraction {
   source_table: "acessos_site" | "mensagens_contato" | "cliques_whatsapp";
 }
 
-// ── Config ──
 const TIPO_CONFIG: Record<InteractionType, { label: string; color: string; bgColor: string; Icon: any }> = {
-  acesso:     { label: "Acesso ao Site",     color: "text-blue-400",    bgColor: "bg-blue-500/10",    Icon: Eye },
-  whatsapp:   { label: "Clique WhatsApp",    color: "text-success",     bgColor: "bg-success/10",     Icon: Phone },
-  instagram:  { label: "Clique Instagram",   color: "text-primary",     bgColor: "bg-primary/10",     Icon: Camera },
-  facebook:   { label: "Clique Facebook",    color: "text-blue-500",    bgColor: "bg-blue-600/10",    Icon: Facebook },
-  formulario: { label: "Respondeu Formulário", color: "text-rose-400", bgColor: "bg-rose-500/10",    Icon: FileText },
+  acesso:     { label: "Acesso ao Site",       color: "text-blue-400",  bgColor: "bg-blue-500/10",  Icon: Eye },
+  whatsapp:   { label: "Clique WhatsApp",      color: "text-success",   bgColor: "bg-success/10",   Icon: Phone },
+  instagram:  { label: "Clique Instagram",     color: "text-primary",   bgColor: "bg-primary/10",   Icon: Camera },
+  facebook:   { label: "Clique Facebook",      color: "text-blue-500",  bgColor: "bg-blue-600/10",  Icon: Facebook },
+  formulario: { label: "Respondeu Formulário", color: "text-rose-400",  bgColor: "bg-rose-500/10",  Icon: FileText },
 };
 
 const PAGE_SIZE = 50;
 
-const DEVICE_PRESETS = ["Mobile", "Desktop", "Tablet"];
+// ── Safe field extractor (handles columns that may not exist in TS types) ──
+function safeField(record: any, field: string): any {
+  return record?.[field] ?? null;
+}
 
-// ── Hook: server-side paginated interactions ──
-function useInteractions(filters: {
-  days: number;
-  tipos: InteractionType[];
-  search: string;
-  cidade: string;
-  dispositivo: string[];
-  page: number;
-}) {
+function mapAcesso(r: any): UnifiedInteraction {
+  return {
+    id: r.id, tipo: "acesso", data_hora: r.criado_em, cidade: r.cidade, estado: r.estado,
+    bairro: safeField(r, "bairro"), cep: safeField(r, "cep"), endereco_completo: safeField(r, "endereco_completo"),
+    rua: safeField(r, "rua"), zona_eleitoral: safeField(r, "zona_eleitoral"), regiao_planejamento: safeField(r, "regiao_planejamento"),
+    endereco_ip: r.endereco_ip, dispositivo: r.dispositivo, sistema_operacional: r.sistema_operacional,
+    navegador: r.navegador, pagina: r.pagina, referrer: r.referrer,
+    utm_source: r.utm_source, utm_medium: r.utm_medium, utm_campaign: r.utm_campaign,
+    utm_content: r.utm_content, utm_term: r.utm_term, primeira_visita: r.primeira_visita,
+    contador_visitas: r.contador_visitas, cookie_visitante: r.cookie_visitante,
+    user_agent: r.user_agent, largura_tela: r.largura_tela, altura_tela: r.altura_tela, pais: r.pais,
+    latitude: safeField(r, "latitude"), longitude: safeField(r, "longitude"),
+    source_table: "acessos_site",
+  };
+}
+
+function mapFormulario(r: any): UnifiedInteraction {
+  return {
+    id: r.id, tipo: "formulario", data_hora: r.criado_em, nome: r.nome, telefone: r.telefone,
+    email: r.email, mensagem: r.mensagem, cidade: r.cidade, estado: r.estado,
+    bairro: safeField(r, "bairro"), cep: safeField(r, "cep"), endereco_completo: safeField(r, "endereco_completo"),
+    rua: safeField(r, "rua"), zona_eleitoral: safeField(r, "zona_eleitoral"), regiao_planejamento: safeField(r, "regiao_planejamento"),
+    endereco_ip: r.endereco_ip, latitude: r.latitude, longitude: r.longitude,
+    user_agent: r.user_agent, lida: r.lida, pais: r.pais, source_table: "mensagens_contato",
+  };
+}
+
+function mapClique(r: any): UnifiedInteraction {
+  const tipo = (r.tipo_clique === "instagram" ? "instagram" : r.tipo_clique === "facebook" ? "facebook" : "whatsapp") as InteractionType;
+  return {
+    id: r.id, tipo, data_hora: r.criado_em, cidade: r.cidade, estado: r.estado,
+    bairro: safeField(r, "bairro"), cep: safeField(r, "cep"), endereco_completo: safeField(r, "endereco_completo"),
+    rua: safeField(r, "rua"), zona_eleitoral: safeField(r, "zona_eleitoral"), regiao_planejamento: safeField(r, "regiao_planejamento"),
+    endereco_ip: r.endereco_ip, cookie_visitante: r.cookie_visitante,
+    texto_botao: r.texto_botao, secao_pagina: r.secao_pagina, url_destino: r.url_destino,
+    latitude: r.latitude, longitude: r.longitude, user_agent: r.user_agent, pais: r.pais,
+    dispositivo: safeField(r, "dispositivo"), sistema_operacional: safeField(r, "sistema_operacional"),
+    navegador: safeField(r, "navegador"),
+    source_table: "cliques_whatsapp",
+  };
+}
+
+// ── Hook ──
+function useInteractions(filters: { days: number; tipos: InteractionType[]; search: string; cidade: string; dispositivo: string[]; page: number }) {
   const { days, tipos, search, cidade, dispositivo, page } = filters;
-
   return useQuery({
     queryKey: ["todas-interacoes", days, tipos, search, cidade, dispositivo, page],
     queryFn: async () => {
       const since = subDays(new Date(), days).toISOString();
       const results: UnifiedInteraction[] = [];
       const counts = { acesso: 0, whatsapp: 0, instagram: 0, facebook: 0, formulario: 0 };
-
-      // Build parallel queries based on selected types
       const queries: Promise<void>[] = [];
 
-      const includeAcessos = tipos.includes("acesso");
-      const includeFormularios = tipos.includes("formulario");
-      const includeCliques = tipos.some((t) => ["whatsapp", "instagram", "facebook"].includes(t));
-
-      // Count queries (always all types for summary)
       const countPromise = Promise.all([
         supabase.from("acessos_site").select("*", { count: "exact", head: true }).gte("criado_em", since),
         supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).gte("criado_em", since),
@@ -101,54 +136,32 @@ function useInteractions(filters: {
         supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).eq("tipo_clique", "instagram"),
         supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).eq("tipo_clique", "facebook"),
       ]).then(([a, f, w, i, fb]) => {
-        counts.acesso = a.count ?? 0;
-        counts.formulario = f.count ?? 0;
-        counts.whatsapp = w.count ?? 0;
-        counts.instagram = i.count ?? 0;
-        counts.facebook = fb.count ?? 0;
+        counts.acesso = a.count ?? 0; counts.formulario = f.count ?? 0;
+        counts.whatsapp = w.count ?? 0; counts.instagram = i.count ?? 0; counts.facebook = fb.count ?? 0;
       });
 
-      // Data queries
-      if (includeAcessos) {
+      if (tipos.includes("acesso")) {
         queries.push((async () => {
           let q = supabase.from("acessos_site").select("*").gte("criado_em", since).order("criado_em", { ascending: false });
           if (search) q = q.or(`cidade.ilike.%${search}%,endereco_ip.ilike.%${search}%,utm_campaign.ilike.%${search}%`);
           if (cidade) q = q.eq("cidade", cidade);
           if (dispositivo.length > 0) q = q.in("dispositivo", dispositivo.map((d) => d.toLowerCase()));
           const { data } = await q.limit(500);
-          (data || []).forEach((r) => {
-            results.push({
-              id: r.id, tipo: "acesso", data_hora: r.criado_em, cidade: r.cidade, estado: r.estado,
-              endereco_ip: r.endereco_ip, dispositivo: r.dispositivo, sistema_operacional: r.sistema_operacional,
-              navegador: r.navegador, pagina: r.pagina, referrer: r.referrer,
-              utm_source: r.utm_source, utm_medium: r.utm_medium, utm_campaign: r.utm_campaign,
-              utm_content: r.utm_content, utm_term: r.utm_term, primeira_visita: r.primeira_visita,
-              contador_visitas: r.contador_visitas, cookie_visitante: r.cookie_visitante,
-              user_agent: r.user_agent, largura_tela: r.largura_tela, altura_tela: r.altura_tela, pais: r.pais,
-              source_table: "acessos_site",
-            });
-          });
+          (data || []).forEach((r) => results.push(mapAcesso(r)));
         })());
       }
 
-      if (includeFormularios) {
+      if (tipos.includes("formulario")) {
         queries.push((async () => {
           let q = supabase.from("mensagens_contato").select("*").gte("criado_em", since).order("criado_em", { ascending: false });
           if (search) q = q.or(`nome.ilike.%${search}%,telefone.ilike.%${search}%,cidade.ilike.%${search}%,email.ilike.%${search}%`);
           if (cidade) q = q.eq("cidade", cidade);
           const { data } = await q.limit(500);
-          (data || []).forEach((r) => {
-            results.push({
-              id: r.id, tipo: "formulario", data_hora: r.criado_em, nome: r.nome, telefone: r.telefone,
-              email: r.email, mensagem: r.mensagem, cidade: r.cidade, estado: r.estado,
-              endereco_ip: r.endereco_ip, latitude: r.latitude, longitude: r.longitude,
-              user_agent: r.user_agent, lida: r.lida, pais: r.pais, source_table: "mensagens_contato",
-            });
-          });
+          (data || []).forEach((r) => results.push(mapFormulario(r)));
         })());
       }
 
-      if (includeCliques) {
+      if (tipos.some((t) => ["whatsapp", "instagram", "facebook"].includes(t))) {
         const clickTypes = tipos.filter((t) => ["whatsapp", "instagram", "facebook"].includes(t));
         queries.push((async () => {
           let q = supabase.from("cliques_whatsapp").select("*").gte("criado_em", since).order("criado_em", { ascending: false });
@@ -156,34 +169,19 @@ function useInteractions(filters: {
           if (search) q = q.or(`cidade.ilike.%${search}%,texto_botao.ilike.%${search}%,endereco_ip.ilike.%${search}%`);
           if (cidade) q = q.eq("cidade", cidade);
           const { data } = await q.limit(500);
-          (data || []).forEach((r) => {
-            const tipo = (r.tipo_clique === "instagram" ? "instagram" : r.tipo_clique === "facebook" ? "facebook" : "whatsapp") as InteractionType;
-            results.push({
-              id: r.id, tipo, data_hora: r.criado_em, cidade: r.cidade, estado: r.estado,
-              endereco_ip: r.endereco_ip, cookie_visitante: r.cookie_visitante,
-              texto_botao: r.texto_botao, secao_pagina: r.secao_pagina, url_destino: r.url_destino,
-              latitude: r.latitude, longitude: r.longitude, user_agent: r.user_agent, pais: r.pais,
-              source_table: "cliques_whatsapp",
-            });
-          });
+          (data || []).forEach((r) => results.push(mapClique(r)));
         })());
       }
 
       await Promise.all([countPromise, ...queries]);
-
-      // Sort merged results
       results.sort((a, b) => new Date(b.data_hora).getTime() - new Date(a.data_hora).getTime());
-
       const total = results.length;
-      const paginated = results.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-
-      return { interactions: paginated, total, counts, allResults: results };
+      return { interactions: results.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE), total, counts, allResults: results };
     },
     staleTime: 30_000,
   });
 }
 
-// ── Helper: cities from data ──
 function useCities(days: number) {
   return useQuery({
     queryKey: ["interaction-cities", days],
@@ -198,7 +196,6 @@ function useCities(days: number) {
   });
 }
 
-// ── Helper: last hour count ──
 function useLastHourCount() {
   return useQuery({
     queryKey: ["last-hour-count"],
@@ -216,7 +213,6 @@ function useLastHourCount() {
   });
 }
 
-// ── Mask IP ──
 function maskIp(ip: string | null | undefined): string {
   if (!ip) return "—";
   const parts = ip.split(".");
@@ -224,7 +220,6 @@ function maskIp(ip: string | null | undefined): string {
   return ip;
 }
 
-// ── Device Icon ──
 function DeviceIcon({ device }: { device?: string | null }) {
   const d = (device || "").toLowerCase();
   if (d.includes("mobile") || d.includes("celular")) return <Smartphone className="h-3.5 w-3.5" />;
@@ -232,25 +227,9 @@ function DeviceIcon({ device }: { device?: string | null }) {
   return <Monitor className="h-3.5 w-3.5" />;
 }
 
-// ── Flame Score ──
-function FlameScore({ score }: { score: number }) {
-  return (
-    <span className="inline-flex gap-0.5">
-      {Array.from({ length: Math.min(score, 4) }).map((_, i) => (
-        <Flame key={i} className="h-3 w-3 text-primary fill-primary" />
-      ))}
-      {Array.from({ length: Math.max(0, 4 - score) }).map((_, i) => (
-        <Flame key={`e${i}`} className="h-3 w-3 text-muted-foreground/30" />
-      ))}
-    </span>
-  );
-}
-
 // ── Main Component ──
 export default function TodasInteracoes() {
   const { toast } = useToast();
-
-  // Filters
   const [days, setDays] = useState(7);
   const [tipos, setTipos] = useState<InteractionType[]>(["acesso", "whatsapp", "instagram", "facebook", "formulario"]);
   const [search, setSearch] = useState("");
@@ -260,7 +239,6 @@ export default function TodasInteracoes() {
   const [page, setPage] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Debounced search
   const handleSearch = useCallback((val: string) => {
     setSearchInput(val);
     const timeout = setTimeout(() => { setSearch(val); setPage(0); }, 400);
@@ -275,7 +253,6 @@ export default function TodasInteracoes() {
   const total = data?.total || 0;
   const counts = data?.counts || { acesso: 0, whatsapp: 0, instagram: 0, facebook: 0, formulario: 0 };
   const allResults = data?.allResults || [];
-
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const activeFilterCount = (tipos.length < 5 ? 1 : 0) + (cidade ? 1 : 0) + (dispositivo.length > 0 ? 1 : 0) + (search ? 1 : 0);
 
@@ -285,41 +262,23 @@ export default function TodasInteracoes() {
   };
 
   const toggleTipo = (t: InteractionType) => {
-    setTipos((prev) => {
-      const next = prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t];
-      return next.length === 0 ? [t] : next;
-    });
+    setTipos((prev) => { const next = prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]; return next.length === 0 ? [t] : next; });
     setPage(0);
   };
 
-  const filterOnlyTipo = (t: InteractionType) => {
-    setTipos([t]);
-    setPage(0);
-  };
+  const filterOnlyTipo = (t: InteractionType) => { setTipos([t]); setPage(0); };
 
-  // Export
   const handleExportXlsx = () => {
     const rows = allResults.map((r) => ({
-      Tipo: TIPO_CONFIG[r.tipo].label,
-      "Data/Hora": format(parseISO(r.data_hora), "dd/MM/yyyy HH:mm:ss"),
-      Nome: r.nome || "",
-      Telefone: r.telefone || "",
-      Email: r.email || "",
-      Cidade: r.cidade || "",
-      Estado: r.estado || "",
-      IP: r.endereco_ip || "",
-      Dispositivo: r.dispositivo || "",
-      SO: r.sistema_operacional || "",
-      Navegador: r.navegador || "",
-      Página: r.pagina || "",
-      "Texto Botão": r.texto_botao || "",
-      "Seção Página": r.secao_pagina || "",
-      UTM_Source: r.utm_source || "",
-      UTM_Medium: r.utm_medium || "",
-      UTM_Campaign: r.utm_campaign || "",
-      Referrer: r.referrer || "",
-      Latitude: r.latitude || "",
-      Longitude: r.longitude || "",
+      Tipo: TIPO_CONFIG[r.tipo].label, "Data/Hora": format(parseISO(r.data_hora), "dd/MM/yyyy HH:mm:ss"),
+      Nome: r.nome || "", Telefone: r.telefone || "", Email: r.email || "",
+      Cidade: r.cidade || "", Estado: r.estado || "", Bairro: r.bairro || "",
+      CEP: r.cep || "", "Endereço Completo": r.endereco_completo || "",
+      "Zona Eleitoral": r.zona_eleitoral || "", IP: r.endereco_ip || "",
+      Dispositivo: r.dispositivo || "", SO: r.sistema_operacional || "", Navegador: r.navegador || "",
+      Página: r.pagina || "", "Texto Botão": r.texto_botao || "", "Seção Página": r.secao_pagina || "",
+      UTM_Source: r.utm_source || "", UTM_Medium: r.utm_medium || "", UTM_Campaign: r.utm_campaign || "",
+      Referrer: r.referrer || "", Latitude: r.latitude || "", Longitude: r.longitude || "",
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
@@ -330,28 +289,21 @@ export default function TodasInteracoes() {
 
   const handleExportCsv = () => {
     const leads = allResults.filter((r) => r.tipo === "formulario" && r.telefone);
-    if (leads.length === 0) {
-      toast({ title: "Nenhum lead com telefone encontrado", variant: "destructive" });
-      return;
-    }
+    if (leads.length === 0) { toast({ title: "Nenhum lead com telefone encontrado", variant: "destructive" }); return; }
     const rows = leads.map((r) => ({
-      Nome: r.nome || "",
-      Telefone: r.telefone || "",
-      Cidade: r.cidade || "",
-      Estado: r.estado || "",
+      Nome: r.nome || "", Telefone: r.telefone || "", Cidade: r.cidade || "",
+      Estado: r.estado || "", Bairro: r.bairro || "", "Zona Eleitoral": r.zona_eleitoral || "",
       "Data/Hora": format(parseISO(r.data_hora), "dd/MM/yyyy HH:mm"),
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const csv = XLSX.utils.sheet_to_csv(ws);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `Leads_ChamaRosa_${format(new Date(), "ddMMyyyy")}.csv`;
+    const a = document.createElement("a"); a.href = url; a.download = `Leads_ChamaRosa_${format(new Date(), "ddMMyyyy")}.csv`;
     a.click(); URL.revokeObjectURL(url);
     toast({ title: `${leads.length} leads exportados` });
   };
 
-  // ── Render ──
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -362,8 +314,7 @@ export default function TodasInteracoes() {
             <span>Exibindo <strong className="text-foreground">{total.toLocaleString("pt-BR")}</strong> interações</span>
             {(lastHour.data ?? 0) > 0 && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-0.5 text-[10px] font-medium text-success">
-                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                {lastHour.data} na última hora
+                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> {lastHour.data} na última hora
               </span>
             )}
           </div>
@@ -382,24 +333,15 @@ export default function TodasInteracoes() {
       <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
         {(["acesso", "whatsapp", "instagram", "facebook", "formulario"] as InteractionType[]).map((t) => {
           const cfg = TIPO_CONFIG[t];
-          const count = counts[t];
           const active = tipos.length === 1 && tipos[0] === t;
           return (
-            <motion.button
-              key={t}
-              onClick={() => filterOnlyTipo(t)}
-              whileTap={{ scale: 0.97 }}
-              className={`glass-card p-3 text-left transition-all ${active ? "ring-1 ring-primary/40" : "hover:bg-white/[0.04]"}`}
-            >
+            <motion.button key={t} onClick={() => filterOnlyTipo(t)} whileTap={{ scale: 0.97 }}
+              className={`glass-card p-3 text-left transition-all ${active ? "ring-1 ring-primary/40" : "hover:bg-white/[0.04]"}`}>
               <div className="flex items-center gap-2">
-                <div className={`rounded-lg p-1.5 ${cfg.bgColor}`}>
-                  <cfg.Icon className={`h-3.5 w-3.5 ${cfg.color}`} />
-                </div>
+                <div className={`rounded-lg p-1.5 ${cfg.bgColor}`}><cfg.Icon className={`h-3.5 w-3.5 ${cfg.color}`} /></div>
                 <span className="text-[10px] text-muted-foreground">{cfg.label}</span>
               </div>
-              <div className="mt-1 text-lg font-bold">
-                <AnimatedNumber value={count} />
-              </div>
+              <div className="mt-1 text-lg font-bold"><AnimatedNumber value={counts[t]} /></div>
             </motion.button>
           );
         })}
@@ -408,7 +350,6 @@ export default function TodasInteracoes() {
       {/* Filter Bar */}
       <div className="glass-card p-3">
         <div className="flex flex-wrap items-center gap-2">
-          {/* Date presets */}
           <div className="flex gap-1">
             {[{ label: "Hoje", d: 1 }, { label: "Ontem", d: 2 }, { label: "7 dias", d: 7 }, { label: "30 dias", d: 30 }].map((p) => (
               <button key={p.d} onClick={() => { setDays(p.d); setPage(0); }}
@@ -417,14 +358,10 @@ export default function TodasInteracoes() {
               </button>
             ))}
           </div>
-
           <div className="h-5 w-px bg-border" />
-
-          {/* Type toggles */}
           <div className="flex gap-1">
             {(["acesso", "whatsapp", "instagram", "facebook", "formulario"] as InteractionType[]).map((t) => {
-              const cfg = TIPO_CONFIG[t];
-              const active = tipos.includes(t);
+              const cfg = TIPO_CONFIG[t]; const active = tipos.includes(t);
               return (
                 <button key={t} onClick={() => toggleTipo(t)}
                   className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-medium transition-colors ${active ? `${cfg.bgColor} ${cfg.color}` : "bg-white/[0.02] text-muted-foreground/50"}`}>
@@ -434,75 +371,48 @@ export default function TodasInteracoes() {
               );
             })}
           </div>
-
           <div className="h-5 w-px bg-border" />
-
-          {/* City select */}
-          <select
-            value={cidade}
-            onChange={(e) => { setCidade(e.target.value); setPage(0); }}
-            className="rounded-lg bg-white/[0.04] border border-border px-2 py-1.5 text-[11px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 max-w-[140px]"
-          >
+          <select value={cidade} onChange={(e) => { setCidade(e.target.value); setPage(0); }}
+            className="rounded-lg bg-white/[0.04] border border-border px-2 py-1.5 text-[11px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 max-w-[140px]">
             <option value="">Todas as cidades</option>
             {(cities.data || []).map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
-
-          {/* Device filter */}
           <div className="flex gap-1">
-            {DEVICE_PRESETS.map((d) => {
+            {["Mobile", "Desktop", "Tablet"].map((d) => {
               const active = dispositivo.includes(d);
               return (
-                <button key={d} onClick={() => {
-                  setDispositivo((prev) => active ? prev.filter((x) => x !== d) : [...prev, d]);
-                  setPage(0);
-                }}
+                <button key={d} onClick={() => { setDispositivo((prev) => active ? prev.filter((x) => x !== d) : [...prev, d]); setPage(0); }}
                   className={`rounded-lg px-2 py-1.5 text-[10px] font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "bg-white/[0.02] text-muted-foreground/50 hover:text-muted-foreground"}`}>
                   {d === "Mobile" ? <Smartphone className="h-3 w-3" /> : d === "Desktop" ? <Monitor className="h-3 w-3" /> : <Tablet className="h-3 w-3" />}
                 </button>
               );
             })}
           </div>
-
-          {/* Search */}
           <div className="relative flex-1 min-w-[180px]">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Buscar nome, telefone, cidade, IP, UTM..."
-              value={searchInput}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="h-8 pl-8 bg-white/[0.03] border-white/[0.08] text-xs"
-            />
+            <Input placeholder="Buscar nome, telefone, cidade, IP, UTM..." value={searchInput}
+              onChange={(e) => handleSearch(e.target.value)} className="h-8 pl-8 bg-white/[0.03] border-white/[0.08] text-xs" />
           </div>
-
-          {/* Active filters badge & clear */}
           {activeFilterCount > 0 && (
             <button onClick={clearFilters} className="flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1.5 text-[10px] font-medium text-primary hover:bg-primary/20 transition-colors">
-              <Filter className="h-3 w-3" />
-              {activeFilterCount} filtro{activeFilterCount > 1 ? "s" : ""}
-              <X className="h-3 w-3" />
+              <Filter className="h-3 w-3" /> {activeFilterCount} filtro{activeFilterCount > 1 ? "s" : ""} <X className="h-3 w-3" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Main Table */}
+      {/* Table */}
       <div className="glass-card overflow-hidden">
         {isLoading ? (
-          <div className="p-5 space-y-2">
-            {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
-          </div>
+          <div className="p-5 space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
         ) : interactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Eye className="h-10 w-10 text-muted-foreground/20 mb-3" />
             <p className="text-sm text-muted-foreground">
-              {total === 0 && !search && !cidade
-                ? EMPTY_STATE_MESSAGE
-                : "Nenhuma interação encontrada para os filtros selecionados."}
+              {total === 0 && !search && !cidade ? EMPTY_STATE_MESSAGE : "Nenhuma interação encontrada para os filtros selecionados."}
             </p>
             {(search || cidade || tipos.length < 5) && (
-              <button onClick={clearFilters} className="mt-3 rounded-lg bg-primary/10 px-4 py-2 text-xs text-primary hover:bg-primary/20 transition-colors">
-                Limpar filtros
-              </button>
+              <button onClick={clearFilters} className="mt-3 rounded-lg bg-primary/10 px-4 py-2 text-xs text-primary hover:bg-primary/20 transition-colors">Limpar filtros</button>
             )}
           </div>
         ) : (
@@ -519,34 +429,24 @@ export default function TodasInteracoes() {
                     <th className="px-3 py-3 text-left font-medium">Dispositivo</th>
                     <th className="px-3 py-3 text-left font-medium">IP</th>
                     <th className="px-3 py-3 text-left font-medium">Origem</th>
-                    <th className="px-3 py-3 text-left font-medium">Detalhes</th>
+                    <th className="px-3 py-3 text-left font-medium w-8"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {interactions.map((row) => (
-                    <InteractionRow
-                      key={`${row.source_table}-${row.id}`}
-                      row={row}
+                    <InteractionRow key={`${row.source_table}-${row.id}`} row={row}
                       expanded={expandedId === `${row.source_table}-${row.id}`}
                       onToggle={() => setExpandedId(expandedId === `${row.source_table}-${row.id}` ? null : `${row.source_table}-${row.id}`)}
-                      toast={toast}
-                    />
+                      toast={toast} />
                   ))}
                 </tbody>
               </table>
             </div>
-
-            {/* Pagination */}
             <div className="flex items-center justify-between border-t border-border px-4 py-3">
-              <span className="text-[11px] text-muted-foreground">
-                Página {page + 1} de {totalPages} · {total} registros
-              </span>
+              <span className="text-[11px] text-muted-foreground">Página {page + 1} de {totalPages} · {total} registros</span>
               <div className="flex gap-1">
                 <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0}
-                  className="rounded-lg px-3 py-1.5 text-[11px] font-medium bg-white/[0.04] text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">
-                  Anterior
-                </button>
-                {/* Page numbers */}
+                  className="rounded-lg px-3 py-1.5 text-[11px] font-medium bg-white/[0.04] text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">Anterior</button>
                 {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
                   const p = page < 3 ? i : page + i - 2;
                   if (p < 0 || p >= totalPages) return null;
@@ -558,9 +458,7 @@ export default function TodasInteracoes() {
                   );
                 })}
                 <button onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1}
-                  className="rounded-lg px-3 py-1.5 text-[11px] font-medium bg-white/[0.04] text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">
-                  Próxima
-                </button>
+                  className="rounded-lg px-3 py-1.5 text-[11px] font-medium bg-white/[0.04] text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">Próxima</button>
               </div>
             </div>
           </>
@@ -570,33 +468,14 @@ export default function TodasInteracoes() {
   );
 }
 
-// ── Row Component ──
-function InteractionRow({
-  row,
-  expanded,
-  onToggle,
-  toast,
-}: {
-  row: UnifiedInteraction;
-  expanded: boolean;
-  onToggle: () => void;
-  toast: any;
-}) {
+// ── Row ──
+function InteractionRow({ row, expanded, onToggle, toast }: { row: UnifiedInteraction; expanded: boolean; onToggle: () => void; toast: any }) {
   const cfg = TIPO_CONFIG[row.tipo];
-  const location = [row.cidade, row.estado].filter(Boolean).join(", ");
-
-  // Derive origin from referrer/utm
-  const origin = row.utm_source
-    || (row.referrer?.includes("google") ? "Google" : row.referrer?.includes("instagram") ? "Instagram"
-    : row.referrer?.includes("whatsapp") ? "WhatsApp" : row.referrer?.includes("facebook") ? "Facebook"
-    : row.referrer ? "Outro" : "Direto");
+  const origin = row.utm_source || (row.referrer?.includes("google") ? "Google" : row.referrer?.includes("instagram") ? "Instagram" : row.referrer?.includes("whatsapp") ? "WhatsApp" : row.referrer?.includes("facebook") ? "Facebook" : row.referrer ? "Outro" : "Direto");
 
   return (
     <>
-      <tr
-        onClick={onToggle}
-        className="border-b border-border/30 hover:bg-white/[0.02] cursor-pointer transition-colors"
-      >
+      <tr onClick={onToggle} className="border-b border-border/30 hover:bg-white/[0.02] cursor-pointer transition-colors">
         <td className="px-3 py-2.5">
           <motion.div animate={{ rotate: expanded ? 90 : 0 }} transition={{ duration: 0.15 }}>
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
@@ -608,22 +487,17 @@ function InteractionRow({
             {row.tipo === "acesso" ? "Acesso" : row.tipo === "formulario" ? "Formulário" : row.tipo.charAt(0).toUpperCase() + row.tipo.slice(1)}
           </span>
         </td>
-        <td className="px-3 py-2.5 text-foreground/80 tabular-nums whitespace-nowrap">
-          {format(parseISO(row.data_hora), "dd/MM/yyyy 'às' HH:mm:ss")}
-        </td>
+        <td className="px-3 py-2.5 text-foreground/80 tabular-nums whitespace-nowrap">{format(parseISO(row.data_hora), "dd/MM/yyyy 'às' HH:mm:ss")}</td>
         <td className="px-3 py-2.5">
-          {row.nome ? (
-            <span className="text-foreground font-medium">{row.nome}</span>
-          ) : (
-            <span className="text-foreground/60">{location || "—"}</span>
-          )}
+          {row.nome ? <span className="text-foreground font-medium">{row.nome}</span>
+            : <span className="text-foreground/60">{[row.cidade, row.estado].filter(Boolean).join(", ") || "—"}</span>}
           {row.contador_visitas && row.contador_visitas > 1 && (
-            <span className="ml-1.5 rounded-full bg-secondary/10 px-1.5 py-0.5 text-[9px] font-medium text-secondary">
-              Retorno
-            </span>
+            <span className="ml-1.5 rounded-full bg-secondary/10 px-1.5 py-0.5 text-[9px] font-medium text-secondary">Retorno</span>
           )}
         </td>
-        <td className="px-3 py-2.5 text-foreground/70 max-w-[160px] truncate">{location || "—"}</td>
+        <td className="px-3 py-2.5 max-w-[180px]">
+          <CompactLocation data={row} />
+        </td>
         <td className="px-3 py-2.5">
           <div className="flex items-center gap-1.5 text-foreground/70">
             <DeviceIcon device={row.dispositivo} />
@@ -633,65 +507,40 @@ function InteractionRow({
         <td className="px-3 py-2.5 text-foreground/50 tabular-nums">{maskIp(row.endereco_ip)}</td>
         <td className="px-3 py-2.5">
           <span className="rounded-full bg-white/[0.04] px-2 py-0.5 text-[10px] text-muted-foreground">{origin}</span>
-          {row.utm_campaign && (
-            <span className="ml-1 rounded bg-primary/5 px-1.5 py-0.5 text-[9px] text-primary/70">{row.utm_campaign}</span>
-          )}
+          {row.utm_campaign && <span className="ml-1 rounded bg-primary/5 px-1.5 py-0.5 text-[9px] text-primary/70">{row.utm_campaign}</span>}
         </td>
-        <td className="px-3 py-2.5">
-          <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
-        </td>
+        <td className="px-3 py-2.5"><ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} /></td>
       </tr>
-
-      {/* Expanded Detail */}
       <AnimatePresence>
         {expanded && (
-          <tr>
-            <td colSpan={9} className="p-0">
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <ExpandedDetail row={row} toast={toast} />
-              </motion.div>
-            </td>
-          </tr>
+          <tr><td colSpan={9} className="p-0">
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+              <ExpandedDetail row={row} toast={toast} />
+            </motion.div>
+          </td></tr>
         )}
       </AnimatePresence>
     </>
   );
 }
 
-// ── Expanded Detail Panel ──
+// ── Expanded Detail ──
 function ExpandedDetail({ row, toast }: { row: UnifiedInteraction; toast: any }) {
+  const handleCopy = (text: string) => toast({ title: "Copiado!" });
+
   return (
     <div className="bg-white/[0.01] border-t border-border/20 px-6 py-5 space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {/* Localização */}
-        <DetailSection title="Localização Completa">
-          <DetailItem label="Cidade" value={row.cidade} />
-          <DetailItem label="Estado" value={row.estado} />
-          <DetailItem label="País" value={row.pais} />
-          {row.latitude && row.longitude && (
-            <DetailItem label="Coordenadas" value={`${row.latitude?.toFixed(4)}, ${row.longitude?.toFixed(4)}`} copyable />
-          )}
-          {!row.latitude && <p className="text-[10px] text-muted-foreground/50 italic">Localização estimada por IP</p>}
-        </DetailSection>
+        <FullLocationDetail data={row} onCopy={handleCopy} />
 
-        {/* Dispositivo */}
         <DetailSection title="Dispositivo e Acesso">
           <DetailItem label="Dispositivo" value={row.dispositivo} />
           <DetailItem label="Sistema Operacional" value={row.sistema_operacional} />
           <DetailItem label="Navegador" value={row.navegador} />
-          {row.largura_tela && row.altura_tela && (
-            <DetailItem label="Resolução" value={`${row.largura_tela}×${row.altura_tela}`} />
-          )}
+          {row.largura_tela && row.altura_tela && <DetailItem label="Resolução" value={`${row.largura_tela}×${row.altura_tela}`} />}
           <DetailItem label="IP Completo" value={row.endereco_ip} copyable />
         </DetailSection>
 
-        {/* Origem */}
         <DetailSection title="Origem do Acesso">
           <DetailItem label="Referrer" value={row.referrer || "(direto)"} />
           <DetailItem label="UTM Source" value={row.utm_source || "—"} />
@@ -702,7 +551,6 @@ function ExpandedDetail({ row, toast }: { row: UnifiedInteraction; toast: any })
         </DetailSection>
       </div>
 
-      {/* Type-specific details */}
       <div className="grid gap-4 md:grid-cols-2">
         {row.tipo === "formulario" && (
           <DetailSection title="Dados do Formulário">
@@ -713,7 +561,6 @@ function ExpandedDetail({ row, toast }: { row: UnifiedInteraction; toast: any })
             <DetailItem label="Lida" value={row.lida ? "Sim" : "Não"} />
           </DetailSection>
         )}
-
         {(row.tipo === "whatsapp" || row.tipo === "instagram" || row.tipo === "facebook") && (
           <DetailSection title="Detalhes do Clique">
             <DetailItem label="Texto do Botão" value={row.texto_botao} />
@@ -721,7 +568,6 @@ function ExpandedDetail({ row, toast }: { row: UnifiedInteraction; toast: any })
             <DetailItem label="URL Destino" value={row.url_destino} />
           </DetailSection>
         )}
-
         {row.tipo === "acesso" && (
           <DetailSection title="Comportamento">
             <DetailItem label="Página Visitada" value={row.pagina} />
@@ -731,28 +577,16 @@ function ExpandedDetail({ row, toast }: { row: UnifiedInteraction; toast: any })
         )}
       </div>
 
-      {/* Action Buttons */}
       <div className="flex items-center gap-2 pt-2 border-t border-border/20">
         {row.telefone && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigator.clipboard.writeText(row.telefone!);
-              toast({ title: "Telefone copiado!" });
-            }}
-            className="flex items-center gap-1.5 rounded-lg bg-success/10 px-3 py-1.5 text-[11px] font-medium text-success hover:bg-success/20 transition-colors"
-          >
+          <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(row.telefone!); toast({ title: "Telefone copiado!" }); }}
+            className="flex items-center gap-1.5 rounded-lg bg-success/10 px-3 py-1.5 text-[11px] font-medium text-success hover:bg-success/20 transition-colors">
             <Copy className="h-3 w-3" /> Copiar Telefone
           </button>
         )}
         {row.url_destino && (
-          <a
-            href={row.url_destino}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 rounded-lg bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
+          <a href={row.url_destino} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 rounded-lg bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors">
             <ExternalLink className="h-3 w-3" /> Abrir URL
           </a>
         )}
@@ -761,7 +595,6 @@ function ExpandedDetail({ row, toast }: { row: UnifiedInteraction; toast: any })
   );
 }
 
-// ── Detail Section ──
 function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
@@ -778,8 +611,7 @@ function DetailItem({ label, value, copyable }: { label: string; value?: string 
       <span className="text-muted-foreground shrink-0 w-28">{label}</span>
       <span className={`text-foreground/80 break-all ${!value ? "text-muted-foreground/40" : ""}`}>{display}</span>
       {copyable && value && (
-        <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(value); }}
-          className="shrink-0 text-muted-foreground/40 hover:text-primary transition-colors">
+        <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(value); }} className="shrink-0 text-muted-foreground/40 hover:text-primary transition-colors">
           <Copy className="h-3 w-3" />
         </button>
       )}

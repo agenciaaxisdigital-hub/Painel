@@ -289,16 +289,28 @@ export function useRealtimeFeed() {
 
     const channel = supabase
       .channel("feed")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "acessos_site" }, (p) => {
-        setEvents((prev) => [{ ...p.new, tipo: "visita", label: "visitou o site" }, ...prev].slice(0, 20));
+      .on("postgres_changes", { event: "*", schema: "public", table: "acessos_site" }, (p) => {
+        if (p.eventType === "INSERT") {
+          setEvents((prev) => [{ ...p.new, tipo: "visita", label: "visitou o site" }, ...prev].slice(0, 20));
+        } else if (p.eventType === "UPDATE") {
+          setEvents((prev) => prev.map((e) => e.id === (p.new as any).id ? { ...e, ...p.new } : e));
+        }
       })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "cliques_whatsapp" }, (p) => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "cliques_whatsapp" }, (p) => {
         const r = p.new as any;
-        setEvents((prev) => [{ ...r, tipo: r.tipo_clique || "whatsapp", label: `clicou no ${r.tipo_clique || "WhatsApp"}` }, ...prev].slice(0, 20));
+        if (p.eventType === "INSERT") {
+          setEvents((prev) => [{ ...r, tipo: r.tipo_clique || "whatsapp", label: `clicou no ${r.tipo_clique || "WhatsApp"}` }, ...prev].slice(0, 20));
+        } else if (p.eventType === "UPDATE") {
+          setEvents((prev) => prev.map((e) => e.id === r.id ? { ...e, ...r } : e));
+        }
       })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "mensagens_contato" }, (p) => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "mensagens_contato" }, (p) => {
         const r = p.new as any;
-        setEvents((prev) => [{ ...r, tipo: "formulario", label: `${r.nome} enviou formulário` }, ...prev].slice(0, 20));
+        if (p.eventType === "INSERT") {
+          setEvents((prev) => [{ ...r, tipo: "formulario", label: `${r.nome} enviou formulário` }, ...prev].slice(0, 20));
+        } else if (p.eventType === "UPDATE") {
+          setEvents((prev) => prev.map((e) => e.id === r.id ? { ...e, ...r } : e));
+        }
       })
       .subscribe();
 
