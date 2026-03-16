@@ -350,7 +350,7 @@ export function identifyZone(params: {
     return { zona: cidade, nome: cidade, cor: "#9CA3AF", eleitores: 0, method: "cidade_fallback", categoria: "interior" };
   }
 
-  return { zona: "Não identificada", nome: "", cor: "#6B7280", eleitores: 0, method: "unknown", categoria: "unknown" };
+  return { zona: "Sem localização", nome: "", cor: "#6B7280", eleitores: 0, method: "unknown", categoria: "unknown" };
 }
 
 // ── Goiânia zone identification ──
