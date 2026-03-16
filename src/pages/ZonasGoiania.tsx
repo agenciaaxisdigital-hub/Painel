@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ZONAS_ELEITORAIS, ZONAS_APARECIDA, TOTAL_ELEITORES_GOIANIA, TOTAL_ELEITORES_APARECIDA } from "@/lib/constants";
+import { identifyZone } from "@/lib/zone-identification";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Target, Download, MapPin, Trophy, BarChart3 } from "lucide-react";
 import { format, subDays } from "date-fns";
