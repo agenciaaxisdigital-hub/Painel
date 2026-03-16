@@ -99,7 +99,8 @@ export default function VisaoGeral() {
           <KPICard titulo="Cliques Facebook" valor={c.facebook} variacao={0} sparkline={[]} tooltip="Cliques no botão de Facebook." delay={4} />
         </div>
       ) : (
-
+        <EmptyState description="Aguardando dados do Site Principal." />
+      )}
       {/* Line Chart */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-5">
         <h3 className="mb-4 text-sm font-medium text-foreground">Evolução Diária</h3>
