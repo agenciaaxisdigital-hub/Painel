@@ -11,7 +11,7 @@ export default function MapaGoias() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [mode, setMode] = useState<"visitantes" | "formularios" | "engajamento">("visitantes");
   const counts = useTableCounts(30);
-  const cities = useTopCities(30);
+  
 
   const totalVisitantes = counts.data?.visitantes ?? 0;
   const totalForms = counts.data?.formularios ?? 0;
