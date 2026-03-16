@@ -481,7 +481,7 @@ export default function Interacoes() {
       <div className="glass-card p-3">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex gap-1">
-            {[{ label: "Hoje", d: 1 }, { label: "Ontem", d: 2 }, { label: "7 dias", d: 7 }, { label: "30 dias", d: 30 }].map((p) => (
+            {[{ label: "Hoje", d: 1 }, { label: "Ontem", d: -1 }, { label: "7 dias", d: 7 }, { label: "30 dias", d: 30 }].map((p) => (
               <button key={p.d} onClick={() => { setDays(p.d); setPage(0); }}
                 className={`rounded-lg px-3 py-1.5 text-[11px] font-medium transition-colors ${days === p.d ? "bg-primary text-primary-foreground" : "bg-white/[0.04] text-muted-foreground hover:text-foreground"}`}>
                 {p.label}
