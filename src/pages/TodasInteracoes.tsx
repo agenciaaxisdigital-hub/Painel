@@ -679,15 +679,6 @@ function ExpandedDetail({ row, toast }: { row: UnifiedInteraction; toast: any })
           {row.largura_tela && row.altura_tela && <DetailItem label="Resolução" value={`${row.largura_tela}×${row.altura_tela}`} />}
           <DetailItem label="IP Completo" value={row.endereco_ip} copyable />
         </DetailSection>
-
-        <DetailSection title="Origem do Acesso">
-          <DetailItem label="Referrer" value={row.referrer || "(direto)"} />
-          <DetailItem label="UTM Source" value={row.utm_source || "—"} />
-          <DetailItem label="UTM Medium" value={row.utm_medium || "—"} />
-          <DetailItem label="UTM Campaign" value={row.utm_campaign || "—"} />
-          <DetailItem label="UTM Content" value={row.utm_content || "—"} />
-          <DetailItem label="UTM Term" value={row.utm_term || "—"} />
-        </DetailSection>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
