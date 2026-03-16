@@ -283,13 +283,13 @@ export function identifyZone(params: {
   if (latitude && longitude) {
     const goianiaResult = findNearestZone(latitude, longitude, GOIANIA_CENTROIDS, 12);
     if (goianiaResult) {
-      const z = ZONAS_ELEITORAIS.find((z) => z.zona === goianiaResult)!;
-      return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates", categoria: "goiania" };
+      const z = ZONAS_ELEITORAIS.find((zz) => zz.zona === goianiaResult);
+      if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates" as const, categoria: "goiania" as const };
     }
     const aparecidaResult = findNearestZone(latitude, longitude, APARECIDA_CENTROIDS, 10);
     if (aparecidaResult) {
-      const z = ZONAS_APARECIDA.find((z) => z.zona === aparecidaResult)!;
-      return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates", categoria: "aparecida" };
+      const z = ZONAS_APARECIDA.find((zz) => zz.zona === aparecidaResult);
+      if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates" as const, categoria: "aparecida" as const };
     }
   }
 
