@@ -249,7 +249,7 @@ export default function ZonasGoiania() {
               <div><span className="text-xs text-muted-foreground">Formulários</span><div className="text-lg font-bold">{selectedData.forms}</div></div>
               <div><span className="text-xs text-muted-foreground">WhatsApp</span><div className="text-lg font-bold text-success">{selectedData.whatsapp}</div></div>
               <div><span className="text-xs text-muted-foreground">Instagram</span><div className="text-lg font-bold text-primary">{selectedData.instagram}</div></div>
-              <div><span className="text-xs text-muted-foreground">Penetração</span><div className="text-lg font-bold text-primary">{selectedData.penetracao}%</div></div>
+              <div><span className="text-xs text-muted-foreground">Acesso</span><div className="text-lg font-bold text-primary">{selectedData.penetracao}%</div></div>
               <div><span className="text-xs text-muted-foreground">Conversão</span><div className="text-lg font-bold">{selectedData.conversao}%</div></div>
             </div>
             {/* Identification methods */}
