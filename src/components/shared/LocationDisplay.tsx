@@ -122,8 +122,10 @@ export function CompactLocation({ data }: { data: LocationData }) {
     mainText = `${bairro}, ${cidade}`;
   } else if (cidade) {
     mainText = `${cidade}${estado ? `, ${estado}` : ""}`;
+  } else if (estado) {
+    mainText = estado;
   } else {
-    mainText = "Cidade não identificada";
+    mainText = "Brasil (localização pendente)";
   }
 
   return (

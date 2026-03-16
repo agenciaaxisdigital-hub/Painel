@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Target, Download, MapPin, Trophy, BarChart3, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { mapRegiao, exportXlsx, exportFilename } from "@/lib/export-utils";
-import { filterValidLocationRecords } from "@/lib/location-validity";
+
 
 interface RegionData {
   nome: string;
@@ -57,9 +57,9 @@ function useRegionDistribution(days: number) {
         supabase.from("mensagens_contato").select(FORM_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
       ]);
 
-      const allVisitantes = filterValidLocationRecords(acessos.data);
-      const allCliques = filterValidLocationRecords(cliques.data);
-      const allForms = filterValidLocationRecords(mensagens.data);
+      const allVisitantes = acessos.data || [];
+      const allCliques = cliques.data || [];
+      const allForms = mensagens.data || [];
 
       const bairroMap: Record<string, string> = {};
       const cidadeMap: Record<string, { cidade: string; estado: string | null }> = {};

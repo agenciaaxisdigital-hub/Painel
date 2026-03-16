@@ -17,7 +17,7 @@ import { subDays } from "date-fns";
 import { ZONAS_ELEITORAIS, ZONAS_APARECIDA } from "@/lib/constants";
 import { identifyZone } from "@/lib/zone-identification";
 import { inferPrecision } from "@/components/shared/LocationDisplay";
-import { filterValidLocationRecords } from "@/lib/location-validity";
+
 
 function useGeographicBreakdown(days: number) {
   return useQuery({
@@ -34,9 +34,9 @@ function useGeographicBreakdown(days: number) {
       ]);
 
       const allRecords = [
-        ...filterValidLocationRecords(acessos.data),
-        ...filterValidLocationRecords(cliques.data),
-        ...filterValidLocationRecords(mensagens.data),
+        ...(acessos.data || []),
+        ...(cliques.data || []),
+        ...(mensagens.data || []),
       ];
 
       const goianiaZones: Record<string, number> = {};
@@ -85,7 +85,7 @@ function useLocationQuality(days: number) {
 
       let gps = 0;
       let ip = 0;
-      filterValidLocationRecords(data).forEach((r) => {
+      (data || []).forEach((r) => {
         const precision = inferPrecision(r);
         if (precision === "GPS_PRECISO") gps++;
         else ip++;
