@@ -199,7 +199,7 @@ export function FullLocationDetail({ data, onCopy }: { data: LocationData; onCop
           </div>
         )}
         {data.cep && <DetailRow label="CEP" value={data.cep} />}
-        <DetailRow label="Cidade" value={data.cidade || "Cidade não identificada"} />
+        <DetailRow label="Cidade" value={data.cidade || "Brasil"} />
         {data.estado && <DetailRow label="Estado" value={data.estado} />}
         {data.regiao_planejamento && <DetailRow label="Região de Planejamento" value={data.regiao_planejamento} />}
 
