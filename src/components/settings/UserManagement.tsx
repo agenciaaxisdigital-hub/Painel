@@ -102,7 +102,18 @@ export default function UserManagement() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (error) throw error;
+      if (error) {
+        try {
+          const errorBody = JSON.parse(error.message);
+          throw new Error(errorBody.error || error.message);
+        } catch (parseErr) {
+          if (error.context && typeof error.context.json === 'function') {
+            const body = await error.context.json();
+            throw new Error(body?.error || error.message);
+          }
+          throw new Error(data?.error || error.message);
+        }
+      }
       if (data?.error) throw new Error(data.error);
       return data;
     },
@@ -124,7 +135,18 @@ export default function UserManagement() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (error) throw error;
+      if (error) {
+        try {
+          const errorBody = JSON.parse(error.message);
+          throw new Error(errorBody.error || error.message);
+        } catch (parseErr) {
+          if (error.context && typeof error.context.json === 'function') {
+            const body = await error.context.json();
+            throw new Error(body?.error || error.message);
+          }
+          throw new Error(data?.error || error.message);
+        }
+      }
       if (data?.error) throw new Error(data.error);
       return data;
     },

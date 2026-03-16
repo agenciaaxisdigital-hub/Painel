@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import NeuralNetworkBackground from "@/components/NeuralNetworkBackground";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +11,7 @@ import { SarelliChat } from "@/components/sarelli/SarelliChat";
 export function DashboardLayout() {
   const { session, loading } = useAuth();
   const [sarelliOpen, setSarelliOpen] = useState(false);
+  const currentLocation = useLocation();
 
   if (loading) {
     return (
@@ -33,7 +34,7 @@ export function DashboardLayout() {
       <main className="relative z-10 flex-1 min-w-0 pb-20 md:pb-0">
         <AnimatePresence mode="wait">
           <motion.div
-            key={location.pathname}
+            key={currentLocation.pathname}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
