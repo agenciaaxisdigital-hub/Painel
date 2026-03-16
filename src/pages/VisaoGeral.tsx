@@ -1,13 +1,13 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from "recharts";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { DateRangeSelector } from "@/components/shared/DateRangeSelector";
 import { useTableCounts, useVariation, useTimeSeries, useConnectionStatus, useTopPages, useRealtimeInvalidation } from "@/hooks/use-supabase-data";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, AlertTriangle, Database, MapPin, FileText } from "lucide-react";
+import { CheckCircle, AlertTriangle, Database, MapPin, FileText, Navigation } from "lucide-react";
 import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { subDays } from "date-fns";
 import { ZONAS_ELEITORAIS, ZONAS_APARECIDA } from "@/lib/constants";
 import { identifyZone } from "@/lib/zone-identification";
+import { inferPrecision } from "@/components/shared/LocationDisplay";
 
 function useGeographicBreakdown(days: number) {
   return useQuery({
@@ -59,6 +60,29 @@ function useGeographicBreakdown(days: number) {
   });
 }
 
+function useLocationQuality(days: number) {
+  return useQuery({
+    queryKey: ["location-quality", days],
+    queryFn: async () => {
+      const since = subDays(new Date(), days).toISOString();
+      const { data } = await supabase.from("acessos_site")
+        .select("latitude, longitude, bairro")
+        .gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(3000);
+
+      let gps = 0;
+      let ip = 0;
+      (data || []).forEach((r) => {
+        const precision = inferPrecision(r);
+        if (precision === "GPS_PRECISO") gps++;
+        else ip++;
+      });
+      const total = gps + ip;
+      return { gps, ip, total, gpsPct: total > 0 ? ((gps / total) * 100).toFixed(1) : "0", ipPct: total > 0 ? ((ip / total) * 100).toFixed(1) : "0" };
+    },
+    staleTime: 60_000,
+  });
+}
+
 export default function VisaoGeral() {
   const [days, setDays] = useState(30);
   const counts = useTableCounts(days);
@@ -67,6 +91,7 @@ export default function VisaoGeral() {
   const connection = useConnectionStatus();
   const topPages = useTopPages(days);
   const geo = useGeographicBreakdown(days);
+  const locQuality = useLocationQuality(days);
   useRealtimeInvalidation();
 
   const c = counts.data;
@@ -146,8 +171,8 @@ export default function VisaoGeral() {
         )}
       </motion.div>
 
-      {/* Geographic Breakdown — 3 ranked lists side by side */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* Geographic Breakdown + Location Quality */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <GeoRankCard
           title="Goiânia — Por Zona"
           icon={<MapPin className="h-4 w-4 text-primary" />}
@@ -156,16 +181,66 @@ export default function VisaoGeral() {
         />
         <GeoRankCard
           title="Aparecida — Por Zona"
-          icon={<MapPin className="h-4 w-4" style={{ color: "#BA55D3" }} />}
+          icon={<MapPin className="h-4 w-4" style={{ color: "hsl(280, 70%, 60%)" }} />}
           data={geo.data?.aparecida.map((z) => ({ label: z.zona, value: z.count, color: z.cor })) || []}
           loading={geo.isLoading}
         />
         <GeoRankCard
           title="Demais Cidades do Estado"
           icon={<MapPin className="h-4 w-4 text-muted-foreground" />}
-          data={geo.data?.cities.map((c) => ({ label: c.name, value: c.count, color: "#9CA3AF" })) || []}
+          data={geo.data?.cities.map((c) => ({ label: c.name, value: c.count, color: "hsl(240, 5%, 64%)" })) || []}
           loading={geo.isLoading}
         />
+
+        {/* Location Quality Widget */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Navigation className="h-4 w-4 text-success" />
+            <h3 className="text-sm font-medium">Qualidade da Localização</h3>
+          </div>
+          {locQuality.isLoading ? <Skeleton className="h-48" /> : locQuality.data && locQuality.data.total > 0 ? (
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-32 w-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "GPS Preciso", value: locQuality.data.gps },
+                        { name: "Aprox. via IP", value: locQuality.data.ip },
+                      ]}
+                      dataKey="value" cx="50%" cy="50%" innerRadius={30} outerRadius={55} paddingAngle={3} strokeWidth={0}
+                    >
+                      <Cell fill="hsl(142, 71%, 45%)" />
+                      <Cell fill="hsl(240, 5%, 40%)" />
+                    </Pie>
+                    <Tooltip contentStyle={{ background: "hsl(240, 15%, 8%)", border: "1px solid hsl(240, 5%, 15%)", borderRadius: "8px", fontSize: "11px" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="space-y-1.5 w-full">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-sm bg-success" />
+                    <span className="text-foreground/80">GPS Preciso</span>
+                  </div>
+                  <span className="tabular-nums font-medium text-success">{locQuality.data.gpsPct}%</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-sm bg-muted-foreground/50" />
+                    <span className="text-foreground/80">Aprox. via IP</span>
+                  </div>
+                  <span className="tabular-nums font-medium text-muted-foreground">{locQuality.data.ipPct}%</span>
+                </div>
+              </div>
+              <p className="text-[9px] text-muted-foreground/50 text-center leading-tight mt-1">
+                GPS Preciso = visitante permitiu localização. Aprox. via IP = estimativa baseada no IP de acesso.
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground text-center py-8">Sem dados</p>
+          )}
+        </motion.div>
       </div>
 
       {/* Rankings */}
