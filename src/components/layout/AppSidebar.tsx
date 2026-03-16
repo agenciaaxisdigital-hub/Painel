@@ -11,9 +11,9 @@ import chamaRosaLogo from "@/assets/chama-rosa-logo.png";
 
 const modules = [
   { path: "/", icon: BarChart3, label: "Visão Geral" },
+  { path: "/interacoes", icon: Layers, label: "Interações" },
   { path: "/visitantes", icon: Users, label: "Visitantes" },
   { path: "/formularios", icon: FileText, label: "Formulários" },
-  { path: "/interacoes", icon: Layers, label: "Interações" },
   { path: "/zonas", icon: MapPin, label: "Zonas Goiânia" },
   { path: "/mapa-goias", icon: Map, label: "Mapa Goiás" },
   { path: "/exportar", icon: Download, label: "Exportar" },

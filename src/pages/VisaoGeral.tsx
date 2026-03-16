@@ -7,39 +7,13 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { DateRangeSelector } from "@/components/shared/DateRangeSelector";
 import { useTableCounts, useVariation, useTimeSeries, useConnectionStatus, useTopCities, useTopPages } from "@/hooks/use-supabase-data";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, AlertTriangle, Database, MapPin, FileText, Crosshair, Signal, Map } from "lucide-react";
+import { CheckCircle, AlertTriangle, Database, MapPin, FileText } from "lucide-react";
 import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { subDays } from "date-fns";
-
-function useLocationQuality(days: number) {
-  return useQuery({
-    queryKey: ["location-quality", days],
-    queryFn: async () => {
-      const since = subDays(new Date(), days).toISOString();
-      const { data } = await supabase.from("acessos_site").select("*").gte("criado_em", since).limit(1000);
-      const records = data || [];
-      const total = records.length;
-      if (total === 0) return { total: 0, gps: 0, ipOnly: 0, withBairro: 0, withZona: 0 };
-
-      let gps = 0, ipOnly = 0, withBairro = 0, withZona = 0;
-      records.forEach((r: any) => {
-        const hasCoords = r.latitude != null && r.longitude != null;
-        const hasBairro = !!(r.bairro && r.bairro.trim());
-        const hasZona = !!(r.zona_eleitoral && r.zona_eleitoral.trim() && r.zona_eleitoral !== "Não identificada");
-        if (hasCoords && hasBairro) gps++;
-        else if (!hasCoords) ipOnly++;
-        if (hasBairro) withBairro++;
-        if (hasZona) withZona++;
-      });
-      return { total, gps, ipOnly, withBairro, withZona };
-    },
-    staleTime: 60_000,
-  });
-}
 
 export default function VisaoGeral() {
   const [days, setDays] = useState(30);
@@ -49,11 +23,9 @@ export default function VisaoGeral() {
   const connection = useConnectionStatus();
   const topCities = useTopCities(days);
   const topPages = useTopPages(days);
-  const locationQuality = useLocationQuality(days);
 
   const c = counts.data;
   const v = variation.data;
-  const lq = locationQuality.data;
 
   return (
     <div className="space-y-6">
@@ -97,29 +69,10 @@ export default function VisaoGeral() {
           <KPICard titulo="Cliques WhatsApp" valor={c.whatsapp} variacao={0} sparkline={[]} tooltip="Cliques no botão de WhatsApp." delay={2} />
           <KPICard titulo="Cliques Instagram" valor={c.instagram} variacao={0} sparkline={[]} tooltip="Cliques no botão de Instagram." delay={3} />
           <KPICard titulo="Cliques Facebook" valor={c.facebook} variacao={0} sparkline={[]} tooltip="Cliques no botão de Facebook." delay={4} />
-          <KPICard titulo="Taxa Conversão" valor={c.taxaConversao} variacao={0} sparkline={[]} tooltip="Formulários ÷ Visitantes em percentual." suffix="%" decimals={2} delay={5} />
         </div>
       ) : (
         <EmptyState description="Aguardando dados do Site Principal." />
       )}
-
-      {/* Location Quality Widget */}
-      {lq && lq.total > 0 && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Crosshair className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-medium">Qualidade da Localização</h3>
-            <span className="text-[10px] text-muted-foreground ml-auto">{lq.total} visitantes analisados</span>
-          </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <QualityMetric icon={<Crosshair className="h-3.5 w-3.5 text-success" />} label="GPS Preciso" value={lq.gps} total={lq.total} color="text-success" />
-            <QualityMetric icon={<Signal className="h-3.5 w-3.5 text-secondary" />} label="Apenas IP" value={lq.ipOnly} total={lq.total} color="text-secondary" />
-            <QualityMetric icon={<MapPin className="h-3.5 w-3.5 text-primary" />} label="Com Bairro" value={lq.withBairro} total={lq.total} color="text-primary" />
-            <QualityMetric icon={<Map className="h-3.5 w-3.5 text-blue-400" />} label="Zona Identificada" value={lq.withZona} total={lq.total} color="text-blue-400" />
-          </div>
-        </motion.div>
-      )}
-
       {/* Line Chart */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-5">
         <h3 className="mb-4 text-sm font-medium text-foreground">Evolução Diária</h3>
@@ -157,23 +110,6 @@ export default function VisaoGeral() {
     </div>
   );
 }
-
-function QualityMetric({ icon, label, value, total, color }: { icon: React.ReactNode; label: string; value: number; total: number; color: string }) {
-  const pct = total > 0 ? ((value / total) * 100).toFixed(1) : "0";
-  return (
-    <div className="flex items-center gap-3 rounded-lg bg-white/[0.02] p-3">
-      {icon}
-      <div className="min-w-0 flex-1">
-        <div className="text-[10px] text-muted-foreground">{label}</div>
-        <div className="flex items-baseline gap-1.5">
-          <span className={`text-lg font-bold tabular-nums ${color}`}>{pct}%</span>
-          <span className="text-[10px] text-muted-foreground">({value})</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function RankingCard({ title, icon, data, loading }: { title: string; icon: React.ReactNode; data: { label: string; value: number }[]; loading: boolean }) {
   if (loading) return <Skeleton className="h-64 rounded-xl" />;
   const max = Math.max(1, ...data.map((d) => d.value));
