@@ -193,10 +193,10 @@ export function identifyZone(params: {
 
   // 4. Aparecida de Goiânia
   if (cidade && normalize(cidade) === normalize("Aparecida de Goiânia")) {
-    return { zona: "Aparecida de Goiânia", cor: "#9CA3AF", eleitores: 0, method: "aparecida" };
+    return { zona: "Aparecida de Goiânia", nome: "", cor: "#9CA3AF", eleitores: 0, method: "aparecida" };
   }
 
-  return { zona: "Não identificada", cor: "#6B7280", eleitores: 0, method: "unknown" };
+  return { zona: "Não identificada", nome: "", cor: "#6B7280", eleitores: 0, method: "unknown" };
 }
 
 /**
