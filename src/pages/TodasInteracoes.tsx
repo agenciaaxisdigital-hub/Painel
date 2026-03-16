@@ -16,7 +16,7 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { EMPTY_STATE_MESSAGE, PLATFORM_COLORS } from "@/lib/constants";
 import { CompactLocation, FullLocationDetail } from "@/components/shared/LocationDisplay";
 import { useHourlyHeatmap } from "@/hooks/use-supabase-data";
-import * as XLSX from "xlsx";
+import { mapInteracao, mapLeadCsv, exportXlsx, exportCsv, exportFilename } from "@/lib/export-utils";
 import { useToast } from "@/hooks/use-toast";
 
 // ── Types ──
