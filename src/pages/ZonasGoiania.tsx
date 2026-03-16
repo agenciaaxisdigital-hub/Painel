@@ -2,10 +2,10 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ZONAS_ELEITORAIS, TOTAL_ELEITORES_GOIANIA } from "@/lib/constants";
+import { ZONAS_ELEITORAIS, ZONAS_APARECIDA, TOTAL_ELEITORES_GOIANIA, TOTAL_ELEITORES_APARECIDA } from "@/lib/constants";
 import { identifyZone } from "@/lib/zone-identification";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Target, Download, MapPin, Trophy, TrendingUp, BarChart3, ChevronDown, ChevronRight, Crown } from "lucide-react";
+import { Target, Download, MapPin, Trophy, BarChart3, Crown } from "lucide-react";
 import { format, subDays } from "date-fns";
 import * as XLSX from "xlsx";
 
@@ -37,9 +37,12 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: "comparativo", label: "Comparativo", icon: BarChart3 },
 ];
 
+const APARECIDA_ZONE_SET = new Set(ZONAS_APARECIDA.map((z) => z.zona));
+const GOIANIA_ZONE_SET = new Set(ZONAS_ELEITORAIS.map((z) => z.zona));
+
 function useRegionDistribution(days: number) {
   return useQuery({
-    queryKey: ["region-distribution-goias", days],
+    queryKey: ["region-distribution-goias-v2", days],
     queryFn: async () => {
       const since = subDays(new Date(), days).toISOString();
 
@@ -51,106 +54,112 @@ function useRegionDistribution(days: number) {
 
       const regions: Record<string, RegionData> = {
         goiania: { nome: "Goiânia", cor: "#E8825C", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 },
-        aparecida: { nome: "Aparecida de Goiânia", cor: "#9CA3AF", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 },
+        aparecida: { nome: "Aparecida de Goiânia", cor: "#FF6B8A", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 },
         restante: { nome: "Restante de Goiás", cor: "#4DB8D4", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 },
         nao_identificado: { nome: "Não Identificado", cor: "#6B7280", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 },
       };
 
-      const zoneCounts: Record<string, { visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number }> = {};
-      ZONAS_ELEITORAIS.forEach((z) => {
-        zoneCounts[z.zona] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
-      });
+      // Goiânia zone counts
+      const goianiaZoneCounts: Record<string, { visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number }> = {};
+      ZONAS_ELEITORAIS.forEach((z) => { goianiaZoneCounts[z.zona] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 }; });
 
+      // Aparecida zone counts
+      const aparecidaZoneCounts: Record<string, { visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number }> = {};
+      ZONAS_APARECIDA.forEach((z) => { aparecidaZoneCounts[z.zona] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 }; });
+
+      // City-level data for all cities
       const cityCounts: Record<string, RegionData> = {};
 
-      const goianiaNormalized = "goiania";
-      const aparecidaNormalized = "aparecida de goiania";
+      const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
-      function normalize(s: string): string {
-        return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-      }
-
-      function getRegion(r: any): string {
+      function classifyRecord(r: any): { region: string; goianiaZona: string | null; aparecidaZona: string | null; cityName: string | null } {
         const zone = identifyZone(r);
-        const cidade = r.cidade ? normalize(r.cidade) : "";
-        if (zone.method !== "unknown" && zone.zona !== "Não identificada" && zone.zona !== "Aparecida de Goiânia") return "goiania";
-        if (zone.zona === "Aparecida de Goiânia" || cidade === aparecidaNormalized) return "aparecida";
-        if (cidade === goianiaNormalized || cidade.includes("goiania")) return "goiania";
-        if (cidade && r.estado && normalize(r.estado).includes("goias")) return "restante";
-        if (cidade) return "restante";
-        return "nao_identificado";
+        const cidade = r.cidade ? norm(r.cidade) : "";
+
+        // Identified as Aparecida zone
+        if (zone.cidade === "aparecida" && zone.zona !== "Aparecida de Goiânia" && APARECIDA_ZONE_SET.has(zone.zona)) {
+          return { region: "aparecida", goianiaZona: null, aparecidaZona: zone.zona, cityName: null };
+        }
+        // Identified as Goiânia zone
+        if (zone.cidade === "goiania" && GOIANIA_ZONE_SET.has(zone.zona)) {
+          return { region: "goiania", goianiaZona: zone.zona, aparecidaZona: null, cityName: null };
+        }
+        // City-level Aparecida
+        if (zone.method === "aparecida" || cidade === "aparecida de goiania" || cidade.includes("aparecida de goian")) {
+          return { region: "aparecida", goianiaZona: null, aparecidaZona: null, cityName: "Aparecida de Goiânia" };
+        }
+        // Goiânia by city
+        if (cidade === "goiania" || cidade.includes("goiania")) {
+          return { region: "goiania", goianiaZona: null, aparecidaZona: null, cityName: null };
+        }
+        // Other city in Goiás
+        if (cidade) {
+          return { region: "restante", goianiaZona: null, aparecidaZona: null, cityName: r.cidade || "Desconhecida" };
+        }
+        return { region: "nao_identificado", goianiaZona: null, aparecidaZona: null, cityName: null };
       }
 
-      function getZona(r: any): string | null {
-        const zone = identifyZone(r);
-        if (zone.method !== "unknown" && zone.zona !== "Não identificada" && zone.zona !== "Aparecida de Goiânia") return zone.zona;
-        return null;
+      function addCity(cityName: string, field: "visitors" | "forms" | "whatsapp" | "instagram" | "facebook") {
+        if (!cityCounts[cityName]) {
+          cityCounts[cityName] = { nome: cityName, cor: "#4DB8D4", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 };
+        }
+        cityCounts[cityName][field]++;
+        if (field === "whatsapp" || field === "instagram" || field === "facebook") cityCounts[cityName].clicks++;
+        cityCounts[cityName].total++;
       }
 
-      function getCityName(r: any): string {
-        return r.cidade || "Desconhecida";
-      }
-
+      // Process acessos
       (acessos.data || []).forEach((r) => {
-        const region = getRegion(r);
-        regions[region].visitors++;
-        regions[region].total++;
-        const zona = getZona(r);
-        if (zona && zoneCounts[zona]) zoneCounts[zona].visitors++;
-        if (region === "restante") {
-          const city = getCityName(r);
-          if (!cityCounts[city]) cityCounts[city] = { nome: city, cor: "#4DB8D4", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 };
-          cityCounts[city].visitors++;
-          cityCounts[city].total++;
-        }
+        const c = classifyRecord(r);
+        regions[c.region].visitors++;
+        regions[c.region].total++;
+        if (c.goianiaZona && goianiaZoneCounts[c.goianiaZona]) goianiaZoneCounts[c.goianiaZona].visitors++;
+        if (c.aparecidaZona && aparecidaZoneCounts[c.aparecidaZona]) aparecidaZoneCounts[c.aparecidaZona].visitors++;
+        if (c.cityName && c.region === "restante") addCity(c.cityName, "visitors");
       });
 
+      // Process cliques
       (cliques.data || []).forEach((r) => {
-        const region = getRegion(r);
+        const c = classifyRecord(r);
         const tipo = (r as any).tipo_clique || "whatsapp";
-        if (tipo === "instagram") regions[region].instagram++;
-        else if (tipo === "facebook") regions[region].facebook++;
-        else regions[region].whatsapp++;
-        regions[region].clicks++;
-        regions[region].total++;
-        const zona = getZona(r);
-        if (zona && zoneCounts[zona]) {
-          if (tipo === "instagram") zoneCounts[zona].instagram++;
-          else if (tipo === "facebook") zoneCounts[zona].facebook++;
-          else zoneCounts[zona].whatsapp++;
-        }
-        if (region === "restante") {
-          const city = getCityName(r);
-          if (!cityCounts[city]) cityCounts[city] = { nome: city, cor: "#4DB8D4", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 };
-          if (tipo === "instagram") cityCounts[city].instagram++;
-          else if (tipo === "facebook") cityCounts[city].facebook++;
-          else cityCounts[city].whatsapp++;
-          cityCounts[city].clicks++;
-          cityCounts[city].total++;
-        }
+        const field = tipo === "instagram" ? "instagram" : tipo === "facebook" ? "facebook" : "whatsapp";
+        (regions[c.region] as any)[field]++;
+        regions[c.region].clicks++;
+        regions[c.region].total++;
+        if (c.goianiaZona && goianiaZoneCounts[c.goianiaZona]) (goianiaZoneCounts[c.goianiaZona] as any)[field]++;
+        if (c.aparecidaZona && aparecidaZoneCounts[c.aparecidaZona]) (aparecidaZoneCounts[c.aparecidaZona] as any)[field]++;
+        if (c.cityName && c.region === "restante") addCity(c.cityName, field as any);
       });
 
+      // Process mensagens
       (mensagens.data || []).forEach((r) => {
-        const region = getRegion(r);
-        regions[region].forms++;
-        regions[region].total++;
-        const zona = getZona(r);
-        if (zona && zoneCounts[zona]) zoneCounts[zona].forms++;
-        if (region === "restante") {
-          const city = getCityName(r);
-          if (!cityCounts[city]) cityCounts[city] = { nome: city, cor: "#4DB8D4", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 };
-          cityCounts[city].forms++;
-          cityCounts[city].total++;
-        }
+        const c = classifyRecord(r);
+        regions[c.region].forms++;
+        regions[c.region].total++;
+        if (c.goianiaZona && goianiaZoneCounts[c.goianiaZona]) goianiaZoneCounts[c.goianiaZona].forms++;
+        if (c.aparecidaZona && aparecidaZoneCounts[c.aparecidaZona]) aparecidaZoneCounts[c.aparecidaZona].forms++;
+        if (c.cityName && c.region === "restante") addCity(c.cityName, "forms");
       });
 
-      const zones: ZoneData[] = ZONAS_ELEITORAIS.map((z) => {
-        const c = zoneCounts[z.zona];
+      // Build zone arrays
+      const goianiaZones: ZoneData[] = ZONAS_ELEITORAIS.map((z) => {
+        const c = goianiaZoneCounts[z.zona];
         const clicks = c.whatsapp + c.instagram + c.facebook;
         const total = c.visitors + c.forms + clicks;
         return {
-          ...z, zona: z.zona,
-          visitors: c.visitors, forms: c.forms, whatsapp: c.whatsapp, instagram: c.instagram, facebook: c.facebook,
+          ...z, zona: z.zona, visitors: c.visitors, forms: c.forms, whatsapp: c.whatsapp, instagram: c.instagram, facebook: c.facebook,
+          clicks, total,
+          penetracao: z.eleitores > 0 ? parseFloat(((c.visitors / z.eleitores) * 100).toFixed(3)) : 0,
+          conversao: c.visitors > 0 ? parseFloat(((c.forms / c.visitors) * 100).toFixed(1)) : 0,
+        };
+      });
+
+      const aparecidaZones: ZoneData[] = ZONAS_APARECIDA.map((z) => {
+        const c = aparecidaZoneCounts[z.zona];
+        const clicks = c.whatsapp + c.instagram + c.facebook;
+        const total = c.visitors + c.forms + clicks;
+        return {
+          ...z, zona: z.zona, visitors: c.visitors, forms: c.forms, whatsapp: c.whatsapp, instagram: c.instagram, facebook: c.facebook,
           clicks, total,
           penetracao: z.eleitores > 0 ? parseFloat(((c.visitors / z.eleitores) * 100).toFixed(3)) : 0,
           conversao: c.visitors > 0 ? parseFloat(((c.forms / c.visitors) * 100).toFixed(1)) : 0,
@@ -160,7 +169,7 @@ function useRegionDistribution(days: number) {
       const cities = Object.values(cityCounts).sort((a, b) => b.total - a.total);
       const totalGeral = Object.values(regions).reduce((s, r) => s + r.total, 0);
 
-      return { regions, zones, cities, totalGeral };
+      return { regions, goianiaZones, aparecidaZones, cities, totalGeral };
     },
     staleTime: 60_000,
   });
@@ -251,7 +260,8 @@ export default function ZonasGoiania() {
   const { data, isLoading } = useRegionDistribution(days);
 
   const regions = data?.regions || {};
-  const zones = data?.zones || [];
+  const goianiaZones = data?.goianiaZones || [];
+  const aparecidaZones = data?.aparecidaZones || [];
   const cities = data?.cities || [];
   const totalGeral = data?.totalGeral || 0;
 
@@ -261,10 +271,11 @@ export default function ZonasGoiania() {
       .filter((r) => r.nome);
   }, [regions]);
 
-  const sortedZones = useMemo(() => [...zones].sort((a, b) => b.visitors - a.visitors), [zones]);
-  const maxZoneVisitors = Math.max(1, ...sortedZones.map((z) => z.visitors));
+  const sortedGoianiaZones = useMemo(() => [...goianiaZones].sort((a, b) => b.visitors - a.visitors), [goianiaZones]);
+  const sortedAparecidaZones = useMemo(() => [...aparecidaZones].sort((a, b) => b.visitors - a.visitors), [aparecidaZones]);
+  const maxGoianiaVisitors = Math.max(1, ...sortedGoianiaZones.map((z) => z.visitors));
+  const maxAparecidaVisitors = Math.max(1, ...sortedAparecidaZones.map((z) => z.visitors));
 
-  // Find the best performing region (by total)
   const bestRegion = useMemo(() => {
     const candidates = regionList.filter((r) => r.key !== "nao_identificado");
     return candidates.sort((a, b) => (b?.total || 0) - (a?.total || 0))[0];
@@ -276,8 +287,12 @@ export default function ZonasGoiania() {
         Região: r.nome, Tipo: "Região", Visitantes: r.visitors, Formulários: r.forms,
         WhatsApp: r.whatsapp, Instagram: r.instagram, Facebook: r.facebook, "Total Interações": r.total,
       })),
-      ...sortedZones.map((z) => ({
+      ...sortedGoianiaZones.map((z) => ({
         Região: `${z.zona} Zona - ${z.nome}`, Tipo: "Zona Goiânia", Visitantes: z.visitors, Formulários: z.forms,
+        WhatsApp: z.whatsapp, Instagram: z.instagram, Facebook: z.facebook, "Total Interações": z.total,
+      })),
+      ...sortedAparecidaZones.map((z) => ({
+        Região: `${z.zona} Zona - ${z.nome}`, Tipo: "Zona Aparecida", Visitantes: z.visitors, Formulários: z.forms,
         WhatsApp: z.whatsapp, Instagram: z.instagram, Facebook: z.facebook, "Total Interações": z.total,
       })),
       ...cities.map((c) => ({
@@ -293,12 +308,9 @@ export default function ZonasGoiania() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="font-display text-3xl font-bold tracking-tight">Regiões de Goiás</h1>
-        <p className="text-sm text-muted-foreground">
-          Visualize e compare o desempenho entre Goiânia, Aparecida de Goiânia e o restante do estado
-        </p>
+        <p className="text-sm text-muted-foreground">Visualize e compare o desempenho entre Goiânia, Aparecida de Goiânia e o restante do estado</p>
       </div>
 
       {/* Controls */}
@@ -328,7 +340,7 @@ export default function ZonasGoiania() {
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key;
           return (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+            <button key={tab.key} onClick={() => { setActiveTab(tab.key); setSelectedZona(null); }}
               className={`relative flex-1 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all ${
                 isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
               }`}>
@@ -351,24 +363,21 @@ export default function ZonasGoiania() {
           {/* ═══ TAB: GOIÂNIA ═══ */}
           {activeTab === "goiania" && (
             <motion.div key="goiania" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }} className="space-y-4">
-              {/* Summary card */}
               {regions.goiania && (
                 <div className="glass-card p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="h-3 w-3 rounded-full" style={{ backgroundColor: "#E8825C" }} />
                     <h3 className="text-sm font-bold">Goiânia — Resumo</h3>
-                    <span className="ml-auto text-[10px] text-muted-foreground">{TOTAL_ELEITORES_GOIANIA.toLocaleString("pt-BR")} eleitores</span>
+                    <span className="ml-auto text-[10px] text-muted-foreground">{TOTAL_ELEITORES_GOIANIA.toLocaleString("pt-BR")} eleitores • 9 zonas</span>
                   </div>
                   <MetricGrid data={regions.goiania} size="lg" />
                 </div>
               )}
-
-              {/* Zones breakdown */}
               <div className="glass-card p-5">
-                <h3 className="text-sm font-medium mb-4">Zonas Eleitorais</h3>
+                <h3 className="text-sm font-medium mb-4">Zonas Eleitorais de Goiânia</h3>
                 <div className="space-y-1">
-                  {sortedZones.map((z, i) => (
-                    <ZoneRow key={z.zona} z={z} i={i} maxVisitors={maxZoneVisitors}
+                  {sortedGoianiaZones.map((z, i) => (
+                    <ZoneRow key={z.zona} z={z} i={i} maxVisitors={maxGoianiaVisitors}
                       isSelected={selectedZona === z.zona}
                       onSelect={() => setSelectedZona(selectedZona === z.zona ? null : z.zona)} />
                   ))}
@@ -383,27 +392,27 @@ export default function ZonasGoiania() {
               {regions.aparecida && (
                 <div className="glass-card p-5">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: "#9CA3AF" }} />
+                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: "#FF6B8A" }} />
                     <h3 className="text-sm font-bold">Aparecida de Goiânia — Resumo</h3>
+                    <span className="ml-auto text-[10px] text-muted-foreground">{TOTAL_ELEITORES_APARECIDA.toLocaleString("pt-BR")} eleitores • 3 zonas</span>
                   </div>
                   <MetricGrid data={regions.aparecida} size="lg" />
                 </div>
               )}
-
-              {/* No sub-zones for Aparecida, show a summary insight */}
               <div className="glass-card p-5">
-                <div className="rounded-lg bg-white/[0.03] p-4 text-[11px] text-foreground/80">
-                  <Target className="h-3 w-3 text-primary inline mr-1" />
-                  Aparecida de Goiânia registrou <strong>{regions.aparecida?.visitors || 0}</strong> visitantes e <strong>{regions.aparecida?.forms || 0}</strong> formulários no período.
-                  {totalGeral > 0 && (
-                    <> Representa <strong>{((regions.aparecida?.total || 0) / totalGeral * 100).toFixed(1)}%</strong> do total de interações.</>
-                  )}
+                <h3 className="text-sm font-medium mb-4">Zonas Eleitorais de Aparecida de Goiânia</h3>
+                <div className="space-y-1">
+                  {sortedAparecidaZones.map((z, i) => (
+                    <ZoneRow key={z.zona} z={z} i={i} maxVisitors={maxAparecidaVisitors}
+                      isSelected={selectedZona === z.zona}
+                      onSelect={() => setSelectedZona(selectedZona === z.zona ? null : z.zona)} />
+                  ))}
                 </div>
               </div>
             </motion.div>
           )}
 
-          {/* ═══ TAB: ESTADO (Restante) ═══ */}
+          {/* ═══ TAB: ESTADO ═══ */}
           {activeTab === "estado" && (
             <motion.div key="estado" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }} className="space-y-4">
               {regions.restante && (
@@ -411,36 +420,38 @@ export default function ZonasGoiania() {
                   <div className="flex items-center gap-2 mb-4">
                     <div className="h-3 w-3 rounded-full" style={{ backgroundColor: "#4DB8D4" }} />
                     <h3 className="text-sm font-bold">Restante de Goiás — Resumo</h3>
+                    <span className="ml-auto text-[10px] text-muted-foreground">{cities.length} cidade{cities.length !== 1 ? "s" : ""} identificada{cities.length !== 1 ? "s" : ""}</span>
                   </div>
                   <MetricGrid data={regions.restante} size="lg" />
                 </div>
               )}
 
-              {/* City ranking */}
-              {cities.length > 0 && (
+              {cities.length > 0 ? (
                 <div className="glass-card p-5">
-                  <h3 className="text-sm font-medium mb-4">Ranking de Cidades do Interior</h3>
+                  <h3 className="text-sm font-medium mb-4">Todas as Cidades do Interior ({cities.length})</h3>
                   <div className="space-y-2">
-                    {cities.slice(0, 25).map((c, i) => {
+                    {cities.map((c, i) => {
                       const maxCity = cities[0]?.total || 1;
                       const barPct = (c.total / maxCity) * 100;
                       return (
                         <div key={c.nome} className="space-y-1">
                           <div className="flex items-center justify-between text-[11px]">
                             <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-muted-foreground w-5 text-right tabular-nums">{i + 1}.</span>
                               {i < 3 && <Trophy className={`h-3 w-3 ${i === 0 ? "text-yellow-400" : i === 1 ? "text-gray-400" : "text-amber-600"}`} />}
                               <span className="font-medium">{c.nome}</span>
                             </div>
                             <div className="flex items-center gap-3 tabular-nums text-[10px]">
                               <span>{c.visitors} visit.</span>
                               <span className="text-success">{c.whatsapp} WA</span>
+                              <span className="text-primary">{c.instagram} IG</span>
                               <span>{c.forms} forms</span>
-                              <span className="font-medium">{c.total} total</span>
+                              <span className="font-bold">{c.total}</span>
                             </div>
                           </div>
                           <div className="h-1.5 w-full rounded-full bg-white/[0.04] overflow-hidden">
                             <motion.div initial={{ width: 0 }} animate={{ width: `${barPct}%` }}
-                              transition={{ duration: 0.5, delay: i * 0.03 }}
+                              transition={{ duration: 0.5, delay: Math.min(i * 0.02, 0.5) }}
                               className="h-full rounded-full" style={{ backgroundColor: "#4DB8D4" }} />
                           </div>
                         </div>
@@ -448,9 +459,7 @@ export default function ZonasGoiania() {
                     })}
                   </div>
                 </div>
-              )}
-
-              {cities.length === 0 && (
+              ) : (
                 <div className="glass-card p-8 text-center text-sm text-muted-foreground">
                   Nenhuma cidade do interior identificada no período selecionado.
                 </div>
@@ -461,8 +470,6 @@ export default function ZonasGoiania() {
           {/* ═══ TAB: COMPARATIVO ═══ */}
           {activeTab === "comparativo" && (
             <motion.div key="comparativo" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }} className="space-y-4">
-
-              {/* Winner highlight */}
               {bestRegion && bestRegion.total > 0 && (
                 <div className="glass-card p-5 ring-1 ring-yellow-500/20">
                   <div className="flex items-center gap-2 mb-3">
@@ -476,13 +483,13 @@ export default function ZonasGoiania() {
                     <span className="text-xs text-muted-foreground">interações</span>
                   </div>
                   <p className="mt-2 text-[11px] text-muted-foreground">
-                    {bestRegion.nome} lidera com {totalGeral > 0 ? ((bestRegion.total / totalGeral) * 100).toFixed(1) : 0}% do total de interações,
+                    {bestRegion.nome} lidera com {totalGeral > 0 ? ((bestRegion.total / totalGeral) * 100).toFixed(1) : 0}% do total,
                     sendo {bestRegion.visitors.toLocaleString("pt-BR")} visitantes, {bestRegion.forms} formulários e {bestRegion.clicks} cliques sociais.
                   </p>
                 </div>
               )}
 
-              {/* Visual bars comparison */}
+              {/* Visual bars */}
               <div className="glass-card p-5">
                 <h3 className="text-sm font-medium mb-4">Comparativo Visual</h3>
                 <div className="space-y-4">
@@ -502,7 +509,6 @@ export default function ZonasGoiania() {
                             <span className="text-muted-foreground">({pct}%)</span>
                           </div>
                         </div>
-                        {/* Stacked bar */}
                         <div className="h-6 w-full rounded-lg bg-white/[0.04] overflow-hidden flex">
                           {[
                             { val: r.visitors, color: r.cor, label: "Visitantes" },
@@ -535,11 +541,9 @@ export default function ZonasGoiania() {
                 </div>
               </div>
 
-              {/* Full comparison table */}
+              {/* Table */}
               <div className="glass-card overflow-hidden">
-                <div className="p-5 border-b border-border">
-                  <h3 className="text-sm font-medium">Tabela Comparativa — Todas as Regiões</h3>
-                </div>
+                <div className="p-5 border-b border-border"><h3 className="text-sm font-medium">Tabela Comparativa</h3></div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
