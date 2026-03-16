@@ -232,25 +232,6 @@ export default function Formularios() {
               ))}
             </div>
           </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-5">
-            <h3 className="text-sm font-medium mb-3">Calendário de Atividade</h3>
-            <div className="grid grid-cols-13 gap-0.5">
-              {calendarData.map((d, i) => (
-                <div key={i} className="h-3 w-3 rounded-sm transition-colors" style={{
-                  backgroundColor: d.count === 0 ? "hsl(240, 5%, 10%)" : `hsl(341, 90%, ${Math.max(30, 70 - d.count * 8)}%)`,
-                  opacity: d.count === 0 ? 0.3 : 0.4 + Math.min(d.count * 0.1, 0.6),
-                }} title={`${d.date}: ${d.count} submissões`} />
-              ))}
-            </div>
-            <div className="mt-2 flex items-center gap-1 text-[9px] text-muted-foreground">
-              <span>Menos</span>
-              {[0, 3, 6, 9, 12].map((v) => (
-                <div key={v} className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: v === 0 ? "hsl(240, 5%, 10%)" : `hsl(341, 90%, ${70 - v * 3}%)` }} />
-              ))}
-              <span>Mais</span>
-            </div>
-          </motion.div>
         </div>
       )}
     </div>
