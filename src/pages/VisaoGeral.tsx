@@ -15,32 +15,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { subDays } from "date-fns";
 
-function useLocationQuality(days: number) {
-  return useQuery({
-    queryKey: ["location-quality", days],
-    queryFn: async () => {
-      const since = subDays(new Date(), days).toISOString();
-      const { data } = await supabase.from("acessos_site").select("*").gte("criado_em", since).limit(1000);
-      const records = data || [];
-      const total = records.length;
-      if (total === 0) return { total: 0, gps: 0, ipOnly: 0, withBairro: 0, withZona: 0 };
-
-      let gps = 0, ipOnly = 0, withBairro = 0, withZona = 0;
-      records.forEach((r: any) => {
-        const hasCoords = r.latitude != null && r.longitude != null;
-        const hasBairro = !!(r.bairro && r.bairro.trim());
-        const hasZona = !!(r.zona_eleitoral && r.zona_eleitoral.trim() && r.zona_eleitoral !== "Não identificada");
-        if (hasCoords && hasBairro) gps++;
-        else if (!hasCoords) ipOnly++;
-        if (hasBairro) withBairro++;
-        if (hasZona) withZona++;
-      });
-      return { total, gps, ipOnly, withBairro, withZona };
-    },
-    staleTime: 60_000,
-  });
-}
-
 export default function VisaoGeral() {
   const [days, setDays] = useState(30);
   const counts = useTableCounts(days);
@@ -49,11 +23,9 @@ export default function VisaoGeral() {
   const connection = useConnectionStatus();
   const topCities = useTopCities(days);
   const topPages = useTopPages(days);
-  const locationQuality = useLocationQuality(days);
 
   const c = counts.data;
   const v = variation.data;
-  const lq = locationQuality.data;
 
   return (
     <div className="space-y-6">
