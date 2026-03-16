@@ -47,9 +47,9 @@ Deno.serve(async (req) => {
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    // Check if there are existing admins
+    // Check if there are existing painel admins
     const { count } = await supabaseAdmin
-      .from("roles_usuarios")
+      .from("roles_painel")
       .select("*", { count: "exact", head: true });
 
     const isFirstUser = count === null || count === 0;
@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Token inválido ou expirado" }, 401);
       }
 
-      const { data: isAdmin } = await supabaseAdmin.rpc("eh_admin", { _user_id: caller.id });
+      const { data: isAdmin } = await supabaseAdmin.rpc("eh_admin_painel", { _user_id: caller.id });
       if (!isAdmin) {
         return jsonResponse({ error: "Apenas admins podem criar usuários" }, 403);
       }
@@ -107,14 +107,13 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Erro inesperado: usuário não foi criado" }, 500);
     }
 
-    // Assign admin role
+    // Assign role in roles_painel
     const { error: roleError } = await supabaseAdmin
-      .from("roles_usuarios")
+      .from("roles_painel")
       .insert({ user_id: newUser.user.id, cargo: isFirstUser ? "super_admin" : "admin" });
 
     if (roleError) {
       console.error("Role insert error:", roleError.message);
-      // User was created but role failed — still report success with warning
     }
 
     console.log(`User created: ${normalizedUsername} (${newUser.user.id})`);

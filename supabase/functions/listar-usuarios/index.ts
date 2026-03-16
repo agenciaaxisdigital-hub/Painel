@@ -43,14 +43,14 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Token inválido ou expirado" }, 401);
     }
 
-    const { data: isAdmin } = await supabaseAdmin.rpc("eh_admin", { _user_id: caller.id });
+    const { data: isAdmin } = await supabaseAdmin.rpc("eh_admin_painel", { _user_id: caller.id });
     if (!isAdmin) {
       return jsonResponse({ error: "Apenas admins podem listar usuários" }, 403);
     }
 
-    // Get roles
+    // Get roles from roles_painel only
     const { data: roles, error: rolesError } = await supabaseAdmin
-      .from("roles_usuarios")
+      .from("roles_painel")
       .select("user_id, cargo, criado_em");
 
     if (rolesError) {
