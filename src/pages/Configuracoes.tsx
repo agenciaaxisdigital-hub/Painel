@@ -151,6 +151,9 @@ export default function Configuracoes() {
           <p>4. <strong className="text-foreground/80">Este painel lê tudo</strong> → Apresenta em gráficos, tabelas e rankings para a equipe de campanha.</p>
         </div>
       </motion.div>
+
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
