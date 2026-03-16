@@ -111,24 +111,32 @@ export function CompactLocation({ data }: { data: LocationData }) {
   const bairro = data.bairro?.trim();
   const cidade = data.cidade?.trim();
   const estado = data.estado?.trim();
+  const rua = data.rua?.trim();
   const zone = identifyZone(data);
+
+  // Build the most complete address possible regardless of precision
+  let mainText = "";
+  if (rua && bairro && cidade) {
+    mainText = `${rua}, ${bairro}, ${cidade}`;
+  } else if (bairro && cidade) {
+    mainText = `${bairro}, ${cidade}`;
+  } else if (cidade) {
+    mainText = `${cidade}${estado ? `, ${estado}` : ""}`;
+  } else {
+    mainText = "Cidade não identificada";
+  }
 
   return (
     <div className="space-y-0.5 min-w-0">
-      {/* Precision dot inline with location */}
       <div className="flex items-center gap-1.5">
         <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${isGps ? "bg-success" : "bg-muted-foreground/40"}`} />
-        {isGps && bairro ? (
-          <span className="text-foreground/80 text-xs truncate">{bairro}, {cidade || ""}</span>
-        ) : (
-          <span className="text-foreground/70 text-xs truncate">{cidade || "Cidade não identificada"}{estado ? `, ${estado}` : ""}</span>
-        )}
+        <span className={`text-xs truncate ${isGps ? "text-foreground/80" : "text-foreground/70"}`}>{mainText}</span>
       </div>
-      {/* Zone badge with ~ for IP */}
       {zone.zona !== "Não identificada" && (
-        <span className="inline-flex items-center gap-1 text-[9px]" style={{ opacity: isGps ? 1 : 0.6 }}>
+        <span className="inline-flex items-center gap-1 text-[9px]" style={{ opacity: isGps ? 1 : 0.7 }}>
           <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: zone.cor }} />
           <span style={{ color: zone.cor }}>{isGps ? "" : "~"}{zone.zona}</span>
+          {!isGps && <span className="text-muted-foreground/40 text-[8px]">(IP)</span>}
         </span>
       )}
     </div>
@@ -141,8 +149,9 @@ export function FullLocationDetail({ data, onCopy }: { data: LocationData; onCop
   const isGps = precision === "GPS_PRECISO";
   const zone = identifyZone(data);
   const hasAddr = !!data.endereco_completo;
-  const geocode = useReverseGeocode(isGps ? data.latitude : null, isGps ? data.longitude : null, hasAddr);
   const hasCoords = data.latitude != null && data.longitude != null;
+  // Always try reverse geocoding if we have coords and no address
+  const geocode = useReverseGeocode(hasCoords ? data.latitude : null, hasCoords ? data.longitude : null, hasAddr);
 
   const copyText = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -164,92 +173,70 @@ export function FullLocationDetail({ data, onCopy }: { data: LocationData; onCop
       </div>
 
       <div className="space-y-1.5">
-        {isGps ? (
-          /* GPS_PRECISO: Show full address details */
-          <>
-            {data.endereco_completo && <DetailRow label="Endereço Completo" value={data.endereco_completo} />}
-            {!data.endereco_completo && geocode.result && <DetailRow label="Endereço Completo" value={geocode.result} />}
-            {!data.endereco_completo && !geocode.result && hasCoords && geocode.loading && (
-              <div className="flex items-start gap-2 text-[11px]">
-                <span className="text-muted-foreground shrink-0 w-28">Endereço Completo</span>
-                <span className="flex items-center gap-1 text-muted-foreground/60">
-                  <Loader2 className="h-3 w-3 animate-spin" /> Buscando endereço...
-                </span>
-              </div>
-            )}
-            {data.rua && <DetailRow label="Rua" value={data.rua} />}
-            {data.bairro && (
-              <div className="flex items-start gap-2 text-[11px]">
-                <span className="text-muted-foreground shrink-0 w-28">Bairro</span>
-                <span className="text-foreground/80">{data.bairro}</span>
-                {zone.zona !== "Não identificada" && (
-                  <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0 text-[9px]" style={{ backgroundColor: `${zone.cor}15`, color: zone.cor }}>
-                    {zone.zona}
-                  </span>
-                )}
-              </div>
-            )}
-            {data.cep && <DetailRow label="CEP" value={data.cep} />}
-            <DetailRow label="Cidade" value={data.cidade || "Cidade não identificada"} />
-            {data.estado && <DetailRow label="Estado" value={data.estado} />}
-            {data.regiao_planejamento && <DetailRow label="Região de Planejamento" value={data.regiao_planejamento} />}
-
-            {hasCoords && (
-              <div className="flex items-start gap-2 text-[11px]">
-                <span className="text-muted-foreground shrink-0 w-28">Coordenadas</span>
-                <span className="text-foreground/80 tabular-nums">{data.latitude!.toFixed(6)}, {data.longitude!.toFixed(6)}</span>
-                <button onClick={() => copyText(`${data.latitude}, ${data.longitude}`)} className="shrink-0 text-muted-foreground/40 hover:text-primary transition-colors">
-                  <Copy className="h-3 w-3" />
-                </button>
-              </div>
-            )}
-
+        {/* Always show all available address fields */}
+        {data.endereco_completo && <DetailRow label="Endereço Completo" value={data.endereco_completo} />}
+        {!data.endereco_completo && geocode.result && <DetailRow label="Endereço" value={geocode.result} />}
+        {!data.endereco_completo && !geocode.result && hasCoords && geocode.loading && (
+          <div className="flex items-start gap-2 text-[11px]">
+            <span className="text-muted-foreground shrink-0 w-28">Endereço</span>
+            <span className="flex items-center gap-1 text-muted-foreground/60">
+              <Loader2 className="h-3 w-3 animate-spin" /> Buscando endereço...
+            </span>
+          </div>
+        )}
+        {data.rua && <DetailRow label="Rua" value={data.rua} />}
+        {data.bairro && (
+          <div className="flex items-start gap-2 text-[11px]">
+            <span className="text-muted-foreground shrink-0 w-28">Bairro</span>
+            <span className="text-foreground/80">{data.bairro}</span>
             {zone.zona !== "Não identificada" && (
-              <div className="flex items-start gap-2 text-[11px]">
-                <span className="text-muted-foreground shrink-0 w-28">Zona Eleitoral</span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: zone.cor }} />
-                  <span className="font-medium" style={{ color: zone.cor }}>{zone.zona} — {zone.nome}</span>
-                  {zone.eleitores > 0 && <span className="text-muted-foreground/50">({zone.eleitores.toLocaleString("pt-BR")} eleitores)</span>}
-                </span>
-              </div>
+              <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0 text-[9px]" style={{ backgroundColor: `${zone.cor}15`, color: zone.cor }}>
+                {isGps ? "" : "~"}{zone.zona}
+              </span>
             )}
-          </>
-        ) : (
-          /* IP_APROXIMADO: Show only city-level data */
-          <>
-            <DetailRow label="Cidade" value={data.cidade || "Cidade não identificada"} />
-            {data.estado && <DetailRow label="Estado" value={data.estado} />}
+          </div>
+        )}
+        {data.cep && <DetailRow label="CEP" value={data.cep} />}
+        <DetailRow label="Cidade" value={data.cidade || "Cidade não identificada"} />
+        {data.estado && <DetailRow label="Estado" value={data.estado} />}
+        {data.regiao_planejamento && <DetailRow label="Região de Planejamento" value={data.regiao_planejamento} />}
 
-            {hasCoords && (
-              <div className="flex items-start gap-2 text-[11px]">
-                <span className="text-muted-foreground shrink-0 w-28">Coordenadas</span>
-                <span className="text-muted-foreground/60 tabular-nums italic">~{data.latitude!.toFixed(4)}, {data.longitude!.toFixed(4)}</span>
-                <span className="text-[9px] text-muted-foreground/40">(Aprox.)</span>
-              </div>
-            )}
+        {hasCoords && (
+          <div className="flex items-start gap-2 text-[11px]">
+            <span className="text-muted-foreground shrink-0 w-28">Coordenadas</span>
+            <span className={`tabular-nums ${isGps ? "text-foreground/80" : "text-muted-foreground/70"}`}>
+              {isGps ? "" : "~"}{data.latitude!.toFixed(isGps ? 6 : 4)}, {data.longitude!.toFixed(isGps ? 6 : 4)}
+            </span>
+            {!isGps && <span className="text-[9px] text-muted-foreground/40">(Aprox.)</span>}
+            <button onClick={() => copyText(`${data.latitude}, ${data.longitude}`)} className="shrink-0 text-muted-foreground/40 hover:text-primary transition-colors">
+              <Copy className="h-3 w-3" />
+            </button>
+          </div>
+        )}
 
-            {zone.zona !== "Não identificada" && (
-              <div className="flex items-start gap-2 text-[11px]">
-                <span className="text-muted-foreground shrink-0 w-28">Zona Eleitoral</span>
-                <span className="inline-flex items-center gap-1.5" style={{ opacity: 0.6 }}>
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: zone.cor }} />
-                  <span className="font-medium" style={{ color: zone.cor }}>~{zone.zona}</span>
-                  <span className="rounded-full bg-secondary/10 px-1.5 py-0 text-[8px] text-secondary">Identificada por IP</span>
-                </span>
-              </div>
-            )}
-
-            <p className="text-[10px] text-muted-foreground/50 italic mt-2">
-              Endereço preciso não disponível — localização baseada no IP de acesso.
-            </p>
-          </>
+        {zone.zona !== "Não identificada" && (
+          <div className="flex items-start gap-2 text-[11px]">
+            <span className="text-muted-foreground shrink-0 w-28">Zona Eleitoral</span>
+            <span className="inline-flex items-center gap-1.5" style={{ opacity: isGps ? 1 : 0.75 }}>
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: zone.cor }} />
+              <span className="font-medium" style={{ color: zone.cor }}>{isGps ? "" : "~"}{zone.zona} — {zone.nome}</span>
+              {zone.eleitores > 0 && <span className="text-muted-foreground/50">({zone.eleitores.toLocaleString("pt-BR")} eleitores)</span>}
+              {!isGps && <span className="rounded-full bg-secondary/10 px-1.5 py-0 text-[8px] text-secondary">via IP</span>}
+            </span>
+          </div>
         )}
       </div>
 
-      {/* Mini Map — only for GPS_PRECISO */}
-      {isGps && hasCoords && (
-        <MiniMap lat={data.latitude!} lng={data.longitude!} />
+      {/* Mini Map — show for both but with note for IP */}
+      {hasCoords && (
+        <div>
+          <MiniMap lat={data.latitude!} lng={data.longitude!} />
+          {!isGps && (
+            <p className="text-[9px] text-muted-foreground/50 italic mt-1 text-center">
+              Localização aproximada baseada no IP de acesso
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
