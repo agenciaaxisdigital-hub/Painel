@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { formatPageName } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { useVisitantes, useDeviceBreakdown } from "@/hooks/use-supabase-data";

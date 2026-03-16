@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { formatPageName } from "@/lib/utils";
 import { X, Smartphone, Monitor, Tablet } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
