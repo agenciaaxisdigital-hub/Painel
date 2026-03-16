@@ -218,12 +218,6 @@ export default function UserManagement() {
                           <div className="text-[11px] text-muted-foreground font-mono">{u.email}</div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="gap-1">
-                          <Shield className="h-3.5 w-3.5" />
-                          Administrador
-                        </Badge>
-                      </TableCell>
                       <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
                         {new Date(u.criado_em).toLocaleDateString("pt-BR")}
                       </TableCell>
