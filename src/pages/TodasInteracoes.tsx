@@ -159,11 +159,11 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
         addDateFilter(supabase.from("cliques_whatsapp").select("id, tipo_clique, endereco_ip, latitude, longitude, cidade, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").eq("tipo_clique", "instagram").or("pais.eq.Brasil,pais.is.null").limit(5000)),
         addDateFilter(supabase.from("cliques_whatsapp").select("id, tipo_clique, endereco_ip, latitude, longitude, cidade, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").eq("tipo_clique", "facebook").or("pais.eq.Brasil,pais.is.null").limit(5000)),
       ]).then(([a, f, w, i, fb]) => {
-        counts.acesso = filterValidLocationRecords(a.data).length;
-        counts.formulario = filterValidLocationRecords(f.data).length;
-        counts.whatsapp = filterValidLocationRecords(w.data).length;
-        counts.instagram = filterValidLocationRecords(i.data).length;
-        counts.facebook = filterValidLocationRecords(fb.data).length;
+        counts.acesso = (a.data || []).length;
+        counts.formulario = (f.data || []).length;
+        counts.whatsapp = (w.data || []).length;
+        counts.instagram = (i.data || []).length;
+        counts.facebook = (fb.data || []).length;
       });
 
       if (tipos.includes("acesso")) {
