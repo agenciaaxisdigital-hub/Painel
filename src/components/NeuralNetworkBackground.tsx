@@ -1,5 +1,5 @@
-import { useRef, useMemo, useCallback } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useRef, useMemo, useCallback, useEffect } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 const NODE_COUNT = 120;
@@ -233,6 +233,53 @@ function NeuralNetwork() {
   );
 }
 
+function ZoomController() {
+  const { camera, gl } = useThree();
+  const targetZ = useRef(7);
+
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      targetZ.current = THREE.MathUtils.clamp(targetZ.current + e.deltaY * 0.005, 3, 14);
+    };
+
+    let lastTouchDist = 0;
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastTouchDist = Math.sqrt(dx * dx + dy * dy);
+      }
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const delta = (lastTouchDist - dist) * 0.02;
+        targetZ.current = THREE.MathUtils.clamp(targetZ.current + delta, 3, 14);
+        lastTouchDist = dist;
+      }
+    };
+
+    const el = gl.domElement;
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    el.addEventListener("touchstart", handleTouchStart, { passive: true });
+    el.addEventListener("touchmove", handleTouchMove, { passive: true });
+    return () => {
+      el.removeEventListener("wheel", handleWheel);
+      el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, [gl]);
+
+  useFrame(() => {
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ.current, 0.08);
+  });
+
+  return null;
+}
+
 export default function NeuralNetworkBackground() {
   return (
     <div className="absolute inset-0 z-0" style={{ background: "#0a0a0f" }}>
@@ -242,6 +289,7 @@ export default function NeuralNetworkBackground() {
         gl={{ antialias: true, alpha: false }}
         style={{ background: "transparent" }}
       >
+        <ZoomController />
         <NeuralNetwork />
       </Canvas>
     </div>
