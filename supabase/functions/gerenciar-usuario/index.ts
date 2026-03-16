@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { action, user_id, new_password } = await req.json();
+    const { action, user_id, new_password, new_username } = await req.json();
 
     // ─── DELETE USER ───
     if (action === "delete") {
