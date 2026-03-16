@@ -30,8 +30,20 @@ export default function Configuracoes() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-3xl font-bold tracking-tight">Configurações</h1>
-        <p className="text-sm text-muted-foreground">Status do sistema e documentação das tabelas</p>
+        <p className="text-sm text-muted-foreground">Status do sistema e gerenciamento de usuários</p>
       </div>
+
+      <Tabs defaultValue="sistema" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="sistema">Sistema</TabsTrigger>
+          <TabsTrigger value="usuarios">Usuários</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="usuarios">
+          <UserManagement />
+        </TabsContent>
+
+        <TabsContent value="sistema" className="space-y-6">
 
       {/* Connection Status */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
