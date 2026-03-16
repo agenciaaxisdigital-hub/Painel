@@ -13,6 +13,7 @@ const modules = [
   { path: "/", icon: BarChart3, label: "Visão Geral" },
   { path: "/visitantes", icon: Users, label: "Visitantes" },
   { path: "/formularios", icon: FileText, label: "Formulários" },
+  { path: "/interacoes", icon: Layers, label: "Todas Interações" },
   { path: "/cliques", icon: MousePointerClick, label: "Cliques" },
   { path: "/zonas", icon: MapPin, label: "Zonas Goiânia" },
   { path: "/mapa-goias", icon: Map, label: "Mapa Goiás" },
