@@ -20,12 +20,23 @@ import { inferPrecision } from "@/components/shared/LocationDisplay";
 
 function useGeographicBreakdown(days: number) {
   return useQuery({
-    queryKey: ["geo-breakdown-visao", days],
+    queryKey: ["geo-breakdown-visao-v2", days],
     queryFn: async () => {
       const since = subDays(new Date(), days).toISOString();
-      const { data } = await supabase.from("acessos_site")
-        .select("zona_eleitoral, bairro, cidade, estado, latitude, longitude")
-        .gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(3000);
+      const FIELDS = "zona_eleitoral, bairro, cidade, estado, latitude, longitude";
+      const FILTER = "pais.eq.Brasil,pais.is.null";
+
+      const [acessos, cliques, mensagens] = await Promise.all([
+        supabase.from("acessos_site").select(FIELDS).gte("criado_em", since).or(FILTER).limit(5000),
+        supabase.from("cliques_whatsapp").select(FIELDS).gte("criado_em", since).or(FILTER).limit(5000),
+        supabase.from("mensagens_contato").select(FIELDS).gte("criado_em", since).or(FILTER).limit(5000),
+      ]);
+
+      const allRecords = [
+        ...(acessos.data || []),
+        ...(cliques.data || []),
+        ...(mensagens.data || []),
+      ];
 
       const goianiaZones: Record<string, number> = {};
       ZONAS_ELEITORAIS.forEach((z) => { goianiaZones[z.zona] = 0; });
@@ -36,7 +47,7 @@ function useGeographicBreakdown(days: number) {
       const goianiaZoneNames = ZONAS_ELEITORAIS.map((z) => z.zona as string);
       const aparecidaZoneNames = ZONAS_APARECIDA.map((z) => z.zona as string);
 
-      (data || []).forEach((r) => {
+      allRecords.forEach((r) => {
         const result = identifyZone(r);
         if (result.categoria === "goiania") {
           const zona = goianiaZoneNames.includes(result.zona) ? result.zona : goianiaZoneNames[0];
