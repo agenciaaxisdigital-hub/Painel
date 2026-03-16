@@ -21,9 +21,44 @@ type UserData = {
   email: string;
 };
 
-async function getToken() {
-  const { data: session } = await supabase.auth.getSession();
-  return session?.session?.access_token;
+function normalizeUsername(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, ".");
+}
+
+function parseResponseSafely(text: string) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text ? { message: text } : {};
+  }
+}
+
+async function callAdminFunction<T>(functionName: string, body: unknown = {}): Promise<T> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+
+  if (!token) {
+    throw new Error("Não autenticado");
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const text = await response.text();
+  const payload = parseResponseSafely(text) as { error?: string; message?: string };
+
+  if (!response.ok) {
+    throw new Error(payload.error || payload.message || `Erro ${response.status}`);
+  }
+
+  return payload as T;
 }
 
 export default function UserManagement() {
