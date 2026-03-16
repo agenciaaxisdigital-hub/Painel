@@ -120,25 +120,6 @@ export default function VisaoGeral() {
         <DateRangeSelector selectedDays={days} onChange={setDays} />
       </div>
 
-      {/* Connection Status */}
-      {connection.data && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          className={`flex flex-wrap items-center gap-3 rounded-xl px-4 py-3 text-xs ${connection.data.status === "green" ? "bg-success/5 border border-success/20" : "bg-secondary/5 border border-secondary/20"}`}>
-          {connection.data.status === "green" ? <CheckCircle className="h-4 w-4 text-success" /> : <AlertTriangle className="h-4 w-4 text-secondary" />}
-          <span className="text-foreground/80">
-            {connection.data.lastRecord
-              ? `Último registro: ${formatDistanceToNow(new Date(connection.data.lastRecord), { addSuffix: true, locale: ptBR })}`
-              : "Aguardando novos dados do Site Principal."}
-          </span>
-          <div className="flex gap-2 ml-auto">
-            {Object.entries(connection.data.counts).map(([key, val]) => (
-              <span key={key} className="rounded-full bg-white/[0.06] px-2 py-0.5 tabular-nums">
-                <Database className="h-3 w-3 inline mr-1 text-muted-foreground" />{key}: {val}
-              </span>
-            ))}
-          </div>
-        </motion.div>
-      )}
 
       {/* KPI Cards */}
       {counts.isLoading ? (
