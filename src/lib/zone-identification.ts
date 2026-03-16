@@ -116,6 +116,7 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 
 export interface ZoneResult {
   zona: string;
+  nome: string;
   cor: string;
   eleitores: number;
   method: "database" | "bairro" | "coordinates" | "aparecida" | "unknown";
