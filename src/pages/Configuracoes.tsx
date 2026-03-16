@@ -2,8 +2,10 @@ import { motion } from "framer-motion";
 import { Database, Server, CheckCircle, AlertTriangle, Info, RefreshCw } from "lucide-react";
 import { useConnectionStatus } from "@/hooks/use-supabase-data";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import UserManagement from "@/components/settings/UserManagement";
 
 const tables = [
   { nome: "acessos_site", descricao: "Registra cada visita ao Site Principal. Guarda cidade, dispositivo, navegador, origem (UTM, referrer) e cookies de visitante." },
