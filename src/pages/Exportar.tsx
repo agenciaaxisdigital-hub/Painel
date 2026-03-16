@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Download, FileSpreadsheet, Calendar, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { mapFormulario, mapVisitante, mapClique, exportXlsx, exportFilename } from "@/lib/export-utils";
+import { filterValidLocationRecords } from "@/lib/location-validity";
 
 const dataTypes = [
   { id: "formularios", label: "Formulários", description: "Todas as submissões com dados completos de localização, contato e UTM" },
@@ -26,21 +27,24 @@ export default function Exportar() {
         let query = supabase.from("mensagens_contato").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(5000);
         if (since) query = query.gte("criado_em", since);
         const { data } = await query;
-        if (data && data.length > 0) sheets.push({ name: "Formulários", data: data.map(mapFormulario) });
+        const validData = filterValidLocationRecords(data);
+        if (validData.length > 0) sheets.push({ name: "Formulários", data: validData.map(mapFormulario) });
       }
 
       if (selectedType === "visitantes" || selectedType === "todos") {
         let query = supabase.from("acessos_site").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(5000);
         if (since) query = query.gte("criado_em", since);
         const { data } = await query;
-        if (data && data.length > 0) sheets.push({ name: "Visitantes", data: data.map(mapVisitante) });
+        const validData = filterValidLocationRecords(data);
+        if (validData.length > 0) sheets.push({ name: "Visitantes", data: validData.map(mapVisitante) });
       }
 
       if (selectedType === "cliques" || selectedType === "todos") {
         let query = supabase.from("cliques_whatsapp").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(5000);
         if (since) query = query.gte("criado_em", since);
         const { data } = await query;
-        if (data && data.length > 0) sheets.push({ name: "Cliques", data: data.map(mapClique) });
+        const validData = filterValidLocationRecords(data);
+        if (validData.length > 0) sheets.push({ name: "Cliques", data: validData.map(mapClique) });
       }
 
       exportXlsx(exportFilename(selectedType === "todos" ? "Completo" : selectedType.charAt(0).toUpperCase() + selectedType.slice(1)), sheets);
