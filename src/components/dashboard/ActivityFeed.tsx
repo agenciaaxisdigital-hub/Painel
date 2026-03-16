@@ -32,7 +32,7 @@ export function ActivityFeed() {
           <span className="text-[10px] text-muted-foreground">Ao vivo</span>
         </div>
       </div>
-      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+      <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
         <AnimatePresence>
           {events.map((evt, i) => {
             const DeviceIcon = deviceIcon[evt.dispositivo] || Smartphone;
