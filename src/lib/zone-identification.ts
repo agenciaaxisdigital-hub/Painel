@@ -369,7 +369,7 @@ function identifyGoianiaZone(params: {
   const { zona_eleitoral, bairro, latitude, longitude } = params;
 
   // 1. Direct from database
-  if (zona_eleitoral && zona_eleitoral.trim() && zona_eleitoral !== "Sem localização") {
+  if (zona_eleitoral && zona_eleitoral.trim()) {
     const z = ZONAS_ELEITORAIS.find((zz) => zz.zona === zona_eleitoral);
     if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "database", categoria: "goiania" };
   }
