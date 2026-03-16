@@ -170,7 +170,7 @@ export default function UserManagement() {
     e.preventDefault();
     if (!renameTarget) return;
     if (!newUsername.trim()) return toast.error("Nome não pode ser vazio");
-    renameUser.mutate({ userId: renameTarget.user_id, newName: newUsername.trim() });
+    renameUser.mutate({ userId: renameTarget.user_id, newName: newUsername });
   };
 
   return (
