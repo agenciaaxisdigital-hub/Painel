@@ -316,7 +316,7 @@ export default function ZonasGoiania() {
                 <th className="px-4 py-3 text-right font-medium">Forms</th>
                 <th className="px-4 py-3 text-right font-medium">WhatsApp</th>
                 <th className="px-4 py-3 text-right font-medium">Instagram</th>
-                <th className="px-4 py-3 text-right font-medium">Penetração</th>
+                <th className="px-4 py-3 text-right font-medium">Acesso</th>
                 <th className="px-4 py-3 text-right font-medium">Conversão</th>
                 <th className="px-4 py-3 text-left font-medium">Status</th>
               </tr>
