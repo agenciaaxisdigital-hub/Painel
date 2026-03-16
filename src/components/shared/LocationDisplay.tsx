@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Copy, MapPin, Loader2, MapPinned } from "lucide-react";
 import { identifyZone, getLocationPrecision, PRECISION_CONFIG, type ZoneResult } from "@/lib/zone-identification";
 
@@ -15,28 +15,27 @@ interface LocationData {
   regiao_planejamento?: string | null;
 }
 
-// ── Reverse Geocoding Hook ──
-function useReverseGeocode() {
+// ── Reverse Geocoding Hook (auto-fetches when coords available and no address) ──
+function useReverseGeocode(lat?: number | null, lng?: number | null, hasAddress?: boolean) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
-  const fetchAddress = async (lat: number, lng: number) => {
+  useEffect(() => {
+    if (hasAddress || !lat || !lng || result) return;
+    let cancelled = false;
     setLoading(true);
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=pt-BR`,
-        { headers: { "User-Agent": "ChamaRosa/1.0" } }
-      );
-      const data = await res.json();
-      setResult(data.display_name || "Endereço não encontrado");
-    } catch {
-      setResult("Erro ao buscar endereço");
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=pt-BR`,
+      { headers: { "User-Agent": "ChamaRosa/1.0" } }
+    )
+      .then((res) => res.json())
+      .then((data) => { if (!cancelled) setResult(data.display_name || "Endereço não encontrado"); })
+      .catch(() => { if (!cancelled) setResult("Erro ao buscar endereço"); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [lat, lng, hasAddress, result]);
 
-  return { loading, result, fetchAddress };
+  return { loading, result };
 }
 
 // ── Precision Badge ──
