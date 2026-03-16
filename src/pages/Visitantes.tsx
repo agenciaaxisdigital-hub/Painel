@@ -186,7 +186,7 @@ function VisitorDetailDrawer({ visitor, onClose }: { visitor: any; onClose: () =
             { label: "Visitas", value: visitor.contador_visitas ?? 1 },
             { label: "Primeira Visita", value: visitor.primeira_visita ? "Sim" : "Não" },
             { label: "País", value: visitor.pais || "—" },
-            { label: "Página", value: visitor.pagina },
+            { label: "Página", value: formatPageName(visitor.pagina) },
           ].map((item) => (
             <div key={item.label} className="rounded-lg bg-white/[0.03] p-3">
               <span className="text-[10px] text-muted-foreground">{item.label}</span>
