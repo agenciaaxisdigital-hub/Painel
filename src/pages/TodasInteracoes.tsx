@@ -377,24 +377,6 @@ export default function Interacoes() {
       {/* Analytics Row: Section Breakdown + Heatmap */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Section Breakdown */}
-        {sectionData.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
-            <h3 className="text-sm font-medium mb-3">Cliques por Seção do Site</h3>
-            <div className="h-[220px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={sectionData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(240, 5%, 12%)" />
-                  <XAxis dataKey="name" stroke="hsl(240, 5%, 40%)" fontSize={10} />
-                  <YAxis stroke="hsl(240, 5%, 40%)" fontSize={10} />
-                  <Tooltip contentStyle={{ background: "hsl(240, 15%, 8%)", border: "1px solid hsl(240, 5%, 15%)", borderRadius: "8px", fontSize: "11px" }} />
-                  <Bar dataKey="whatsapp" name="WhatsApp" fill={PLATFORM_COLORS.whatsapp} stackId="a" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="instagram" name="Instagram" fill={PLATFORM_COLORS.instagram} stackId="a" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="facebook" name="Facebook" fill={PLATFORM_COLORS.facebook} stackId="a" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </motion.div>
-        )}
 
         {/* Hourly Heatmap */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
