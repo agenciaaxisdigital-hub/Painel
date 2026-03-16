@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { formatPageName } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -700,7 +701,7 @@ function ExpandedDetail({ row, toast }: { row: UnifiedInteraction; toast: any })
         )}
         {row.tipo === "acesso" && (
           <DetailSection title="Comportamento">
-            <DetailItem label="Página Visitada" value={row.pagina === "/" ? "Home (Página Principal)" : row.pagina} />
+            <DetailItem label="Página Visitada" value={formatPageName(row.pagina)} />
             <DetailItem label="Primeira Visita" value={row.primeira_visita ? "Sim" : "Não"} />
             <DetailItem label="Nº de Visitas" value={String(row.contador_visitas || 1)} />
           </DetailSection>

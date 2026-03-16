@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { formatPageName } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { useVisitantes, useDeviceBreakdown } from "@/hooks/use-supabase-data";
@@ -128,7 +129,7 @@ export default function Visitantes() {
                       <td className="px-4 py-2 text-foreground/80">{v.estado || "—"}</td>
                       <td className="px-4 py-2"><DeviceIcon className="h-3.5 w-3.5 text-muted-foreground" /></td>
                       <td className="px-4 py-2 text-foreground/80">{v.navegador || "—"}</td>
-                      <td className="px-4 py-2 font-mono text-foreground/60">{v.pagina}</td>
+                      <td className="px-4 py-2 font-mono text-foreground/60">{formatPageName(v.pagina)}</td>
                       <td className="px-4 py-2 text-right tabular-nums">{v.contador_visitas ?? 1}</td>
                       <td className="px-4 py-2 text-muted-foreground">{format(new Date(v.criado_em), "dd/MM HH:mm")}</td>
                     </tr>
@@ -186,7 +187,7 @@ function VisitorDetailDrawer({ visitor, onClose }: { visitor: any; onClose: () =
             { label: "Visitas", value: visitor.contador_visitas ?? 1 },
             { label: "Primeira Visita", value: visitor.primeira_visita ? "Sim" : "Não" },
             { label: "País", value: visitor.pais || "—" },
-            { label: "Página", value: visitor.pagina },
+            { label: "Página", value: formatPageName(visitor.pagina) },
           ].map((item) => (
             <div key={item.label} className="rounded-lg bg-white/[0.03] p-3">
               <span className="text-[10px] text-muted-foreground">{item.label}</span>

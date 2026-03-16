@@ -237,7 +237,7 @@ export function useTopPages(days: number) {
       const { data } = await supabase.from("acessos_site").select("pagina").gte("criado_em", since).limit(1000);
       const counts: Record<string, number> = {};
       (data || []).forEach((r) => { counts[r.pagina] = (counts[r.pagina] || 0) + 1; });
-      return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([pagina, visitas]) => ({ pagina, visitas }));
+      return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([pagina, visitas]) => ({ pagina: pagina === "/" ? "Home" : pagina, visitas }));
     },
     staleTime: 60_000,
   });

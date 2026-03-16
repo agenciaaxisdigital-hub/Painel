@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { formatPageName } from "@/lib/utils";
 import { X, Smartphone, Monitor, Tablet } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -83,7 +84,7 @@ export function VisitorDrawer({ visitor, onClose }: VisitorDrawerProps) {
           <h4 className="text-xs font-medium text-muted-foreground mb-2">Páginas Visitadas</h4>
           <div className="space-y-1">
             {visitor.paginasVisitadas.map((p: string) => (
-              <div key={p} className="rounded bg-white/[0.03] px-3 py-2 text-xs text-foreground/70 font-mono">{p}</div>
+              <div key={p} className="rounded bg-white/[0.03] px-3 py-2 text-xs text-foreground/70 font-mono">{formatPageName(p)}</div>
             ))}
           </div>
         </div>
