@@ -316,7 +316,7 @@ export function useRealtimeFeed() {
       .on("postgres_changes", { event: "*", schema: "public", table: "mensagens_contato" }, (p) => {
         const r = p.new as any;
         if (p.eventType === "INSERT" && isBrasil(r)) {
-          setEvents((prev) => [{ ...r, tipo: "formulario", label: `${r.nome} enviou formulário` }, ...prev].slice(0, 20));
+          setEvents((prev) => [{ ...r, tipo: "formulario", label: `${r.nome} enviou formulário` }, ...prev].slice(0, 100));
         } else if (p.eventType === "UPDATE") {
           setEvents((prev) => prev.map((e) => e.id === r.id ? { ...e, ...r } : e));
         }
