@@ -295,7 +295,7 @@ export default function UserManagement() {
                             {u.username}
                             {isSelf && <span className="text-[9px] text-primary">(você)</span>}
                           </div>
-                          <div className="text-[11px] text-muted-foreground font-mono">{u.email}</div>
+                          
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
