@@ -94,7 +94,7 @@ function useRegionDistribution(days: number) {
       // Zone counters — Goiânia
       const goianiaZoneCounts: Record<string, { visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number }> = {};
       ZONAS_ELEITORAIS.forEach((z) => { goianiaZoneCounts[z.zona] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 }; });
-      goianiaZoneCounts["Não identificada"] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
+      goianiaZoneCounts["Sem localização"] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
 
       // Zone counters — Aparecida
       const aparecidaZoneCounts: Record<string, { visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number }> = {};
