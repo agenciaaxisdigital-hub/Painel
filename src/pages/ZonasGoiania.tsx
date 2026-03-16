@@ -218,6 +218,7 @@ function ZoneRow({ z, i, maxVisitors, isSelected, onSelect }: {
             <span>{z.visitors} visit.</span>
             <span className="text-success">{z.whatsapp} WA</span>
             <span className="text-primary">{z.instagram} IG</span>
+            <span className="text-blue-400">{z.facebook} FB</span>
             <span>{z.forms} forms</span>
             <span className="text-primary font-medium">{z.penetracao}%</span>
           </div>
@@ -445,6 +446,7 @@ export default function ZonasGoiania() {
                               <span>{c.visitors} visit.</span>
                               <span className="text-success">{c.whatsapp} WA</span>
                               <span className="text-primary">{c.instagram} IG</span>
+                              <span className="text-blue-400">{c.facebook} FB</span>
                               <span>{c.forms} forms</span>
                               <span className="font-bold">{c.total}</span>
                             </div>
