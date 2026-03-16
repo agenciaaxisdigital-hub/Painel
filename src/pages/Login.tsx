@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -6,6 +6,67 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import fernandaPhoto from "@/assets/fernanda-sarelli.jpeg";
+
+function VantaBackground() {
+  const vantaRef = useRef<HTMLDivElement>(null);
+  const vantaEffect = useRef<any>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadVanta() {
+      // Load THREE.js
+      if (!(window as any).THREE) {
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js";
+          s.onload = () => resolve();
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+      // Load Vanta NET
+      if (!(window as any).VANTA) {
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.net.min.js";
+          s.onload = () => resolve();
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      if (cancelled || !vantaRef.current || !(window as any).VANTA) return;
+
+      vantaEffect.current = (window as any).VANTA.NET({
+        el: vantaRef.current,
+        THREE: (window as any).THREE,
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200,
+        minWidth: 200,
+        scale: 1.0,
+        scaleMobile: 1.0,
+        color: 0xe8567a,        // rose/primary
+        backgroundColor: 0x0a0a0f, // dark bg
+        points: 8,
+        maxDistance: 23,
+        spacing: 18,
+        showDots: true,
+      });
+    }
+
+    loadVanta();
+
+    return () => {
+      cancelled = true;
+      if (vantaEffect.current) vantaEffect.current.destroy();
+    };
+  }, []);
+
+  return <div ref={vantaRef} className="absolute inset-0 z-0" />;
+}
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -75,9 +136,13 @@ export default function Login() {
         </motion.div>
       </div>
 
-      {/* Right side — dark login form */}
-      <div className="flex flex-1 items-center justify-center bg-background p-6">
-        <div className="ambient-glow" />
+      {/* Right side — Vanta NET background + login form */}
+      <div className="relative flex flex-1 items-center justify-center p-6">
+        {/* Vanta animated background */}
+        <VantaBackground />
+
+        {/* Subtle overlay to ensure readability */}
+        <div className="absolute inset-0 z-[1] bg-background/40" />
 
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
@@ -117,7 +182,7 @@ export default function Login() {
             </p>
           </div>
 
-          <div className="glass-card p-8">
+          <div className="glass-card p-8 backdrop-blur-xl bg-background/60">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
