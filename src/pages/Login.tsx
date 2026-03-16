@@ -93,18 +93,17 @@ export default function Login() {
 
   return (
     <div className="relative flex min-h-screen overflow-hidden">
-      {/* Left side — pink gradient with photo */}
-      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center"
-        style={{ background: "linear-gradient(135deg, hsl(341 90% 65%) 0%, hsl(350 80% 75%) 50%, hsl(355 85% 82%) 100%)" }}
-      >
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: "radial-gradient(circle at 30% 50%, rgba(255,255,255,0.3) 0%, transparent 60%)" }}
-        />
+      {/* Vanta NET covers the ENTIRE screen */}
+      <VantaBackground />
+      <div className="absolute inset-0 z-[1] bg-background/30" />
+
+      {/* Left side — photo + info over Vanta */}
+      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="relative z-10 flex flex-col items-center text-center px-12"
+          className="relative flex flex-col items-center text-center px-12"
         >
           <div className="relative mb-8">
             <div className="absolute -inset-2 rounded-full border-2 border-white/30 animate-pulse" />
@@ -137,13 +136,8 @@ export default function Login() {
         </motion.div>
       </div>
 
-      {/* Right side — Vanta NET background + login form */}
-      <div className="relative flex flex-1 items-center justify-center p-6">
-        {/* Vanta animated background */}
-        <VantaBackground />
-
-        {/* Subtle overlay to ensure readability */}
-        <div className="absolute inset-0 z-[1] bg-background/40" />
+      {/* Right side — login form over Vanta */}
+      <div className="relative flex flex-1 items-center justify-center p-6 z-10">
 
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
