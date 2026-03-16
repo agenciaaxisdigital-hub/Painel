@@ -13,10 +13,11 @@ Deno.serve(async (req) => {
 
   try {
     const { username, password } = await req.json();
+    const normalizedUsername = String(username || "").trim().toLowerCase().replace(/\s+/g, ".");
 
-    if (!username || !password) {
+    if (!normalizedUsername || !password) {
       return new Response(
-        JSON.stringify({ error: "Username e senha são obrigatórios" }),
+        JSON.stringify({ error: "Nome de usuário e senha são obrigatórios" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
