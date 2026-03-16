@@ -1,28 +1,24 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { DateRangeSelector } from "@/components/shared/DateRangeSelector";
-import { useTableCounts, useVariation, useTimeSeries, useDeviceBreakdown, useTrafficOrigin, useClickPlatforms, useConnectionStatus } from "@/hooks/use-supabase-data";
-import { DEVICE_COLORS, PLATFORM_COLORS } from "@/lib/constants";
+import { useTableCounts, useVariation, useTimeSeries, useConnectionStatus, useTopCities, useTopPages } from "@/hooks/use-supabase-data";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, AlertTriangle, Database } from "lucide-react";
+import { CheckCircle, AlertTriangle, Database, MapPin, FileText } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-const CHART_COLORS = ["hsl(341, 90%, 65%)", "hsl(45, 93%, 47%)", "hsl(142, 71%, 45%)", "hsl(280, 70%, 60%)", "hsl(220, 70%, 55%)"];
 
 export default function VisaoGeral() {
   const [days, setDays] = useState(30);
   const counts = useTableCounts(days);
   const variation = useVariation(days);
   const timeSeries = useTimeSeries(days);
-  const devices = useDeviceBreakdown(days);
-  const traffic = useTrafficOrigin(days);
-  const platforms = useClickPlatforms(days);
   const connection = useConnectionStatus();
+  const topCities = useTopCities(days);
+  const topPages = useTopPages(days);
 
   const c = counts.data;
   const v = variation.data;
@@ -110,11 +106,20 @@ export default function VisaoGeral() {
         )}
       </motion.div>
 
-      {/* Three Donut Charts */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <DonutCard title="Dispositivos" data={devices.data} loading={devices.isLoading} colors={Object.values(DEVICE_COLORS)} />
-        <DonutCard title="Origem do Tráfego" data={traffic.data} loading={traffic.isLoading} colors={CHART_COLORS} />
-        <DonutCard title="Plataformas de Clique" data={platforms.data} loading={platforms.isLoading} colors={[PLATFORM_COLORS.whatsapp, PLATFORM_COLORS.instagram, PLATFORM_COLORS.facebook]} />
+      {/* Top Cities + Top Pages */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <RankingCard
+          title="Top Cidades"
+          icon={<MapPin className="h-4 w-4 text-primary" />}
+          data={topCities.data?.map((c) => ({ label: c.cidade, value: c.visitantes })) || []}
+          loading={topCities.isLoading}
+        />
+        <RankingCard
+          title="Páginas Mais Acessadas"
+          icon={<FileText className="h-4 w-4 text-secondary" />}
+          data={topPages.data?.map((p) => ({ label: p.pagina, value: p.visitas })) || []}
+          loading={topPages.isLoading}
+        />
       </div>
 
       {/* Activity Feed */}
@@ -123,41 +128,38 @@ export default function VisaoGeral() {
   );
 }
 
-function DonutCard({ title, data, loading, colors }: { title: string; data: any[] | undefined; loading: boolean; colors: string[] }) {
+function RankingCard({ title, icon, data, loading }: { title: string; icon: React.ReactNode; data: { label: string; value: number }[]; loading: boolean }) {
   if (loading) return <Skeleton className="h-64 rounded-xl" />;
-  if (!data || data.length === 0) {
-    return (
-      <div className="glass-card p-5">
-        <h3 className="text-sm font-medium mb-3">{title}</h3>
-        <p className="text-xs text-muted-foreground text-center py-8">Sem dados</p>
-      </div>
-    );
-  }
+  const max = Math.max(1, ...data.map((d) => d.value));
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
-      <h3 className="text-sm font-medium mb-3">{title}</h3>
-      <div className="h-48">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} strokeWidth={0}>
-              {data.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
-            </Pie>
-            <Tooltip contentStyle={{ background: "hsl(240, 15%, 8%)", border: "1px solid hsl(240, 5%, 15%)", borderRadius: "8px", fontSize: "11px" }} />
-          </PieChart>
-        </ResponsiveContainer>
+      <div className="flex items-center gap-2 mb-4">
+        {icon}
+        <h3 className="text-sm font-medium">{title}</h3>
       </div>
-      <div className="space-y-1 mt-2">
-        {data.map((d, i) => (
-          <div key={d.name} className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2">
-              <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: colors[i % colors.length] }} />
-              <span className="text-foreground/80">{d.name}</span>
+      {data.length === 0 ? (
+        <p className="text-xs text-muted-foreground text-center py-8">Sem dados</p>
+      ) : (
+        <div className="space-y-2.5">
+          {data.slice(0, 8).map((item, i) => (
+            <div key={item.label} className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-foreground/80 truncate max-w-[70%]">{item.label}</span>
+                <span className="tabular-nums text-muted-foreground font-medium">{item.value.toLocaleString("pt-BR")}</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(item.value / max) * 100}%` }}
+                  transition={{ duration: 0.8, delay: i * 0.05 }}
+                  className="h-full rounded-full bg-gradient-to-r from-primary/60 to-primary"
+                />
+              </div>
             </div>
-            <span className="tabular-nums text-muted-foreground">{d.percentage}%</span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 }
