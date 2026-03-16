@@ -185,16 +185,6 @@ function useRegionDistribution(days: number) {
         };
       });
 
-      const goianiaNI = goianiaZoneCounts["Sem localização"];
-      if (goianiaNI && (goianiaNI.visitors + goianiaNI.forms + goianiaNI.whatsapp + goianiaNI.instagram + goianiaNI.facebook) > 0) {
-        const clicks = goianiaNI.whatsapp + goianiaNI.instagram + goianiaNI.facebook;
-        goianiaZones.push({
-          zona: "Sem localização", nome: "Sem localização", cor: "#E8825C", eleitores: 0,
-          visitors: goianiaNI.visitors, forms: goianiaNI.forms, whatsapp: goianiaNI.whatsapp, instagram: goianiaNI.instagram, facebook: goianiaNI.facebook,
-          clicks, total: goianiaNI.visitors + goianiaNI.forms + clicks, penetracao: 0,
-          conversao: goianiaNI.visitors > 0 ? parseFloat(((goianiaNI.forms / goianiaNI.visitors) * 100).toFixed(1)) : 0,
-        });
-      }
 
       // Build zone arrays — Aparecida (every record assigned)
       const aparecidaZones: ZoneData[] = ZONAS_APARECIDA.map((z) => {
