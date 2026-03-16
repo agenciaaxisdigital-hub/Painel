@@ -8,6 +8,9 @@ function getSince(days: number) {
   return subDays(new Date(), days).toISOString();
 }
 
+// Filter: only Brasil or null (domestic records without pais filled)
+const BRASIL_FILTER = "pais.eq.Brasil,pais.is.null";
+
 // ==================== COUNTS ====================
 export function useTableCounts(days: number) {
   return useQuery({
@@ -15,11 +18,11 @@ export function useTableCounts(days: number) {
     queryFn: async () => {
       const since = getSince(days);
       const [v, f, wh, ig, fb] = await Promise.all([
-        supabase.from("acessos_site").select("*", { count: "exact", head: true }).gte("criado_em", since),
-        supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).gte("criado_em", since),
-        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).eq("tipo_clique", "whatsapp"),
-        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).eq("tipo_clique", "instagram"),
-        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).eq("tipo_clique", "facebook"),
+        supabase.from("acessos_site").select("*", { count: "exact", head: true }).gte("criado_em", since).or(BRASIL_FILTER),
+        supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).gte("criado_em", since).or(BRASIL_FILTER),
+        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).eq("tipo_clique", "whatsapp").or(BRASIL_FILTER),
+        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).eq("tipo_clique", "instagram").or(BRASIL_FILTER),
+        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).eq("tipo_clique", "facebook").or(BRASIL_FILTER),
       ]);
       const vc = v.count ?? 0;
       const fc = f.count ?? 0;
@@ -43,14 +46,14 @@ export function useVariation(days: number) {
       const currentSince = getSince(days);
       const previousSince = subDays(new Date(), days * 2).toISOString();
       const [cV, pV, cF, pF, cW, pW, cI, pI] = await Promise.all([
-        supabase.from("acessos_site").select("*", { count: "exact", head: true }).gte("criado_em", currentSince),
-        supabase.from("acessos_site").select("*", { count: "exact", head: true }).gte("criado_em", previousSince).lt("criado_em", currentSince),
-        supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).gte("criado_em", currentSince),
-        supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).gte("criado_em", previousSince).lt("criado_em", currentSince),
-        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", currentSince).eq("tipo_clique", "whatsapp"),
-        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", previousSince).lt("criado_em", currentSince).eq("tipo_clique", "whatsapp"),
-        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", currentSince).eq("tipo_clique", "instagram"),
-        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", previousSince).lt("criado_em", currentSince).eq("tipo_clique", "instagram"),
+        supabase.from("acessos_site").select("*", { count: "exact", head: true }).gte("criado_em", currentSince).or(BRASIL_FILTER),
+        supabase.from("acessos_site").select("*", { count: "exact", head: true }).gte("criado_em", previousSince).lt("criado_em", currentSince).or(BRASIL_FILTER),
+        supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).gte("criado_em", currentSince).or(BRASIL_FILTER),
+        supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).gte("criado_em", previousSince).lt("criado_em", currentSince).or(BRASIL_FILTER),
+        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", currentSince).eq("tipo_clique", "whatsapp").or(BRASIL_FILTER),
+        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", previousSince).lt("criado_em", currentSince).eq("tipo_clique", "whatsapp").or(BRASIL_FILTER),
+        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", currentSince).eq("tipo_clique", "instagram").or(BRASIL_FILTER),
+        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", previousSince).lt("criado_em", currentSince).eq("tipo_clique", "instagram").or(BRASIL_FILTER),
       ]);
       const calc = (curr: number, prev: number) => (prev > 0 ? ((curr - prev) / prev) * 100 : curr > 0 ? 100 : 0);
       return {
@@ -71,9 +74,9 @@ export function useTimeSeries(days: number) {
     queryFn: async () => {
       const since = getSince(days);
       const [vis, forms, clicks] = await Promise.all([
-        supabase.from("acessos_site").select("criado_em").gte("criado_em", since).limit(1000),
-        supabase.from("mensagens_contato").select("criado_em").gte("criado_em", since).limit(1000),
-        supabase.from("cliques_whatsapp").select("criado_em, tipo_clique").gte("criado_em", since).limit(1000),
+        supabase.from("acessos_site").select("criado_em").gte("criado_em", since).or(BRASIL_FILTER).limit(1000),
+        supabase.from("mensagens_contato").select("criado_em").gte("criado_em", since).or(BRASIL_FILTER).limit(1000),
+        supabase.from("cliques_whatsapp").select("criado_em, tipo_clique").gte("criado_em", since).or(BRASIL_FILTER).limit(1000),
       ]);
 
       const dayMap: Record<string, { visitantes: number; formularios: number; whatsapp: number; instagram: number; facebook: number }> = {};
@@ -119,6 +122,7 @@ export function useVisitantes(days: number) {
         .from("acessos_site")
         .select("*")
         .gte("criado_em", since)
+        .or(BRASIL_FILTER)
         .order("criado_em", { ascending: false })
         .limit(500);
       if (error) throw error;
@@ -137,6 +141,7 @@ export function useFormularios(days: number) {
         .from("mensagens_contato")
         .select("*")
         .gte("criado_em", since)
+        .or(BRASIL_FILTER)
         .order("criado_em", { ascending: false })
         .limit(500);
       if (error) throw error;
@@ -155,6 +160,7 @@ export function useCliques(days: number) {
         .from("cliques_whatsapp")
         .select("*")
         .gte("criado_em", since)
+        .or(BRASIL_FILTER)
         .order("criado_em", { ascending: false })
         .limit(500);
       if (error) throw error;
@@ -170,7 +176,7 @@ export function useDeviceBreakdown(days: number) {
     queryKey: ["device-breakdown", days],
     queryFn: async () => {
       const since = getSince(days);
-      const { data } = await supabase.from("acessos_site").select("dispositivo").gte("criado_em", since).limit(1000);
+      const { data } = await supabase.from("acessos_site").select("dispositivo").gte("criado_em", since).or(BRASIL_FILTER).limit(1000);
       return aggregate(data || [], "dispositivo");
     },
     staleTime: 60_000,
@@ -182,7 +188,7 @@ export function useTrafficOrigin(days: number) {
     queryKey: ["traffic-origin", days],
     queryFn: async () => {
       const since = getSince(days);
-      const { data } = await supabase.from("acessos_site").select("referrer, utm_source").gte("criado_em", since).limit(1000);
+      const { data } = await supabase.from("acessos_site").select("referrer, utm_source").gte("criado_em", since).or(BRASIL_FILTER).limit(1000);
       const items = (data || []).map((r) => {
         if (r.utm_source) return r.utm_source;
         if (r.referrer?.includes("google")) return "Google";
@@ -208,7 +214,7 @@ export function useClickPlatforms(days: number) {
     queryKey: ["click-platforms", days],
     queryFn: async () => {
       const since = getSince(days);
-      const { data } = await supabase.from("cliques_whatsapp").select("tipo_clique").gte("criado_em", since).limit(1000);
+      const { data } = await supabase.from("cliques_whatsapp").select("tipo_clique").gte("criado_em", since).or(BRASIL_FILTER).limit(1000);
       return aggregate(data || [], "tipo_clique");
     },
     staleTime: 60_000,
@@ -220,7 +226,7 @@ export function useTopCities(days: number) {
     queryKey: ["top-cities", days],
     queryFn: async () => {
       const since = getSince(days);
-      const { data } = await supabase.from("acessos_site").select("cidade").gte("criado_em", since).limit(1000);
+      const { data } = await supabase.from("acessos_site").select("cidade").gte("criado_em", since).or(BRASIL_FILTER).limit(1000);
       const counts: Record<string, number> = {};
       (data || []).forEach((r) => { if (r.cidade && r.cidade.trim()) { counts[r.cidade] = (counts[r.cidade] || 0) + 1; } });
       return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([cidade, visitantes]) => ({ cidade, visitantes }));
@@ -234,7 +240,7 @@ export function useTopPages(days: number) {
     queryKey: ["top-pages", days],
     queryFn: async () => {
       const since = getSince(days);
-      const { data } = await supabase.from("acessos_site").select("pagina").gte("criado_em", since).limit(1000);
+      const { data } = await supabase.from("acessos_site").select("pagina").gte("criado_em", since).or(BRASIL_FILTER).limit(1000);
       const counts: Record<string, number> = {};
       (data || []).forEach((r) => { counts[r.pagina] = (counts[r.pagina] || 0) + 1; });
       return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([pagina, visitas]) => ({ pagina: pagina === "/" ? "Home" : pagina, visitas }));
@@ -249,9 +255,9 @@ export function useConnectionStatus() {
     queryKey: ["connection-status"],
     queryFn: async () => {
       const [v, f, c] = await Promise.all([
-        supabase.from("acessos_site").select("criado_em", { count: "exact" }).order("criado_em", { ascending: false }).limit(1),
-        supabase.from("mensagens_contato").select("criado_em", { count: "exact" }).order("criado_em", { ascending: false }).limit(1),
-        supabase.from("cliques_whatsapp").select("criado_em", { count: "exact" }).order("criado_em", { ascending: false }).limit(1),
+        supabase.from("acessos_site").select("criado_em", { count: "exact" }).or(BRASIL_FILTER).order("criado_em", { ascending: false }).limit(1),
+        supabase.from("mensagens_contato").select("criado_em", { count: "exact" }).or(BRASIL_FILTER).order("criado_em", { ascending: false }).limit(1),
+        supabase.from("cliques_whatsapp").select("criado_em", { count: "exact" }).or(BRASIL_FILTER).order("criado_em", { ascending: false }).limit(1),
       ]);
       const lastRecord = [v.data?.[0]?.criado_em, f.data?.[0]?.criado_em, c.data?.[0]?.criado_em].filter(Boolean).sort().reverse()[0] || null;
       const minutesSince = lastRecord ? (Date.now() - new Date(lastRecord).getTime()) / 60000 : Infinity;
@@ -275,9 +281,9 @@ export function useRealtimeFeed() {
   useEffect(() => {
     const fetchRecent = async () => {
       const [vis, forms, clicks] = await Promise.all([
-        supabase.from("acessos_site").select("id, criado_em, cidade, dispositivo").order("criado_em", { ascending: false }).limit(10),
-        supabase.from("mensagens_contato").select("id, criado_em, cidade, nome").order("criado_em", { ascending: false }).limit(5),
-        supabase.from("cliques_whatsapp").select("id, criado_em, cidade, tipo_clique").order("criado_em", { ascending: false }).limit(5),
+        supabase.from("acessos_site").select("id, criado_em, cidade, dispositivo, pais").or(BRASIL_FILTER).order("criado_em", { ascending: false }).limit(10),
+        supabase.from("mensagens_contato").select("id, criado_em, cidade, nome, pais").or(BRASIL_FILTER).order("criado_em", { ascending: false }).limit(5),
+        supabase.from("cliques_whatsapp").select("id, criado_em, cidade, tipo_clique, pais").or(BRASIL_FILTER).order("criado_em", { ascending: false }).limit(5),
       ]);
       const all = [
         ...(vis.data || []).map((r) => ({ ...r, tipo: "visita" as const, label: "visitou o site" })),
@@ -288,10 +294,12 @@ export function useRealtimeFeed() {
     };
     fetchRecent();
 
+    const isBrasil = (r: any) => !r.pais || r.pais === "Brasil";
+
     const channel = supabase
       .channel("feed")
       .on("postgres_changes", { event: "*", schema: "public", table: "acessos_site" }, (p) => {
-        if (p.eventType === "INSERT") {
+        if (p.eventType === "INSERT" && isBrasil(p.new)) {
           setEvents((prev) => [{ ...p.new, tipo: "visita", label: "visitou o site" }, ...prev].slice(0, 20));
         } else if (p.eventType === "UPDATE") {
           setEvents((prev) => prev.map((e) => e.id === (p.new as any).id ? { ...e, ...p.new } : e));
@@ -299,7 +307,7 @@ export function useRealtimeFeed() {
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "cliques_whatsapp" }, (p) => {
         const r = p.new as any;
-        if (p.eventType === "INSERT") {
+        if (p.eventType === "INSERT" && isBrasil(r)) {
           setEvents((prev) => [{ ...r, tipo: r.tipo_clique || "whatsapp", label: `clicou no ${r.tipo_clique || "WhatsApp"}` }, ...prev].slice(0, 20));
         } else if (p.eventType === "UPDATE") {
           setEvents((prev) => prev.map((e) => e.id === r.id ? { ...e, ...r } : e));
@@ -307,7 +315,7 @@ export function useRealtimeFeed() {
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "mensagens_contato" }, (p) => {
         const r = p.new as any;
-        if (p.eventType === "INSERT") {
+        if (p.eventType === "INSERT" && isBrasil(r)) {
           setEvents((prev) => [{ ...r, tipo: "formulario", label: `${r.nome} enviou formulário` }, ...prev].slice(0, 20));
         } else if (p.eventType === "UPDATE") {
           setEvents((prev) => prev.map((e) => e.id === r.id ? { ...e, ...r } : e));
@@ -327,7 +335,7 @@ export function useHourlyHeatmap(days: number, tipoClique?: string) {
     queryKey: ["hourly-heatmap", days, tipoClique],
     queryFn: async () => {
       const since = getSince(days);
-      let query = supabase.from("cliques_whatsapp").select("criado_em").gte("criado_em", since).limit(1000);
+      let query = supabase.from("cliques_whatsapp").select("criado_em").gte("criado_em", since).or(BRASIL_FILTER).limit(1000);
       if (tipoClique) query = query.eq("tipo_clique", tipoClique);
       const { data } = await query;
 
