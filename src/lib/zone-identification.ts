@@ -328,8 +328,8 @@ function identifyGoianiaZone(params: {
     const normalizedBairro = normalize(bairro);
     for (const [zona, neighborhoods] of Object.entries(GOIANIA_ZONE_NEIGHBORHOODS)) {
       if (neighborhoods.some((n) => normalize(n) === normalizedBairro)) {
-        const z = ZONAS_ELEITORAIS.find((z) => z.zona === zona)!;
-        return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "bairro", categoria: "goiania" };
+        const z = ZONAS_ELEITORAIS.find((zz) => zz.zona === zona);
+        if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "bairro" as const, categoria: "goiania" as const };
       }
     }
   }
@@ -338,7 +338,7 @@ function identifyGoianiaZone(params: {
   if (latitude && longitude) {
     const nearest = findNearestZone(latitude, longitude, GOIANIA_CENTROIDS, 15);
     if (nearest) {
-      const z = ZONAS_ELEITORAIS.find((z) => z.zona === nearest)!;
+      const z = ZONAS_ELEITORAIS.find((zz) => zz.zona === nearest);
       return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates", categoria: "goiania" };
     }
   }
