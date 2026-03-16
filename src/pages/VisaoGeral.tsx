@@ -34,9 +34,9 @@ function useGeographicBreakdown(days: number) {
       ]);
 
       const allRecords = [
-        ...filterValidLocationRecords(acessos.data),
-        ...filterValidLocationRecords(cliques.data),
-        ...filterValidLocationRecords(mensagens.data),
+        ...(acessos.data || []),
+        ...(cliques.data || []),
+        ...(mensagens.data || []),
       ];
 
       const goianiaZones: Record<string, number> = {};
