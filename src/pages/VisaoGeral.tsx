@@ -24,7 +24,7 @@ function useGeographicBreakdown(days: number) {
       const since = subDays(new Date(), days).toISOString();
       const { data } = await supabase.from("acessos_site")
         .select("zona_eleitoral, bairro, cidade, estado, latitude, longitude")
-        .gte("criado_em", since).limit(3000);
+        .gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(3000);
 
       const goianiaZones: Record<string, number> = {};
       ZONAS_ELEITORAIS.forEach((z) => { goianiaZones[z.zona] = 0; });

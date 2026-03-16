@@ -24,7 +24,7 @@ export default function Exportar() {
       const since = dateRange === "all" ? undefined : new Date(Date.now() - parseInt(dateRange) * 86400000).toISOString();
 
       if (selectedType === "formularios" || selectedType === "todos") {
-        let query = supabase.from("mensagens_contato").select("*").order("criado_em", { ascending: false }).limit(1000);
+        let query = supabase.from("mensagens_contato").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(1000);
         if (since) query = query.gte("criado_em", since);
         const { data } = await query;
         if (data) {
@@ -39,7 +39,7 @@ export default function Exportar() {
       }
 
       if (selectedType === "visitantes" || selectedType === "todos") {
-        let query = supabase.from("acessos_site").select("*").order("criado_em", { ascending: false }).limit(1000);
+        let query = supabase.from("acessos_site").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(1000);
         if (since) query = query.gte("criado_em", since);
         const { data } = await query;
         if (data) {
@@ -56,7 +56,7 @@ export default function Exportar() {
       }
 
       if (selectedType === "cliques" || selectedType === "todos") {
-        let query = supabase.from("cliques_whatsapp").select("*").order("criado_em", { ascending: false }).limit(1000);
+        let query = supabase.from("cliques_whatsapp").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(1000);
         if (since) query = query.gte("criado_em", since);
         const { data } = await query;
         if (data) {
