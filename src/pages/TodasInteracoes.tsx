@@ -18,7 +18,7 @@ import { CompactLocation, FullLocationDetail } from "@/components/shared/Locatio
 import { useHourlyHeatmap } from "@/hooks/use-supabase-data";
 import { mapInteracao, mapLeadCsv, exportXlsx, exportCsv, exportFilename } from "@/lib/export-utils";
 import { useToast } from "@/hooks/use-toast";
-import { filterValidLocationRecords } from "@/lib/location-validity";
+
 
 // ── Types ──
 type InteractionType = "acesso" | "whatsapp" | "instagram" | "facebook" | "formulario";
