@@ -126,17 +126,39 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
   return useQuery({
     queryKey: ["todas-interacoes", days, tipos, search, cidade, dispositivo, page],
     queryFn: async () => {
-      const since = subDays(new Date(), days).toISOString();
+      // Calculate date range
+      let since: string;
+      let until: string | undefined;
+      const now = new Date();
+
+      if (days === -1) {
+        // "Ontem" — only yesterday
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterdayStart = new Date(todayStart);
+        yesterdayStart.setDate(todayStart.getDate() - 1);
+        since = yesterdayStart.toISOString();
+        until = todayStart.toISOString();
+      } else {
+        since = subDays(now, days).toISOString();
+      }
+
       const results: UnifiedInteraction[] = [];
       const counts = { acesso: 0, whatsapp: 0, instagram: 0, facebook: 0, formulario: 0 };
       const queries: Promise<void>[] = [];
 
+      // Build count queries with date range
+      const addDateFilter = (q: any) => {
+        q = q.gte("criado_em", since);
+        if (until) q = q.lt("criado_em", until);
+        return q;
+      };
+
       const countPromise = Promise.all([
-        supabase.from("acessos_site").select("*", { count: "exact", head: true }).gte("criado_em", since),
-        supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).gte("criado_em", since),
-        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).eq("tipo_clique", "whatsapp"),
-        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).eq("tipo_clique", "instagram"),
-        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).eq("tipo_clique", "facebook"),
+        addDateFilter(supabase.from("acessos_site").select("*", { count: "exact", head: true })),
+        addDateFilter(supabase.from("mensagens_contato").select("*", { count: "exact", head: true })),
+        addDateFilter(supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).eq("tipo_clique", "whatsapp")),
+        addDateFilter(supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).eq("tipo_clique", "instagram")),
+        addDateFilter(supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).eq("tipo_clique", "facebook")),
       ]).then(([a, f, w, i, fb]) => {
         counts.acesso = a.count ?? 0; counts.formulario = f.count ?? 0;
         counts.whatsapp = w.count ?? 0; counts.instagram = i.count ?? 0; counts.facebook = fb.count ?? 0;
@@ -145,6 +167,7 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
       if (tipos.includes("acesso")) {
         queries.push((async () => {
           let q = supabase.from("acessos_site").select("*").gte("criado_em", since).order("criado_em", { ascending: false });
+          if (until) q = q.lt("criado_em", until);
           if (search) q = q.or(`cidade.ilike.%${search}%,endereco_ip.ilike.%${search}%,utm_campaign.ilike.%${search}%`);
           if (cidade) q = q.eq("cidade", cidade);
           if (dispositivo.length > 0) q = q.in("dispositivo", dispositivo.map((d) => d.toLowerCase()));
@@ -156,6 +179,7 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
       if (tipos.includes("formulario")) {
         queries.push((async () => {
           let q = supabase.from("mensagens_contato").select("*").gte("criado_em", since).order("criado_em", { ascending: false });
+          if (until) q = q.lt("criado_em", until);
           if (search) q = q.or(`nome.ilike.%${search}%,telefone.ilike.%${search}%,cidade.ilike.%${search}%,email.ilike.%${search}%`);
           if (cidade) q = q.eq("cidade", cidade);
           const { data } = await q.limit(500);
@@ -167,6 +191,7 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
         const clickTypes = tipos.filter((t) => ["whatsapp", "instagram", "facebook"].includes(t));
         queries.push((async () => {
           let q = supabase.from("cliques_whatsapp").select("*").gte("criado_em", since).order("criado_em", { ascending: false });
+          if (until) q = q.lt("criado_em", until);
           if (clickTypes.length > 0 && clickTypes.length < 3) q = q.in("tipo_clique", clickTypes);
           if (search) q = q.or(`cidade.ilike.%${search}%,texto_botao.ilike.%${search}%,endereco_ip.ilike.%${search}%`);
           if (cidade) q = q.eq("cidade", cidade);
