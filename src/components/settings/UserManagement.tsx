@@ -200,7 +200,6 @@ export default function UserManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Usuário</TableHead>
-                  <TableHead>Cargo</TableHead>
                   <TableHead className="hidden sm:table-cell">Criado em</TableHead>
                   <TableHead className="hidden sm:table-cell">Status</TableHead>
                   <TableHead className="w-[60px]">Ações</TableHead>
