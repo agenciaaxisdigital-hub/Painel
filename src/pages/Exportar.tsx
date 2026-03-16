@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Download, FileSpreadsheet, Calendar, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { mapFormulario, mapVisitante, mapClique, exportXlsx, exportFilename } from "@/lib/export-utils";
-import { filterValidLocationRecords } from "@/lib/location-validity";
+
 
 const dataTypes = [
   { id: "formularios", label: "Formulários", description: "Todas as submissões com dados completos de localização, contato e UTM" },
