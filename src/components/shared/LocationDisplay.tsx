@@ -161,15 +161,10 @@ export function FullLocationDetail({ data, onCopy }: { data: LocationData; onCop
                 <Copy className="h-3 w-3" />
               </button>
             </>
-          ) : hasCoords ? (
-            <>
-              <span className="text-muted-foreground/40 flex-1">—</span>
-              <button onClick={() => geocode.fetchAddress(data.latitude!, data.longitude!)} disabled={geocode.loading}
-                className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors disabled:opacity-50 shrink-0">
-                {geocode.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <MapPinned className="h-3 w-3" />}
-                {geocode.loading ? "Buscando..." : "Buscar via GPS"}
-              </button>
-            </>
+          ) : hasCoords && geocode.loading ? (
+            <span className="flex items-center gap-1 text-muted-foreground/60">
+              <Loader2 className="h-3 w-3 animate-spin" /> Buscando endereço...
+            </span>
           ) : (
             <span className="text-muted-foreground/40">—</span>
           )}
