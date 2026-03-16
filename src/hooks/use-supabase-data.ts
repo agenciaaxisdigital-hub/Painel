@@ -281,15 +281,15 @@ export function useRealtimeFeed() {
   useEffect(() => {
     const fetchRecent = async () => {
       const [vis, forms, clicks] = await Promise.all([
-        supabase.from("acessos_site").select("id, criado_em, cidade, dispositivo, pais").or(BRASIL_FILTER).order("criado_em", { ascending: false }).limit(10),
-        supabase.from("mensagens_contato").select("id, criado_em, cidade, nome, pais").or(BRASIL_FILTER).order("criado_em", { ascending: false }).limit(5),
-        supabase.from("cliques_whatsapp").select("id, criado_em, cidade, tipo_clique, pais").or(BRASIL_FILTER).order("criado_em", { ascending: false }).limit(5),
+        supabase.from("acessos_site").select("id, criado_em, cidade, dispositivo, pais").or(BRASIL_FILTER).order("criado_em", { ascending: false }).limit(60),
+        supabase.from("mensagens_contato").select("id, criado_em, cidade, nome, pais").or(BRASIL_FILTER).order("criado_em", { ascending: false }).limit(20),
+        supabase.from("cliques_whatsapp").select("id, criado_em, cidade, tipo_clique, pais").or(BRASIL_FILTER).order("criado_em", { ascending: false }).limit(20),
       ]);
       const all = [
         ...(vis.data || []).map((r) => ({ ...r, tipo: "visita" as const, label: "visitou o site" })),
         ...(forms.data || []).map((r) => ({ ...r, tipo: "formulario" as const, label: `${r.nome} enviou formulário` })),
         ...(clicks.data || []).map((r) => ({ ...r, tipo: (r.tipo_clique || "whatsapp") as string, label: `clicou no ${r.tipo_clique || "WhatsApp"}` })),
-      ].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime()).slice(0, 20);
+      ].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime()).slice(0, 100);
       setEvents(all);
     };
     fetchRecent();
