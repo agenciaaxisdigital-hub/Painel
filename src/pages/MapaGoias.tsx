@@ -29,7 +29,7 @@ export default function MapaGoias() {
   // Regions with data that don't match any defined region
   const extraRegions = useMemo(() => {
     const data = regionCounts.data || {};
-    const definedNames = new Set(REGIOES_GOIAS.map((r) => r.nome));
+    const definedNames = new Set(REGIOES_GOIAS.map((r) => r.nome) as unknown as string[]);
     return Object.entries(data)
       .filter(([name]) => !definedNames.has(name) && name !== "Não identificada")
       .map(([nome, counts]) => ({ nome, cor: "#6B7280", ...counts }));
