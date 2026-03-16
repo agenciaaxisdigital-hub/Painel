@@ -31,8 +31,7 @@ const App = () => (
               <Route path="/" element={<VisaoGeral />} />
               <Route path="/visitantes" element={<Visitantes />} />
               <Route path="/formularios" element={<Formularios />} />
-              <Route path="/interacoes" element={<TodasInteracoes />} />
-              <Route path="/cliques" element={<Cliques />} />
+              <Route path="/interacoes" element={<Interacoes />} />
               <Route path="/zonas" element={<ZonasGoiania />} />
               <Route path="/mapa-goias" element={<MapaGoias />} />
               <Route path="/exportar" element={<Exportar />} />
