@@ -622,7 +622,7 @@ export default function ZonasGoiania() {
           {/* ═══ TAB: COMPARATIVO ═══ */}
           {activeTab === "comparativo" && (() => {
             const allItems: { nome: string; origem: string; cor: string; visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number; total: number }[] = [
-              ...sortedGoianiaZones.filter(z => z.zona !== "Não identificada").map((z) => ({
+              ...sortedGoianiaZones.filter(z => z.zona !== "Sem localização").map((z) => ({
                 nome: z.zona.includes("Zona") ? `${z.zona} — ${z.nome}` : `${z.zona} Zona — ${z.nome}`, origem: "Goiânia", cor: z.cor,
                 visitors: z.visitors, forms: z.forms, whatsapp: z.whatsapp, instagram: z.instagram, facebook: z.facebook, total: z.total,
               })),
