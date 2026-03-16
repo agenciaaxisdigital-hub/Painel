@@ -34,7 +34,7 @@ export function DashboardLayout() {
       <main className="relative z-10 flex-1 min-w-0 pb-20 md:pb-0">
         <AnimatePresence mode="wait">
           <motion.div
-            key={location.pathname}
+            key={currentLocation.pathname}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
