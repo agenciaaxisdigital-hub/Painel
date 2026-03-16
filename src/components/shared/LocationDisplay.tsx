@@ -56,10 +56,11 @@ export function ZoneBadge({ data, showEleitores = false }: { data: LocationData;
   if (zone.zona === "Não identificada") {
     return <span className="text-[10px] text-muted-foreground/50">Zona não identificada</span>;
   }
+  const displayLabel = zone.zona.includes("Zona Aparecida") || zone.categoria === "interior" ? zone.zona : `${zone.zona} Zona`;
   return (
     <span className="inline-flex items-center gap-1.5 text-[10px]">
       <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: zone.cor }} />
-      <span className="font-medium" style={{ color: zone.cor }}>{zone.zona} Zona</span>
+      <span className="font-medium" style={{ color: zone.cor }}>{displayLabel}</span>
       {showEleitores && zone.eleitores > 0 && (
         <span className="text-muted-foreground/50">({zone.eleitores.toLocaleString("pt-BR")} eleitores)</span>
       )}

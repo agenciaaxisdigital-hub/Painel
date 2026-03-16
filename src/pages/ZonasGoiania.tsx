@@ -47,9 +47,9 @@ function useRegionDistribution(days: number) {
       const since = subDays(new Date(), days).toISOString();
 
       const [acessos, cliques, mensagens] = await Promise.all([
-        supabase.from("acessos_site").select("zona_eleitoral, bairro, cidade, latitude, longitude").gte("criado_em", since).limit(5000),
-        supabase.from("cliques_whatsapp").select("zona_eleitoral, bairro, cidade, latitude, longitude, tipo_clique").gte("criado_em", since).limit(5000),
-        supabase.from("mensagens_contato").select("zona_eleitoral, bairro, cidade, latitude, longitude").gte("criado_em", since).limit(5000),
+        supabase.from("acessos_site").select("zona_eleitoral, bairro, cidade, estado, latitude, longitude").gte("criado_em", since).limit(5000),
+        supabase.from("cliques_whatsapp").select("zona_eleitoral, bairro, cidade, estado, latitude, longitude, tipo_clique").gte("criado_em", since).limit(5000),
+        supabase.from("mensagens_contato").select("zona_eleitoral, bairro, cidade, estado, latitude, longitude").gte("criado_em", since).limit(5000),
       ]);
 
       const regions: Record<string, RegionData> = {
@@ -77,22 +77,26 @@ function useRegionDistribution(days: number) {
         const cidade = r.cidade ? norm(r.cidade) : "";
 
         // Identified as Aparecida zone
-        if (zone.cidade === "aparecida" && zone.zona !== "Aparecida de Goiânia" && APARECIDA_ZONE_SET.has(zone.zona)) {
+        if (zone.categoria === "aparecida" && APARECIDA_ZONE_SET.has(zone.zona)) {
           return { region: "aparecida", goianiaZona: null, aparecidaZona: zone.zona, cityName: null };
         }
         // Identified as Goiânia zone
-        if (zone.cidade === "goiania" && GOIANIA_ZONE_SET.has(zone.zona)) {
+        if (zone.categoria === "goiania" && GOIANIA_ZONE_SET.has(zone.zona)) {
           return { region: "goiania", goianiaZona: zone.zona, aparecidaZona: null, cityName: null };
         }
-        // City-level Aparecida
-        if (zone.method === "aparecida" || cidade === "aparecida de goiania" || cidade.includes("aparecida de goian")) {
+        // Aparecida category (unidentified zone)
+        if (zone.categoria === "aparecida") {
           return { region: "aparecida", goianiaZona: null, aparecidaZona: null, cityName: "Aparecida de Goiânia" };
         }
-        // Goiânia by city
-        if (cidade === "goiania" || cidade.includes("goiania")) {
+        // Goiânia category (unidentified zone)
+        if (zone.categoria === "goiania") {
           return { region: "goiania", goianiaZona: null, aparecidaZona: null, cityName: null };
         }
-        // Other city in Goiás
+        // Interior
+        if (zone.categoria === "interior") {
+          return { region: "restante", goianiaZona: null, aparecidaZona: null, cityName: r.cidade || "Desconhecida" };
+        }
+        // Other city in Goiás by raw cidade
         if (cidade) {
           return { region: "restante", goianiaZona: null, aparecidaZona: null, cityName: r.cidade || "Desconhecida" };
         }
@@ -395,7 +399,7 @@ export default function ZonasGoiania() {
                   <div className="flex items-center gap-2 mb-4">
                     <div className="h-3 w-3 rounded-full" style={{ backgroundColor: "#FF6B8A" }} />
                     <h3 className="text-sm font-bold">Aparecida de Goiânia — Resumo</h3>
-                    <span className="ml-auto text-[10px] text-muted-foreground">{TOTAL_ELEITORES_APARECIDA.toLocaleString("pt-BR")} eleitores • 3 zonas</span>
+                    <span className="ml-auto text-[10px] text-muted-foreground">{TOTAL_ELEITORES_APARECIDA.toLocaleString("pt-BR")} eleitores • 4 zonas</span>
                   </div>
                   <MetricGrid data={regions.aparecida} size="lg" />
                 </div>
