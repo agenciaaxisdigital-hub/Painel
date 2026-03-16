@@ -127,7 +127,7 @@ export default function Login() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="seu.usuario"
+                  placeholder="usuario"
                   required
                   className="bg-white/[0.03] border-white/[0.08] focus:border-primary/50"
                 />
