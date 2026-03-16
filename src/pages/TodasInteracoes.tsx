@@ -167,7 +167,7 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
 
       if (tipos.includes("acesso")) {
         queries.push((async () => {
-          let q = supabase.from("acessos_site").select("*").gte("criado_em", since).order("criado_em", { ascending: false });
+          let q = supabase.from("acessos_site").select("*").gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false });
           if (until) q = q.lt("criado_em", until);
           if (search) q = q.or(`cidade.ilike.%${search}%,endereco_ip.ilike.%${search}%,utm_campaign.ilike.%${search}%`);
           if (cidade) q = q.eq("cidade", cidade);
