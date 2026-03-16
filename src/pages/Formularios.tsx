@@ -42,7 +42,7 @@ export default function Formularios() {
 
   const cityData = useMemo(() => {
     const map: Record<string, number> = {};
-    data.forEach((s) => { const c = s.cidade || "Desconhecida"; map[c] = (map[c] || 0) + 1; });
+    data.forEach((s) => { if (s.cidade && s.cidade.trim()) { map[s.cidade] = (map[s.cidade] || 0) + 1; } });
     return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, value]) => ({ name, value }));
   }, [data]);
 
