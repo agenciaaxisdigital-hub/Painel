@@ -92,10 +92,10 @@ export default function VisaoGeral() {
         </div>
       ) : c ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <KPICard titulo="Total Visitantes" valor={c.visitantes} variacao={v?.visitantes ?? 0} sparkline={[]} tooltip="Pessoas que acessaram o Site Principal." delay={0} />
-          <KPICard titulo="Formulários" valor={c.formularios} variacao={v?.formularios ?? 0} sparkline={[]} tooltip="Formulários de contato enviados." delay={1} />
-          <KPICard titulo="Cliques WhatsApp" valor={c.whatsapp} variacao={v?.whatsapp ?? 0} sparkline={[]} tooltip="Cliques no botão de WhatsApp." delay={2} />
-          <KPICard titulo="Cliques Instagram" valor={c.instagram} variacao={v?.instagram ?? 0} sparkline={[]} tooltip="Cliques no botão de Instagram." delay={3} />
+          <KPICard titulo="Total Visitantes" valor={c.visitantes} variacao={0} sparkline={[]} tooltip="Pessoas que acessaram o Site Principal." delay={0} />
+          <KPICard titulo="Formulários" valor={c.formularios} variacao={0} sparkline={[]} tooltip="Formulários de contato enviados." delay={1} />
+          <KPICard titulo="Cliques WhatsApp" valor={c.whatsapp} variacao={0} sparkline={[]} tooltip="Cliques no botão de WhatsApp." delay={2} />
+          <KPICard titulo="Cliques Instagram" valor={c.instagram} variacao={0} sparkline={[]} tooltip="Cliques no botão de Instagram." delay={3} />
           <KPICard titulo="Cliques Facebook" valor={c.facebook} variacao={0} sparkline={[]} tooltip="Cliques no botão de Facebook." delay={4} />
           <KPICard titulo="Taxa Conversão" valor={c.taxaConversao} variacao={0} sparkline={[]} tooltip="Formulários ÷ Visitantes em percentual." suffix="%" decimals={2} delay={5} />
         </div>
