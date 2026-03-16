@@ -276,12 +276,12 @@ export function useRealtimeFeed() {
       const [vis, forms, clicks] = await Promise.all([
         supabase.from("acessos_site").select("id, criado_em, cidade, dispositivo").order("criado_em", { ascending: false }).limit(10),
         supabase.from("mensagens_contato").select("id, criado_em, cidade, nome").order("criado_em", { ascending: false }).limit(5),
-        supabase.from("cliques_whatsapp").select("id, criado_em, cidade, tipo_clique, dispositivo").order("criado_em", { ascending: false }).limit(5),
+        supabase.from("cliques_whatsapp").select("id, criado_em, cidade, tipo_clique").order("criado_em", { ascending: false }).limit(5),
       ]);
       const all = [
-        ...(vis.data || []).map((r) => ({ ...r, tipo: "visita", label: "visitou o site" })),
-        ...(forms.data || []).map((r) => ({ ...r, tipo: "formulario", label: `${r.nome} enviou formulário` })),
-        ...(clicks.data || []).map((r) => ({ ...r, tipo: r.tipo_clique || "whatsapp", label: `clicou no ${r.tipo_clique || "WhatsApp"}` })),
+        ...(vis.data || []).map((r) => ({ ...r, tipo: "visita" as const, label: "visitou o site" })),
+        ...(forms.data || []).map((r) => ({ ...r, tipo: "formulario" as const, label: `${r.nome} enviou formulário` })),
+        ...(clicks.data || []).map((r) => ({ ...r, tipo: (r.tipo_clique || "whatsapp") as string, label: `clicou no ${r.tipo_clique || "WhatsApp"}` })),
       ].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime()).slice(0, 20);
       setEvents(all);
     };
