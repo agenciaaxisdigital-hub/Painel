@@ -237,7 +237,7 @@ export function identifyZone(params: {
   }
 
   // ── STEP 2: Aparecida de Goiânia ──
-  if (cidadeNorm === "aparecida de goiania" || cidadeNorm.includes("aparecida de goian")) {
+  if (cidadeNorm === "aparecida de goiania" || cidadeNorm.includes("aparecida") && cidadeNorm.includes("goian") || cidadeNorm === "aparecida de goiania") {
     return identifyAparecidaZone({ bairro, latitude, longitude });
   }
 
