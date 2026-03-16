@@ -324,7 +324,7 @@ function DebugPanel({ debug }: { debug: any }) {
       detail: `zonas=${debug.aparecidaZoneSum} região=${debug.aparecidaTotal}`,
     },
     {
-      label: "Aparecida zero sem localização",
+      label: "Aparecida: todos identificados",
       pass: debug.aparecidaNaoIdentificada === 0,
       warn: debug.aparecidaNaoIdentificada > 0,
       detail: `count=${debug.aparecidaNaoIdentificada}`,
