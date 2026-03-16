@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Download, FileSpreadsheet, Calendar, Loader2 } from "lucide-react";
-import { format } from "date-fns";
-import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
+import { mapFormulario, mapVisitante, mapClique, exportXlsx, exportFilename } from "@/lib/export-utils";
 
 const dataTypes = [
-  { id: "formularios", label: "Formulários", description: "Todas as submissões com dados completos" },
-  { id: "visitantes", label: "Visitantes", description: "Acessos ao site com dispositivo e origem" },
-  { id: "cliques", label: "Cliques", description: "Cliques em WhatsApp, Instagram e Facebook" },
-  { id: "todos", label: "Tudo Combinado", description: "Exportação completa de todos os dados" },
+  { id: "formularios", label: "Formulários", description: "Todas as submissões com dados completos de localização, contato e UTM" },
+  { id: "visitantes", label: "Visitantes", description: "Acessos ao site com dispositivo, origem, localização e dados de sessão" },
+  { id: "cliques", label: "Cliques", description: "Cliques em WhatsApp, Instagram e Facebook com localização completa" },
+  { id: "todos", label: "Tudo Combinado", description: "Exportação completa — cada tabela em uma aba separada" },
 ];
 
 export default function Exportar() {
@@ -20,56 +19,31 @@ export default function Exportar() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const wb = XLSX.utils.book_new();
       const since = dateRange === "all" ? undefined : new Date(Date.now() - parseInt(dateRange) * 86400000).toISOString();
+      const sheets: { name: string; data: any[] }[] = [];
 
       if (selectedType === "formularios" || selectedType === "todos") {
-        let query = supabase.from("mensagens_contato").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(1000);
+        let query = supabase.from("mensagens_contato").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(5000);
         if (since) query = query.gte("criado_em", since);
         const { data } = await query;
-        if (data) {
-          const ws = XLSX.utils.json_to_sheet(data.map((f) => ({
-            Nome: f.nome, Telefone: f.telefone, Email: f.email || "", Mensagem: f.mensagem,
-            Cidade: f.cidade || "", Estado: f.estado || "", País: f.pais || "",
-            Lat: f.latitude, Lng: f.longitude, IP: f.endereco_ip || "",
-            Data: format(new Date(f.criado_em), "dd/MM/yyyy HH:mm"), Lida: f.lida ? "Sim" : "Não",
-          })));
-          XLSX.utils.book_append_sheet(wb, ws, "Formulários");
-        }
+        if (data && data.length > 0) sheets.push({ name: "Formulários", data: data.map(mapFormulario) });
       }
 
       if (selectedType === "visitantes" || selectedType === "todos") {
-        let query = supabase.from("acessos_site").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(1000);
+        let query = supabase.from("acessos_site").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(5000);
         if (since) query = query.gte("criado_em", since);
         const { data } = await query;
-        if (data) {
-          const ws = XLSX.utils.json_to_sheet(data.map((v) => ({
-            Cookie: v.cookie_visitante || "", Cidade: v.cidade || "", Estado: v.estado || "",
-            Dispositivo: v.dispositivo || "", Navegador: v.navegador || "", SO: v.sistema_operacional || "",
-            Página: v.pagina, Referrer: v.referrer || "", UTM_Source: v.utm_source || "",
-            UTM_Medium: v.utm_medium || "", UTM_Campaign: v.utm_campaign || "",
-            Visitas: v.contador_visitas, "Primeira Visita": v.primeira_visita ? "Sim" : "Não",
-            Data: format(new Date(v.criado_em), "dd/MM/yyyy HH:mm"),
-          })));
-          XLSX.utils.book_append_sheet(wb, ws, "Visitantes");
-        }
+        if (data && data.length > 0) sheets.push({ name: "Visitantes", data: data.map(mapVisitante) });
       }
 
       if (selectedType === "cliques" || selectedType === "todos") {
-        let query = supabase.from("cliques_whatsapp").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(1000);
+        let query = supabase.from("cliques_whatsapp").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(5000);
         if (since) query = query.gte("criado_em", since);
         const { data } = await query;
-        if (data) {
-          const ws = XLSX.utils.json_to_sheet(data.map((c) => ({
-            Tipo: c.tipo_clique || "whatsapp", Botão: c.texto_botao || "", Seção: c.secao_pagina || "",
-            Cidade: c.cidade || "", Estado: c.estado || "", Lat: c.latitude, Lng: c.longitude,
-            Data: format(new Date(c.criado_em), "dd/MM/yyyy HH:mm"),
-          })));
-          XLSX.utils.book_append_sheet(wb, ws, "Cliques");
-        }
+        if (data && data.length > 0) sheets.push({ name: "Cliques", data: data.map(mapClique) });
       }
 
-      XLSX.writeFile(wb, `chama-rosa-${selectedType}-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+      exportXlsx(exportFilename(selectedType === "todos" ? "Completo" : selectedType.charAt(0).toUpperCase() + selectedType.slice(1)), sheets);
     } finally {
       setExporting(false);
     }
@@ -79,7 +53,7 @@ export default function Exportar() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-3xl font-bold tracking-tight">Exportar Dados</h1>
-        <p className="text-sm text-muted-foreground">Exporte dados reais do Supabase em formato Excel</p>
+        <p className="text-sm text-muted-foreground">Exporte dados reais do Supabase em formato Excel — todos os campos capturados, padronizados e organizados</p>
       </div>
 
       <div className="glass-card p-5">
@@ -116,9 +90,20 @@ export default function Exportar() {
         {exporting ? "Exportando..." : "Exportar para Excel"}
       </motion.button>
 
-      <p className="text-center text-xs text-muted-foreground">
-        Dados reais do Supabase. A exportação inclui todos os campos capturados pelo Site Principal.
-      </p>
+      <div className="glass-card p-4">
+        <h4 className="text-xs font-medium text-foreground mb-2">Campos incluídos em cada exportação:</h4>
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-3 text-[10px] text-muted-foreground">
+          <div>
+            <span className="font-medium text-foreground/80">Formulários:</span> Nome, Telefone, Email, Mensagem, Cidade, Estado, Bairro, CEP, Rua, Endereço, Zona Eleitoral, Região, País, Coordenadas, IP, Data/Hora, Lida
+          </div>
+          <div>
+            <span className="font-medium text-foreground/80">Visitantes:</span> Cookie, Página, Cidade, Estado, Bairro, CEP, Rua, Endereço, Zona Eleitoral, Região, País, Coordenadas, Dispositivo, Navegador, SO, Tela, Referrer, UTMs, Nº Visitas, IP, Data/Hora
+          </div>
+          <div>
+            <span className="font-medium text-foreground/80">Cliques:</span> Tipo, Botão, Seção, Página Origem, URL Destino, Cookie, Cidade, Estado, Bairro, CEP, Rua, Endereço, Zona Eleitoral, Região, País, Coordenadas, Dispositivo, SO, IP, Data/Hora
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

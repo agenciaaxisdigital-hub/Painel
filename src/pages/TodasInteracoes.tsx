@@ -331,38 +331,16 @@ export default function Interacoes() {
   const filterOnlyTipo = (t: InteractionType) => { setTipos([t]); setPage(0); };
 
   const handleExportXlsx = () => {
-    const rows = allResults.map((r) => ({
-      Tipo: TIPO_CONFIG[r.tipo].label, "Data/Hora": format(parseISO(r.data_hora), "dd/MM/yyyy HH:mm:ss"),
-      Nome: r.nome || "", Telefone: r.telefone || "", Email: r.email || "",
-      Cidade: r.cidade || "", Estado: r.estado || "", Bairro: r.bairro || "",
-      CEP: r.cep || "", "Endereço Completo": r.endereco_completo || "",
-      "Zona Eleitoral": r.zona_eleitoral || "", IP: r.endereco_ip || "",
-      Dispositivo: r.dispositivo || "", SO: r.sistema_operacional || "", Navegador: r.navegador || "",
-      Página: r.pagina || "", "Texto Botão": r.texto_botao || "", "Seção Página": r.secao_pagina || "",
-      UTM_Source: r.utm_source || "", UTM_Medium: r.utm_medium || "", UTM_Campaign: r.utm_campaign || "",
-      Referrer: r.referrer || "", Latitude: r.latitude || "", Longitude: r.longitude || "",
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Interações");
-    XLSX.writeFile(wb, `Interacoes_ChamaRosa_${format(new Date(), "ddMMyyyy")}.xlsx`);
+    const rows = allResults.map((r) => mapInteracao(r));
+    exportXlsx(exportFilename("Interacoes"), [{ name: "Interações", data: rows }]);
     toast({ title: `${rows.length} registros exportados` });
   };
 
   const handleExportCsv = () => {
     const leads = allResults.filter((r) => r.tipo === "formulario" && r.telefone);
     if (leads.length === 0) { toast({ title: "Nenhum lead com telefone encontrado", variant: "destructive" }); return; }
-    const rows = leads.map((r) => ({
-      Nome: r.nome || "", Telefone: r.telefone || "", Cidade: r.cidade || "",
-      Estado: r.estado || "", Bairro: r.bairro || "", "Zona Eleitoral": r.zona_eleitoral || "",
-      "Data/Hora": format(parseISO(r.data_hora), "dd/MM/yyyy HH:mm"),
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const csv = XLSX.utils.sheet_to_csv(ws);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `Leads_ChamaRosa_${format(new Date(), "ddMMyyyy")}.csv`;
-    a.click(); URL.revokeObjectURL(url);
+    const rows = leads.map((r) => mapLeadCsv(r));
+    exportCsv(exportFilename("Leads_WhatsApp", "csv"), rows);
     toast({ title: `${leads.length} leads exportados` });
   };
 

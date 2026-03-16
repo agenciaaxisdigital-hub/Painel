@@ -47,8 +47,6 @@ export default function MapaGoias() {
       { name: "Regiões de Planejamento", data: allRegions.map(mapRegiaoGoias) },
     ]);
   };
-    XLSX.writeFile(wb, `regioes_goias_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-  };
 
   return (
     <div className="space-y-6">

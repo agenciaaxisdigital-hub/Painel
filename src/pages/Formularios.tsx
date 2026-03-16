@@ -57,17 +57,9 @@ export default function Formularios() {
   }, [data]);
 
   const handleExport = () => {
-    const ws = XLSX.utils.json_to_sheet(data.map((s: any) => ({
-      Nome: s.nome, Telefone: s.telefone, Email: s.email || "", Mensagem: s.mensagem,
-      Cidade: s.cidade || "", Estado: s.estado || "", Bairro: s.bairro || "",
-      CEP: s.cep || "", "Endereço Completo": s.endereco_completo || "",
-      "Zona Eleitoral": s.zona_eleitoral || "", País: s.pais || "",
-      Latitude: s.latitude, Longitude: s.longitude, IP: s.endereco_ip || "",
-      Data: format(parseISO(s.criado_em), "dd/MM/yyyy HH:mm"), Lida: s.lida ? "Sim" : "Não",
-    })));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Formulários");
-    XLSX.writeFile(wb, `formularios_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    exportXlsx(exportFilename("Formularios"), [
+      { name: "Formulários", data: data.map(mapFormulario) },
+    ]);
   };
 
   return (
