@@ -70,14 +70,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    const email = `${username.toLowerCase().replace(/\s+/g, ".")}@chamarosa.app`;
+    const email = `${normalizedUsername}@chamarosa.app`;
 
     // Check if user already exists
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
     const existing = existingUsers?.users?.find(u => u.email === email);
     if (existing) {
       return new Response(
-        JSON.stringify({ error: `Usuário "${username}" já existe` }),
+        JSON.stringify({ error: `Usuário "${normalizedUsername}" já existe` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
