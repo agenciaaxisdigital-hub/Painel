@@ -6,169 +6,113 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return jsonResponse({ error: "Configuração do servidor incompleta" }, 500);
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     // Verify caller is admin
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Não autorizado" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Não autorizado" }, 401);
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
-    if (!caller) {
-      return new Response(
-        JSON.stringify({ error: "Token inválido" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !caller) {
+      return jsonResponse({ error: "Token inválido ou expirado" }, 401);
     }
 
     const { data: isAdmin } = await supabaseAdmin.rpc("eh_admin", { _user_id: caller.id });
     if (!isAdmin) {
-      return new Response(
-        JSON.stringify({ error: "Apenas admins podem gerenciar usuários" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Apenas admins podem gerenciar usuários" }, 403);
     }
 
-    const { action, user_id, new_password, new_username } = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return jsonResponse({ error: "Body JSON inválido" }, 400);
+    }
+
+    const { action, user_id, new_password, new_username } = body;
 
     // ─── DELETE USER ───
     if (action === "delete") {
-      if (!user_id) {
-        return new Response(
-          JSON.stringify({ error: "user_id é obrigatório" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      if (!user_id) return jsonResponse({ error: "user_id é obrigatório" }, 400);
+      if (user_id === caller.id) return jsonResponse({ error: "Você não pode excluir sua própria conta" }, 400);
 
-      // Prevent self-deletion
-      if (user_id === caller.id) {
-        return new Response(
-          JSON.stringify({ error: "Você não pode excluir sua própria conta" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      await supabaseAdmin.from("roles_usuarios").delete().eq("user_id", user_id);
 
-      // Delete role first (cascade should handle but be explicit)
-      await supabaseAdmin
-        .from("roles_usuarios")
-        .delete()
-        .eq("user_id", user_id);
-
-      // Delete from auth
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id);
       if (deleteError) {
-        return new Response(
-          JSON.stringify({ error: deleteError.message }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        console.error("Delete error:", deleteError.message);
+        return jsonResponse({ error: deleteError.message }, 400);
       }
 
-      return new Response(
-        JSON.stringify({ success: true, message: "Usuário excluído com sucesso" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.log(`User deleted: ${user_id} by ${caller.id}`);
+      return jsonResponse({ success: true, message: "Usuário excluído com sucesso" });
     }
 
     // ─── RESET PASSWORD ───
     if (action === "reset_password") {
-      if (!user_id || !new_password) {
-        return new Response(
-          JSON.stringify({ error: "user_id e new_password são obrigatórios" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      if (new_password.length < 6) {
-        return new Response(
-          JSON.stringify({ error: "Senha deve ter no mínimo 6 caracteres" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      if (!user_id || !new_password) return jsonResponse({ error: "user_id e new_password são obrigatórios" }, 400);
+      if (String(new_password).length < 6) return jsonResponse({ error: "Senha deve ter no mínimo 6 caracteres" }, 400);
 
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
-        password: new_password,
+        password: String(new_password),
       });
 
       if (updateError) {
-        return new Response(
-          JSON.stringify({ error: updateError.message }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        console.error("Reset password error:", updateError.message);
+        return jsonResponse({ error: updateError.message }, 400);
       }
 
-      return new Response(
-        JSON.stringify({ success: true, message: "Senha redefinida com sucesso" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.log(`Password reset for ${user_id} by ${caller.id}`);
+      return jsonResponse({ success: true, message: "Senha redefinida com sucesso" });
     }
 
     // ─── RENAME USER ───
     if (action === "rename") {
-      if (!user_id || !new_username) {
-        return new Response(
-          JSON.stringify({ error: "user_id e new_username são obrigatórios" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      if (!user_id || !new_username) return jsonResponse({ error: "user_id e new_username são obrigatórios" }, 400);
 
-      const trimmed = new_username.trim();
-      if (!trimmed) {
-        return new Response(
-          JSON.stringify({ error: "Nome de usuário não pode ser vazio" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      const currentUserResponse = await supabaseAdmin.auth.admin.getUserById(user_id);
-      const currentEmail = currentUserResponse.data.user?.email;
-
-      if (!currentEmail) {
-        return new Response(
-          JSON.stringify({ error: "Usuário não encontrado" }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      const trimmed = String(new_username).trim().toLowerCase().replace(/\s+/g, ".");
+      if (!trimmed) return jsonResponse({ error: "Nome de usuário não pode ser vazio" }, 400);
 
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
-        email: currentEmail,
         user_metadata: { username: trimmed },
       });
 
       if (updateError) {
-        return new Response(
-          JSON.stringify({ error: updateError.message }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        console.error("Rename error:", updateError.message);
+        return jsonResponse({ error: updateError.message }, 400);
       }
 
-      return new Response(
-        JSON.stringify({ success: true, message: `Nome atualizado para "${trimmed}"` }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.log(`User renamed to ${trimmed}: ${user_id} by ${caller.id}`);
+      return jsonResponse({ success: true, message: `Nome atualizado para "${trimmed}"` });
     }
 
-    return new Response(
-      JSON.stringify({ error: "Ação inválida. Use 'delete', 'reset_password' ou 'rename'" }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ error: "Ação inválida. Use 'delete', 'reset_password' ou 'rename'" }, 400);
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    console.error("gerenciar-usuario unexpected error:", err);
+    return jsonResponse({ error: err.message || "Erro interno do servidor" }, 500);
   }
 });
