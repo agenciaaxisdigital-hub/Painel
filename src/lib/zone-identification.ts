@@ -339,7 +339,7 @@ function identifyGoianiaZone(params: {
     const nearest = findNearestZone(latitude, longitude, GOIANIA_CENTROIDS, 15);
     if (nearest) {
       const z = ZONAS_ELEITORAIS.find((zz) => zz.zona === nearest);
-      return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates", categoria: "goiania" };
+      if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates" as const, categoria: "goiania" as const };
     }
   }
 
