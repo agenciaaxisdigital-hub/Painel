@@ -143,6 +143,7 @@ export function identifyZone(params: {
     const zoneData = ZONAS_ELEITORAIS.find((z) => z.zona === zona_eleitoral);
     return {
       zona: zona_eleitoral,
+      nome: zoneData?.nome || "",
       cor: zoneData?.cor || ZONE_COLOR_MAP[zona_eleitoral] || "#888",
       eleitores: zoneData?.eleitores || 0,
       method: "database",
