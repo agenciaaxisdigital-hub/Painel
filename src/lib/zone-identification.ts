@@ -319,8 +319,8 @@ function identifyGoianiaZone(params: {
 
   // 1. Direct from database
   if (zona_eleitoral && zona_eleitoral.trim() && zona_eleitoral !== "Não identificada" && GOIANIA_ZONE_SET.has(zona_eleitoral)) {
-    const z = ZONAS_ELEITORAIS.find((z) => z.zona === zona_eleitoral)!;
-    return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "database", categoria: "goiania" };
+    const z = ZONAS_ELEITORAIS.find((zz) => zz.zona === zona_eleitoral);
+    if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "database" as const, categoria: "goiania" as const };
   }
 
   // 2. Bairro matching
