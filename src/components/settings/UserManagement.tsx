@@ -21,9 +21,44 @@ type UserData = {
   email: string;
 };
 
-async function getToken() {
-  const { data: session } = await supabase.auth.getSession();
-  return session?.session?.access_token;
+function normalizeUsername(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, ".");
+}
+
+function parseResponseSafely(text: string) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text ? { message: text } : {};
+  }
+}
+
+async function callAdminFunction<T>(functionName: string, body: unknown = {}): Promise<T> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+
+  if (!token) {
+    throw new Error("Não autenticado");
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const text = await response.text();
+  const payload = parseResponseSafely(text) as { error?: string; message?: string };
+
+  if (!response.ok) {
+    throw new Error(payload.error || payload.message || `Erro ${response.status}`);
+  }
+
+  return payload as T;
 }
 
 export default function UserManagement() {
@@ -44,47 +79,20 @@ export default function UserManagement() {
   const [renameTarget, setRenameTarget] = useState<UserData | null>(null);
   const [newUsername, setNewUsername] = useState("");
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, error: usersError } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      const token = await getToken();
-      if (!token) throw new Error("Não autenticado");
-
-      const { data, error } = await supabase.functions.invoke("listar-usuarios", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (error) throw error;
-      return (data as { users: UserData[] }).users;
+      const data = await callAdminFunction<{ users: UserData[] }>("listar-usuarios");
+      return data.users;
     },
   });
 
   const createUser = useMutation({
     mutationFn: async () => {
-      const token = await getToken();
-      if (!token) throw new Error("Não autenticado");
-
-      const { data, error } = await supabase.functions.invoke("criar-usuario", {
-        body: { username, password },
-        headers: { Authorization: `Bearer ${token}` },
+      return callAdminFunction<{ message: string }>("criar-usuario", {
+        username: normalizeUsername(username),
+        password,
       });
-
-      if (error) {
-        // Try to extract the actual error message from the response
-        try {
-          const errorBody = JSON.parse(error.message);
-          throw new Error(errorBody.error || error.message);
-        } catch (parseErr) {
-          // If the error context has a json body
-          if (error.context && typeof error.context.json === 'function') {
-            const body = await error.context.json();
-            throw new Error(body?.error || error.message);
-          }
-          throw new Error(data?.error || error.message);
-        }
-      }
-      if (data?.error) throw new Error(data.error);
-      return data;
     },
     onSuccess: (data) => {
       toast.success(data.message || "Usuário criado com sucesso");
@@ -98,28 +106,10 @@ export default function UserManagement() {
 
   const deleteUser = useMutation({
     mutationFn: async (userId: string) => {
-      const token = await getToken();
-      if (!token) throw new Error("Não autenticado");
-
-      const { data, error } = await supabase.functions.invoke("gerenciar-usuario", {
-        body: { action: "delete", user_id: userId },
-        headers: { Authorization: `Bearer ${token}` },
+      return callAdminFunction<{ message: string }>("gerenciar-usuario", {
+        action: "delete",
+        user_id: userId,
       });
-
-      if (error) {
-        try {
-          const errorBody = JSON.parse(error.message);
-          throw new Error(errorBody.error || error.message);
-        } catch (parseErr) {
-          if (error.context && typeof error.context.json === 'function') {
-            const body = await error.context.json();
-            throw new Error(body?.error || error.message);
-          }
-          throw new Error(data?.error || error.message);
-        }
-      }
-      if (data?.error) throw new Error(data.error);
-      return data;
     },
     onSuccess: (data) => {
       toast.success(data.message || "Usuário excluído");
@@ -131,31 +121,14 @@ export default function UserManagement() {
 
   const resetPassword = useMutation({
     mutationFn: async ({ userId, password }: { userId: string; password: string }) => {
-      const token = await getToken();
-      if (!token) throw new Error("Não autenticado");
-
-      const { data, error } = await supabase.functions.invoke("gerenciar-usuario", {
-        body: { action: "reset_password", user_id: userId, new_password: password },
-        headers: { Authorization: `Bearer ${token}` },
+      return callAdminFunction<{ message: string }>("gerenciar-usuario", {
+        action: "reset_password",
+        user_id: userId,
+        new_password: password,
       });
-
-      if (error) {
-        try {
-          const errorBody = JSON.parse(error.message);
-          throw new Error(errorBody.error || error.message);
-        } catch (parseErr) {
-          if (error.context && typeof error.context.json === 'function') {
-            const body = await error.context.json();
-            throw new Error(body?.error || error.message);
-          }
-          throw new Error(data?.error || error.message);
-        }
-      }
-      if (data?.error) throw new Error(data.error);
-      return data;
     },
     onSuccess: (data) => {
-      toast.success(data.message || "Senha redefinida");
+      toast.success(data.message || "Senha redefinida com sucesso");
       setResetTarget(null);
       setNewPassword("");
     },
@@ -164,28 +137,11 @@ export default function UserManagement() {
 
   const renameUser = useMutation({
     mutationFn: async ({ userId, newName }: { userId: string; newName: string }) => {
-      const token = await getToken();
-      if (!token) throw new Error("Não autenticado");
-
-      const { data, error } = await supabase.functions.invoke("gerenciar-usuario", {
-        body: { action: "rename", user_id: userId, new_username: newName },
-        headers: { Authorization: `Bearer ${token}` },
+      return callAdminFunction<{ message: string }>("gerenciar-usuario", {
+        action: "rename",
+        user_id: userId,
+        new_username: normalizeUsername(newName),
       });
-
-      if (error) {
-        try {
-          const errorBody = JSON.parse(error.message);
-          throw new Error(errorBody.error || error.message);
-        } catch (parseErr) {
-          if (error.context && typeof error.context.json === 'function') {
-            const body = await error.context.json();
-            throw new Error(body?.error || error.message);
-          }
-          throw new Error(data?.error || error.message);
-        }
-      }
-      if (data?.error) throw new Error(data.error);
-      return data;
     },
     onSuccess: (data) => {
       toast.success(data.message || "Usuário renomeado");
@@ -214,7 +170,7 @@ export default function UserManagement() {
     e.preventDefault();
     if (!renameTarget) return;
     if (!newUsername.trim()) return toast.error("Nome não pode ser vazio");
-    renameUser.mutate({ userId: renameTarget.user_id, newName: newUsername.trim() });
+    renameUser.mutate({ userId: renameTarget.user_id, newName: newUsername });
   };
 
   return (
@@ -247,7 +203,7 @@ export default function UserManagement() {
                   <Input id="username" placeholder="Ex: joao.silva" value={username}
                     onChange={(e) => setUsername(e.target.value)} autoComplete="off" />
                   <p className="text-[11px] text-muted-foreground">
-                    Login será: <span className="font-mono text-primary">{username.toLowerCase().replace(/\s+/g, ".") || "..."}</span>
+                    Login será: <span className="font-mono text-primary">{normalizeUsername(username) || "..."}</span>
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -403,7 +359,7 @@ export default function UserManagement() {
               <Input id="new-username" placeholder="Ex: joao.silva"
                 value={newUsername} onChange={(e) => setNewUsername(e.target.value)} autoComplete="off" />
               <p className="text-[11px] text-muted-foreground">
-                Login será: <span className="font-mono text-primary">{newUsername.toLowerCase().replace(/\s+/g, ".") || "..."}</span>
+                Login será: <span className="font-mono text-primary">{normalizeUsername(newUsername) || "..."}</span>
               </p>
             </div>
             <DialogFooter>

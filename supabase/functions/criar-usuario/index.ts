@@ -13,10 +13,11 @@ Deno.serve(async (req) => {
 
   try {
     const { username, password } = await req.json();
+    const normalizedUsername = String(username || "").trim().toLowerCase().replace(/\s+/g, ".");
 
-    if (!username || !password) {
+    if (!normalizedUsername || !password) {
       return new Response(
-        JSON.stringify({ error: "Username e senha são obrigatórios" }),
+        JSON.stringify({ error: "Nome de usuário e senha são obrigatórios" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -69,14 +70,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    const email = `${username.toLowerCase().replace(/\s+/g, ".")}@chamarosa.app`;
+    const email = `${normalizedUsername}@chamarosa.app`;
 
     // Check if user already exists
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
     const existing = existingUsers?.users?.find(u => u.email === email);
     if (existing) {
       return new Response(
-        JSON.stringify({ error: `Usuário "${username}" já existe` }),
+        JSON.stringify({ error: `Usuário "${normalizedUsername}" já existe` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -86,7 +87,7 @@ Deno.serve(async (req) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { username },
+      user_metadata: { username: normalizedUsername },
     });
 
     if (createError) {
@@ -109,8 +110,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Usuário "${username}" criado com sucesso`,
-        login: { username, email },
+        message: `Usuário "${normalizedUsername}" criado com sucesso`,
+        login: { username: normalizedUsername, email },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
