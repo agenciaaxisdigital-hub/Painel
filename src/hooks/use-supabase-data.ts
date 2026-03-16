@@ -1,7 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { subDays, format, parseISO } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { toast } from "@/hooks/use-toast";
 
 function getSince(days: number) {
   return subDays(new Date(), days).toISOString();
@@ -349,6 +350,45 @@ export function useHourlyHeatmap(days: number, tipoClique?: string) {
     },
     staleTime: 60_000,
   });
+}
+
+// ==================== REALTIME INVALIDATION ====================
+export function useRealtimeInvalidation() {
+  const queryClient = useQueryClient();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("dashboard-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "acessos_site" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["table-counts"] });
+        queryClient.invalidateQueries({ queryKey: ["variation"] });
+        queryClient.invalidateQueries({ queryKey: ["time-series"] });
+        queryClient.invalidateQueries({ queryKey: ["connection-status"] });
+        queryClient.invalidateQueries({ queryKey: ["top-cities"] });
+        queryClient.invalidateQueries({ queryKey: ["top-pages"] });
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "cliques_whatsapp" }, (p) => {
+        queryClient.invalidateQueries({ queryKey: ["table-counts"] });
+        queryClient.invalidateQueries({ queryKey: ["variation"] });
+        queryClient.invalidateQueries({ queryKey: ["time-series"] });
+        queryClient.invalidateQueries({ queryKey: ["connection-status"] });
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "mensagens_contato" }, (p) => {
+        const r = p.new as any;
+        queryClient.invalidateQueries({ queryKey: ["table-counts"] });
+        queryClient.invalidateQueries({ queryKey: ["variation"] });
+        queryClient.invalidateQueries({ queryKey: ["time-series"] });
+        queryClient.invalidateQueries({ queryKey: ["connection-status"] });
+        toast({
+          title: "📩 Novo formulário recebido!",
+          description: `${r.nome || "Alguém"} enviou uma mensagem${r.cidade ? ` de ${r.cidade}` : ""}.`,
+        });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
 }
 
 // ==================== HELPERS ====================
