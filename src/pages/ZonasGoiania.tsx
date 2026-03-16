@@ -274,7 +274,7 @@ function ZoneRow({ z, i, maxVisitors, isSelected, onSelect }: {
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: z.cor }} />
             <span className="text-xs font-medium">{displayZona}</span>
-            {z.nome && z.zona !== "Não identificada" && <span className="text-[10px] text-muted-foreground">— {z.nome}</span>}
+            {z.nome && z.zona !== "Sem localização" && <span className="text-[10px] text-muted-foreground">— {z.nome}</span>}
           </div>
           <div className="flex items-center gap-3 text-[10px] tabular-nums">
             <span>{z.visitors} visit.</span>
