@@ -470,13 +470,39 @@ export default function ZonasGoiania() {
           )}
 
           {/* ═══ TAB: COMPARATIVO ═══ */}
-          {activeTab === "comparativo" && (
+          {activeTab === "comparativo" && (() => {
+            // Build unified ranking: zones from Goiânia + Aparecida + cities
+            const allItems: { nome: string; origem: string; cor: string; visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number; total: number }[] = [
+              ...sortedGoianiaZones.map((z) => ({
+                nome: `${z.zona} Zona — ${z.nome}`, origem: "Goiânia", cor: z.cor,
+                visitors: z.visitors, forms: z.forms, whatsapp: z.whatsapp, instagram: z.instagram, facebook: z.facebook, total: z.total,
+              })),
+              ...sortedAparecidaZones.map((z) => ({
+                nome: `${z.zona} Zona — ${z.nome}`, origem: "Aparecida", cor: z.cor,
+                visitors: z.visitors, forms: z.forms, whatsapp: z.whatsapp, instagram: z.instagram, facebook: z.facebook, total: z.total,
+              })),
+              ...cities.map((c) => ({
+                nome: c.nome, origem: "Interior", cor: "#4DB8D4",
+                visitors: c.visitors, forms: c.forms, whatsapp: c.whatsapp, instagram: c.instagram, facebook: c.facebook, total: c.total,
+              })),
+            ].sort((a, b) => b.total - a.total);
+
+            const top50 = allItems.slice(0, 50);
+            const maxRankTotal = Math.max(1, top50[0]?.total || 1);
+            const origemBadge: Record<string, string> = {
+              "Goiânia": "bg-[#E8825C]/20 text-[#E8825C]",
+              "Aparecida": "bg-[#FF6B8A]/20 text-[#FF6B8A]",
+              "Interior": "bg-[#4DB8D4]/20 text-[#4DB8D4]",
+            };
+
+            return (
             <motion.div key="comparativo" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }} className="space-y-4">
+              {/* Best region card */}
               {bestRegion && bestRegion.total > 0 && (
                 <div className="glass-card p-5 ring-1 ring-yellow-500/20">
                   <div className="flex items-center gap-2 mb-3">
                     <Crown className="h-5 w-5 text-yellow-400" />
-                    <h3 className="text-sm font-bold">Melhor Desempenho</h3>
+                    <h3 className="text-sm font-bold">Melhor Desempenho por Região</h3>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="h-4 w-4 rounded-full" style={{ backgroundColor: bestRegion.cor }} />
@@ -491,9 +517,26 @@ export default function ZonasGoiania() {
                 </div>
               )}
 
-              {/* Visual bars */}
+              {/* Best zone/city */}
+              {top50[0] && top50[0].total > 0 && (
+                <div className="glass-card p-5 ring-1 ring-primary/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Trophy className="h-5 w-5 text-yellow-400" />
+                    <h3 className="text-sm font-bold">Melhor Zona / Cidade</h3>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="h-4 w-4 rounded-full" style={{ backgroundColor: top50[0].cor }} />
+                    <span className="text-lg font-bold">{top50[0].nome}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${origemBadge[top50[0].origem]}`}>{top50[0].origem}</span>
+                    <span className="ml-auto text-2xl font-bold tabular-nums gold-text">{top50[0].total.toLocaleString("pt-BR")}</span>
+                    <span className="text-xs text-muted-foreground">interações</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Region visual bars */}
               <div className="glass-card p-5">
-                <h3 className="text-sm font-medium mb-4">Comparativo Visual</h3>
+                <h3 className="text-sm font-medium mb-4">Comparativo por Região</h3>
                 <div className="space-y-4">
                   {regionList.filter((r) => r.key !== "nao_identificado").map((r, i) => {
                     const maxTotal = Math.max(1, ...regionList.filter((x) => x.key !== "nao_identificado").map((x) => x.total));
@@ -543,9 +586,80 @@ export default function ZonasGoiania() {
                 </div>
               </div>
 
-              {/* Table */}
+              {/* ═══ RANKING UNIFICADO TOP 50 ═══ */}
               <div className="glass-card overflow-hidden">
-                <div className="p-5 border-b border-border"><h3 className="text-sm font-medium">Tabela Comparativa</h3></div>
+                <div className="p-5 border-b border-border">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium flex items-center gap-2">
+                      <Trophy className="h-4 w-4 text-yellow-400" />
+                      Ranking Geral — Top {Math.min(50, allItems.length)} Zonas e Cidades
+                    </h3>
+                    <span className="text-[10px] text-muted-foreground">{allItems.length} locais identificados</span>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border text-muted-foreground">
+                        <th className="px-4 py-3 text-left font-medium w-8">#</th>
+                        <th className="px-4 py-3 text-left font-medium">Zona / Cidade</th>
+                        <th className="px-4 py-3 text-left font-medium">Origem</th>
+                        <th className="px-4 py-3 text-right font-medium">Visit.</th>
+                        <th className="px-4 py-3 text-right font-medium">Forms</th>
+                        <th className="px-4 py-3 text-right font-medium">WA</th>
+                        <th className="px-4 py-3 text-right font-medium">IG</th>
+                        <th className="px-4 py-3 text-right font-medium">FB</th>
+                        <th className="px-4 py-3 text-right font-medium">Total</th>
+                        <th className="px-4 py-3 text-left font-medium w-32"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {top50.map((item, i) => {
+                        const barPct = (item.total / maxRankTotal) * 100;
+                        return (
+                          <tr key={`${item.origem}-${item.nome}`} className={`border-b border-border/50 hover:bg-white/[0.02] ${i === 0 ? "bg-yellow-500/[0.04]" : i < 3 ? "bg-white/[0.01]" : ""}`}>
+                            <td className="px-4 py-2.5 tabular-nums text-muted-foreground">
+                              {i < 3 ? (
+                                <Trophy className={`h-3.5 w-3.5 ${i === 0 ? "text-yellow-400" : i === 1 ? "text-gray-400" : "text-amber-600"}`} />
+                              ) : (
+                                <span>{i + 1}</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2.5">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.cor }} />
+                                <span className="font-medium truncate max-w-[200px]">{item.nome}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-2.5">
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${origemBadge[item.origem]}`}>
+                                {item.origem}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-right tabular-nums">{item.visitors}</td>
+                            <td className="px-4 py-2.5 text-right tabular-nums">{item.forms}</td>
+                            <td className="px-4 py-2.5 text-right tabular-nums text-success">{item.whatsapp}</td>
+                            <td className="px-4 py-2.5 text-right tabular-nums text-primary">{item.instagram}</td>
+                            <td className="px-4 py-2.5 text-right tabular-nums text-blue-400">{item.facebook}</td>
+                            <td className="px-4 py-2.5 text-right tabular-nums font-bold">{item.total}</td>
+                            <td className="px-4 py-2.5">
+                              <div className="h-1.5 w-full rounded-full bg-white/[0.04] overflow-hidden">
+                                <motion.div initial={{ width: 0 }} animate={{ width: `${barPct}%` }}
+                                  transition={{ duration: 0.4, delay: Math.min(i * 0.02, 0.5) }}
+                                  className="h-full rounded-full" style={{ backgroundColor: item.cor }} />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Region summary table */}
+              <div className="glass-card overflow-hidden">
+                <div className="p-5 border-b border-border"><h3 className="text-sm font-medium">Resumo por Região</h3></div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
@@ -553,9 +667,9 @@ export default function ZonasGoiania() {
                         <th className="px-4 py-3 text-left font-medium">Região</th>
                         <th className="px-4 py-3 text-right font-medium">Visitantes</th>
                         <th className="px-4 py-3 text-right font-medium">Forms</th>
-                        <th className="px-4 py-3 text-right font-medium">WhatsApp</th>
-                        <th className="px-4 py-3 text-right font-medium">Instagram</th>
-                        <th className="px-4 py-3 text-right font-medium">Facebook</th>
+                        <th className="px-4 py-3 text-right font-medium">WA</th>
+                        <th className="px-4 py-3 text-right font-medium">IG</th>
+                        <th className="px-4 py-3 text-right font-medium">FB</th>
                         <th className="px-4 py-3 text-right font-medium">Total</th>
                         <th className="px-4 py-3 text-right font-medium">%</th>
                       </tr>
@@ -594,7 +708,8 @@ export default function ZonasGoiania() {
                 </div>
               </div>
             </motion.div>
-          )}
+            );
+          })()}
         </AnimatePresence>
       )}
     </div>
