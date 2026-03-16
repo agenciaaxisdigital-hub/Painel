@@ -300,7 +300,7 @@ export function useRealtimeFeed() {
       .channel("feed")
       .on("postgres_changes", { event: "*", schema: "public", table: "acessos_site" }, (p) => {
         if (p.eventType === "INSERT" && isBrasil(p.new)) {
-          setEvents((prev) => [{ ...p.new, tipo: "visita", label: "visitou o site" }, ...prev].slice(0, 20));
+          setEvents((prev) => [{ ...p.new, tipo: "visita", label: "visitou o site" }, ...prev].slice(0, 100));
         } else if (p.eventType === "UPDATE") {
           setEvents((prev) => prev.map((e) => e.id === (p.new as any).id ? { ...e, ...p.new } : e));
         }
