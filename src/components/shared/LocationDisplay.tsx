@@ -117,39 +117,6 @@ export function FullLocationDetail({ data, onCopy }: { data: LocationData; onCop
       </div>
 
       <div className="space-y-1.5">
-        {/* Reverse geocoded address */}
-        {hasCoords && !data.endereco_completo && (
-          <div className="space-y-1">
-            {geocode.result ? (
-              <div className="flex items-start gap-2 text-[11px]">
-                <span className="text-muted-foreground shrink-0 w-28">Endereço (GPS)</span>
-                <span className="text-foreground/80 break-all">{geocode.result}</span>
-                <button onClick={() => copyText(geocode.result!)} className="shrink-0 text-muted-foreground/40 hover:text-primary transition-colors">
-                  <Copy className="h-3 w-3" />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => geocode.fetchAddress(data.latitude!, data.longitude!)}
-                disabled={geocode.loading}
-                className="flex items-center gap-1.5 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-[11px] font-medium text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
-              >
-                {geocode.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <MapPinned className="h-3 w-3" />}
-                {geocode.loading ? "Buscando endereço..." : "Buscar Endereço Completo"}
-              </button>
-            )}
-          </div>
-        )}
-
-        {data.endereco_completo && (
-          <div className="flex items-start gap-2 text-[11px]">
-            <span className="text-muted-foreground shrink-0 w-28">Endereço Completo</span>
-            <span className="text-foreground/80 break-all">{data.endereco_completo}</span>
-            <button onClick={() => copyText(data.endereco_completo!)} className="shrink-0 text-muted-foreground/40 hover:text-primary transition-colors">
-              <Copy className="h-3 w-3" />
-            </button>
-          </div>
-        )}
         {data.rua && <DetailRow label="Rua" value={data.rua} />}
         {data.bairro && (
           <div className="flex items-start gap-2 text-[11px]">
