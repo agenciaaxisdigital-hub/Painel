@@ -177,7 +177,11 @@ export function useDeviceBreakdown(days: number) {
     queryFn: async () => {
       const since = getSince(days);
       const { data } = await supabase.from("acessos_site").select("dispositivo").gte("criado_em", since).or(BRASIL_FILTER).limit(1000);
-      return aggregate(data || [], "dispositivo");
+      // Normalize: only "Desktop" or "Mobile"
+      const normalized = (data || []).map((r) => ({
+        dispositivo: r.dispositivo?.toLowerCase() === "desktop" ? "desktop" : "mobile",
+      }));
+      return aggregate(normalized, "dispositivo");
     },
     staleTime: 60_000,
   });
