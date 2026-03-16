@@ -13,8 +13,17 @@ export const ZONAS_ELEITORAIS = [
 
 export const TOTAL_ELEITORES_GOIANIA = 1_036_218;
 
+// ============ ZONAS ELEITORAIS APARECIDA DE GOIÂNIA ============
+export const ZONAS_APARECIDA = [
+  { zona: "119ª", nome: "Centro / Cidade Livre / Jardim Riviera", eleitores: 135000, cor: "#FF6B8A" },
+  { zona: "132ª", nome: "American Park / Cardoso / Independência", eleitores: 142000, cor: "#FFB347" },
+  { zona: "145ª", nome: "Garavelo / Papillon / Jardim Luz", eleitores: 128000, cor: "#7EC8E3" },
+] as const;
+
+export const TOTAL_ELEITORES_APARECIDA = 405_000;
+
 export const ZONE_COLOR_MAP: Record<string, string> = Object.fromEntries(
-  ZONAS_ELEITORAIS.map((z) => [z.zona, z.cor])
+  [...ZONAS_ELEITORAIS, ...ZONAS_APARECIDA].map((z) => [z.zona, z.cor])
 );
 
 // ============ REGIÕES DE PLANEJAMENTO GOIÁS ============
