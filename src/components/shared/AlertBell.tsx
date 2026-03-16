@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Bell, AlertTriangle, TrendingUp, Info, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { generateAlerts } from "@/lib/mock-data";
 
 const typeConfig = {
   warning: { icon: AlertTriangle, color: "text-secondary", bg: "bg-secondary/10" },
@@ -10,9 +9,14 @@ const typeConfig = {
   info: { icon: Info, color: "text-primary", bg: "bg-primary/10" },
 };
 
+// Alerts are generated from data analysis — placeholder until real alert system
+const defaultAlerts = [
+  { id: "a1", type: "info" as const, message: "Sistema de alertas ativo. Monitorando dados do Site Principal.", time: "agora", read: false },
+];
+
 export function AlertBell() {
   const [open, setOpen] = useState(false);
-  const [alerts] = useState(generateAlerts);
+  const [alerts] = useState(defaultAlerts);
   const unread = alerts.filter((a) => !a.read).length;
 
   return (
@@ -50,12 +54,7 @@ export function AlertBell() {
                   const config = typeConfig[alert.type];
                   const Icon = config.icon;
                   return (
-                    <div
-                      key={alert.id}
-                      className={`flex items-start gap-3 px-4 py-3 border-b border-white/[0.04] transition-colors ${
-                        !alert.read ? "bg-white/[0.02]" : ""
-                      }`}
-                    >
+                    <div key={alert.id} className={`flex items-start gap-3 px-4 py-3 border-b border-white/[0.04] ${!alert.read ? "bg-white/[0.02]" : ""}`}>
                       <div className={`mt-0.5 rounded-full p-1.5 ${config.bg}`}>
                         <Icon className={`h-3 w-3 ${config.color}`} />
                       </div>

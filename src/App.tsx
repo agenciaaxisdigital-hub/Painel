@@ -6,8 +6,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Login from "./pages/Login";
-import DadosDoSite from "./pages/DadosDoSite";
-import Mapas from "./pages/Mapas";
+import VisaoGeral from "./pages/VisaoGeral";
+import Visitantes from "./pages/Visitantes";
+import Formularios from "./pages/Formularios";
+import Cliques from "./pages/Cliques";
+import ZonasGoiania from "./pages/ZonasGoiania";
+import MapaGoias from "./pages/MapaGoias";
 import Exportar from "./pages/Exportar";
 import Configuracoes from "./pages/Configuracoes";
 import NotFound from "./pages/NotFound";
@@ -24,8 +28,12 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route element={<DashboardLayout />}>
-              <Route path="/" element={<DadosDoSite />} />
-              <Route path="/mapas" element={<Mapas />} />
+              <Route path="/" element={<VisaoGeral />} />
+              <Route path="/visitantes" element={<Visitantes />} />
+              <Route path="/formularios" element={<Formularios />} />
+              <Route path="/cliques" element={<Cliques />} />
+              <Route path="/zonas" element={<ZonasGoiania />} />
+              <Route path="/mapa-goias" element={<MapaGoias />} />
               <Route path="/exportar" element={<Exportar />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
             </Route>
