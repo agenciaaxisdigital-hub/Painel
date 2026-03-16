@@ -113,24 +113,34 @@ Deno.serve(async (req) => {
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
+    // Auth: accept service role key OR admin user token
     const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return jsonResponse({ error: "Não autorizado" }, 401);
-    }
+    const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
+    
+    // Also accept a cleanup_key in body for automated calls
+    let body: any = {};
+    try { body = await req.json(); } catch {}
+    const hasCleanupKey = body?.cleanup_key === serviceRoleKey;
 
-    const token = authHeader.replace("Bearer ", "");
-    const {
-      data: { user: caller },
-      error: authError,
-    } = await supabaseAdmin.auth.getUser(token);
+    if (!isServiceRole && !hasCleanupKey) {
+      if (!authHeader?.startsWith("Bearer ")) {
+        return jsonResponse({ error: "Não autorizado" }, 401);
+      }
 
-    if (authError || !caller) {
-      return jsonResponse({ error: "Token inválido ou expirado" }, 401);
-    }
+      const token = authHeader.replace("Bearer ", "");
+      const {
+        data: { user: caller },
+        error: authError,
+      } = await supabaseAdmin.auth.getUser(token);
 
-    const { data: isAdmin } = await supabaseAdmin.rpc("eh_admin", { _user_id: caller.id });
-    if (!isAdmin) {
-      return jsonResponse({ error: "Apenas admins podem limpar registros" }, 403);
+      if (authError || !caller) {
+        return jsonResponse({ error: "Token inválido ou expirado" }, 401);
+      }
+
+      const { data: isAdmin } = await supabaseAdmin.rpc("eh_admin", { _user_id: caller.id });
+      if (!isAdmin) {
+        return jsonResponse({ error: "Apenas admins podem limpar registros" }, 403);
+      }
     }
 
     const tables = ["acessos_site", "mensagens_contato", "cliques_whatsapp"] as const;
