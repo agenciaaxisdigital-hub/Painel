@@ -117,7 +117,6 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("authorization");
     const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
     
-    // Also accept a cleanup_key in body for automated calls
     let body: any = {};
     try { body = await req.json(); } catch {}
     const hasCleanupKey = body?.cleanup_key === serviceRoleKey;
@@ -137,7 +136,7 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Token inválido ou expirado" }, 401);
       }
 
-      const { data: isAdmin } = await supabaseAdmin.rpc("eh_admin", { _user_id: caller.id });
+      const { data: isAdmin } = await supabaseAdmin.rpc("eh_admin_painel", { _user_id: caller.id });
       if (!isAdmin) {
         return jsonResponse({ error: "Apenas admins podem limpar registros" }, 403);
       }

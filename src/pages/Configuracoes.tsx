@@ -15,7 +15,7 @@ const tables = [
   { nome: "acessos_site", descricao: "Registra cada visita ao Site Principal. Guarda cidade, dispositivo, navegador, origem (UTM, referrer) e cookies de visitante." },
   { nome: "mensagens_contato", descricao: "Armazena os formulários de contato enviados. Contém nome, telefone, mensagem, email e coordenadas GPS capturadas." },
   { nome: "cliques_whatsapp", descricao: "Registra cada clique nos botões de WhatsApp, Instagram e Facebook. Inclui tipo_clique, seção da página, texto do botão e localização." },
-  { nome: "roles_usuarios", descricao: "Controla o nível de acesso dos administradores do painel. Super admin, admin ou editor." },
+  { nome: "roles_painel", descricao: "Controla o nível de acesso dos administradores do painel. Super admin, admin ou editor." },
   { nome: "configuracoes", descricao: "Configurações gerais do sistema. Chaves de configuração com valores editáveis." },
 ];
 

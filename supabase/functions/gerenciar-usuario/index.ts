@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Token inválido ou expirado" }, 401);
     }
 
-    const { data: isAdmin } = await supabaseAdmin.rpc("eh_admin", { _user_id: caller.id });
+    const { data: isAdmin } = await supabaseAdmin.rpc("eh_admin_painel", { _user_id: caller.id });
     if (!isAdmin) {
       return jsonResponse({ error: "Apenas admins podem gerenciar usuários" }, 403);
     }
@@ -60,7 +60,8 @@ Deno.serve(async (req) => {
       if (!user_id) return jsonResponse({ error: "user_id é obrigatório" }, 400);
       if (user_id === caller.id) return jsonResponse({ error: "Você não pode excluir sua própria conta" }, 400);
 
-      await supabaseAdmin.from("roles_usuarios").delete().eq("user_id", user_id);
+      // Remove from roles_painel only (don't touch roles_usuarios)
+      await supabaseAdmin.from("roles_painel").delete().eq("user_id", user_id);
 
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id);
       if (deleteError) {
