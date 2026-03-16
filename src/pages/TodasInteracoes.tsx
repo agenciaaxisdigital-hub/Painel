@@ -155,11 +155,11 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
       };
 
       const countPromise = Promise.all([
-        addDateFilter(supabase.from("acessos_site").select("*", { count: "exact", head: true })),
-        addDateFilter(supabase.from("mensagens_contato").select("*", { count: "exact", head: true })),
-        addDateFilter(supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).eq("tipo_clique", "whatsapp")),
-        addDateFilter(supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).eq("tipo_clique", "instagram")),
-        addDateFilter(supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).eq("tipo_clique", "facebook")),
+        addDateFilter(supabase.from("acessos_site").select("*", { count: "exact", head: true }).or("pais.eq.Brasil,pais.is.null")),
+        addDateFilter(supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).or("pais.eq.Brasil,pais.is.null")),
+        addDateFilter(supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).eq("tipo_clique", "whatsapp").or("pais.eq.Brasil,pais.is.null")),
+        addDateFilter(supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).eq("tipo_clique", "instagram").or("pais.eq.Brasil,pais.is.null")),
+        addDateFilter(supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).eq("tipo_clique", "facebook").or("pais.eq.Brasil,pais.is.null")),
       ]).then(([a, f, w, i, fb]) => {
         counts.acesso = a.count ?? 0; counts.formulario = f.count ?? 0;
         counts.whatsapp = w.count ?? 0; counts.instagram = i.count ?? 0; counts.facebook = fb.count ?? 0;
