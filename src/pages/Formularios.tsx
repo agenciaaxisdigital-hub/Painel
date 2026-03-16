@@ -210,27 +210,33 @@ export default function Formularios() {
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-5">
             <h3 className="text-sm font-medium mb-3">Por Cidade</h3>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={cityData} innerRadius={50} outerRadius={75} paddingAngle={2} dataKey="value" strokeWidth={0}>
-                    {cityData.map((_, i) => <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ background: "hsl(240, 15%, 8%)", border: "1px solid hsl(240, 5%, 15%)", borderRadius: "8px", fontSize: "12px" }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="space-y-1 mt-2">
-              {cityData.map((d, i) => (
-                <div key={d.name} className="flex items-center justify-between text-[10px]">
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-2 w-2 rounded-sm" style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }} />
-                    <span className="text-foreground/80">{d.name}</span>
-                  </div>
-                  <span className="tabular-nums text-muted-foreground">{d.value}</span>
-                </div>
-              ))}
-            </div>
+            {cityData.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-8 text-center">Sem dados de cidade</p>
+            ) : (
+              <div className="space-y-2">
+                {cityData.map((d, i) => {
+                  const max = cityData[0]?.value || 1;
+                  const pct = (d.value / max) * 100;
+                  return (
+                    <div key={d.name} className="space-y-1">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-foreground/80 font-medium">{d.name}</span>
+                        <span className="tabular-nums text-muted-foreground">{d.value}</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-white/[0.04] overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.6, delay: i * 0.08 }}
+                          className="h-full rounded-full"
+                          style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
         </div>
       )}
