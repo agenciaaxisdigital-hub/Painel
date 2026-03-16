@@ -1,4 +1,4 @@
-import { ZONAS_ELEITORAIS, ZONE_COLOR_MAP } from "./constants";
+import { ZONAS_ELEITORAIS, ZONAS_APARECIDA, ZONE_COLOR_MAP } from "./constants";
 
 // ── Zone neighborhood map (case/accent insensitive matching) ──
 const ZONE_NEIGHBORHOODS: Record<string, string[]> = {
@@ -81,10 +81,41 @@ const ZONE_NEIGHBORHOODS: Record<string, string[]> = {
     "Jardim Novo Oriente norte","Jardim das Flores norte","Setor Bela Vista sul",
     "Residencial Buena Vista norte","Parque Primavera","Setor Campinas sul","Jardim Cerrado II",
   ],
+  // ── Aparecida de Goiânia ──
+  "119ª": [
+    "Cidade Livre","Centro Aparecida","Jardim Riviera","Setor Central Aparecida","Jardim Bela Vista Aparecida",
+    "Vila Brasília Aparecida","Setor dos Afonsos Aparecida","Jardim Nova Era","Vila São Tomaz",
+    "Jardim Tiradentes Aparecida","Setor Garavelo","Jardim Cristal","Setor Conde dos Arcos",
+    "Setor Parque das Nações","Jardim Helvécia Aparecida","Residencial Village Garavelo",
+    "Jardim Asa Branca","Setor Serra Dourada","Cidade Satélite São Luiz","Residencial Solar Central Park",
+    "Setor Aeroporto Aparecida","Vila Maria Aparecida","Parque Flamboyant Aparecida",
+    "Jardim das Esmeraldas Aparecida","Jardim Florença Aparecida","Setor Marista Aparecida",
+    "Residencial Ville de France","Residencial Buriti Sereno","Jardim Maranata","Vila Santa Luzia",
+  ],
+  "132ª": [
+    "American Park","Bairro Cardoso","Setor Independência","Jardim Luz","Jardim dos Girassóis",
+    "Jardim Buriti Sereno","Setor Alto Paraíso","Parque Veiga Jardim","Vila Rosa","Jardim Bonança",
+    "Residencial Ana Lúcia","Residencial Jardim Veneza","Cidade Vera Cruz","Setor Araguaia",
+    "Residencial Park Ville","Residencial Vale do Araguaia","Bairro Andrade Reis",
+    "Residencial Araguaia Aparecida","Jardim Nova União","Setor Madre Germana",
+    "Chácara São Pedro","Residencial Humaitá","Residencial Itaipu","Vila Mariana",
+    "Jardim Paraíso","Jardim Santo Antônio","Setor Norte Aparecida","Residencial Monte Sinai Aparecida",
+  ],
+  "145ª": [
+    "Garavelo Park","Papillon Park","Jardim Luz Aparecida","Residencial Tocantins",
+    "Setor Morada do Morro","Jardim Belo Horizonte","Setor Expansul","Residencial Belo Horizonte",
+    "Residencial Montreal Aparecida","Residencial Itamaracá","Residencial Canadá",
+    "Setor Colina Azul","Residencial Recanto do Bosque","Residencial Nova Olinda",
+    "Setor Cruzeiro Aparecida","Residencial Olinda","Setor Sul Aparecida","Residencial Marés",
+    "Residencial Santa Fé Aparecida","Residencial Park Real","Residencial Park Sol",
+    "Residencial São Lourenço","Jardim Imperial","Residencial São Luiz",
+    "Jardim Ipiranga Aparecida","Residencial Águas Claras","Residencial Portal do Cerrado",
+  ],
 };
 
 // Zone centroids for coordinate-based fallback
 const ZONE_CENTROIDS: Record<string, { lat: number; lng: number }> = {
+  // Goiânia
   "1ª": { lat: -16.6864, lng: -49.2553 },
   "2ª": { lat: -16.6720, lng: -49.2501 },
   "127ª": { lat: -16.7198, lng: -49.2695 },
@@ -94,7 +125,13 @@ const ZONE_CENTROIDS: Record<string, { lat: number; lng: number }> = {
   "136ª": { lat: -16.7482, lng: -49.2683 },
   "146ª": { lat: -16.6451, lng: -49.2601 },
   "147ª": { lat: -16.7003, lng: -49.2849 },
+  // Aparecida de Goiânia
+  "119ª": { lat: -16.7900, lng: -49.2438 },
+  "132ª": { lat: -16.8200, lng: -49.2700 },
+  "145ª": { lat: -16.7650, lng: -49.2850 },
 };
+
+const ALL_ZONES = [...ZONAS_ELEITORAIS, ...ZONAS_APARECIDA];
 
 // Normalize string for comparison (remove accents, lowercase)
 function normalize(str: string): string {
@@ -114,12 +151,16 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// Aparecida zone numbers for identification
+const APARECIDA_ZONES = new Set(["119ª", "132ª", "145ª"]);
+
 export interface ZoneResult {
   zona: string;
   nome: string;
   cor: string;
   eleitores: number;
   method: "database" | "bairro" | "coordinates" | "aparecida" | "unknown";
+  cidade: "goiania" | "aparecida" | "unknown";
 }
 
 /**
@@ -140,13 +181,15 @@ export function identifyZone(params: {
 
   // 1. Direct from database
   if (zona_eleitoral && zona_eleitoral !== "Não identificada" && zona_eleitoral.trim()) {
-    const zoneData = ZONAS_ELEITORAIS.find((z) => z.zona === zona_eleitoral);
+    const zoneData = ALL_ZONES.find((z) => z.zona === zona_eleitoral);
+    const isAparecida = APARECIDA_ZONES.has(zona_eleitoral);
     return {
       zona: zona_eleitoral,
       nome: zoneData?.nome || "",
       cor: zoneData?.cor || ZONE_COLOR_MAP[zona_eleitoral] || "#888",
       eleitores: zoneData?.eleitores || 0,
       method: "database",
+      cidade: isAparecida ? "aparecida" : "goiania",
     };
   }
 
@@ -155,13 +198,15 @@ export function identifyZone(params: {
     const normalizedBairro = normalize(bairro);
     for (const [zona, neighborhoods] of Object.entries(ZONE_NEIGHBORHOODS)) {
       if (neighborhoods.some((n) => normalize(n) === normalizedBairro)) {
-        const zoneData = ZONAS_ELEITORAIS.find((z) => z.zona === zona);
+        const zoneData = ALL_ZONES.find((z) => z.zona === zona);
+        const isAparecida = APARECIDA_ZONES.has(zona);
         return {
           zona,
           nome: zoneData?.nome || "",
           cor: zoneData?.cor || "#888",
           eleitores: zoneData?.eleitores || 0,
           method: "bairro",
+          cidade: isAparecida ? "aparecida" : "goiania",
         };
       }
     }
@@ -178,25 +223,27 @@ export function identifyZone(params: {
         closestZone = zona;
       }
     }
-    // Only assign if within ~15km (reasonable for Goiânia)
+    // Only assign if within ~15km
     if (minDist < 15 && closestZone) {
-      const zoneData = ZONAS_ELEITORAIS.find((z) => z.zona === closestZone);
+      const zoneData = ALL_ZONES.find((z) => z.zona === closestZone);
+      const isAparecida = APARECIDA_ZONES.has(closestZone);
       return {
         zona: closestZone,
         nome: zoneData?.nome || "",
         cor: zoneData?.cor || "#888",
         eleitores: zoneData?.eleitores || 0,
         method: "coordinates",
+        cidade: isAparecida ? "aparecida" : "goiania",
       };
     }
   }
 
-  // 4. Aparecida de Goiânia
+  // 4. Aparecida de Goiânia (city-level fallback)
   if (cidade && normalize(cidade) === normalize("Aparecida de Goiânia")) {
-    return { zona: "Aparecida de Goiânia", nome: "", cor: "#9CA3AF", eleitores: 0, method: "aparecida" };
+    return { zona: "Aparecida de Goiânia", nome: "", cor: "#9CA3AF", eleitores: 0, method: "aparecida", cidade: "aparecida" };
   }
 
-  return { zona: "Não identificada", nome: "", cor: "#6B7280", eleitores: 0, method: "unknown" };
+  return { zona: "Não identificada", nome: "", cor: "#6B7280", eleitores: 0, method: "unknown", cidade: "unknown" };
 }
 
 /**
