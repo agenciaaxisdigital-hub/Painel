@@ -111,11 +111,11 @@ export default function VisaoGeral() {
   const v = variation.data;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Visão Geral</h1>
-          <p className="text-sm text-muted-foreground">Saúde completa do Site Principal</p>
+          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Visão Geral</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Saúde completa do Site Principal</p>
         </div>
         <DateRangeSelector selectedDays={days} onChange={setDays} />
       </div>
@@ -146,7 +146,7 @@ export default function VisaoGeral() {
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>
       ) : c ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <KPICard titulo="Total Visitantes" valor={c.visitantes} variacao={v?.visitantes ?? 0} sparkline={timeSeries.data?.map(d => d.visitantes) ?? []} tooltip="Pessoas que acessaram o Site Principal." delay={0} />
           <KPICard titulo="Formulários" valor={c.formularios} variacao={v?.formularios ?? 0} sparkline={timeSeries.data?.map(d => d.formularios) ?? []} tooltip="Formulários de contato enviados." delay={1} />
           <KPICard titulo="Cliques WhatsApp" valor={c.whatsapp} variacao={v?.whatsapp ?? 0} sparkline={timeSeries.data?.map(d => d.whatsapp) ?? []} tooltip="Cliques no botão de WhatsApp." delay={2} />
@@ -185,7 +185,7 @@ export default function VisaoGeral() {
       </motion.div>
 
       {/* Geographic Breakdown + Location Quality */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
         <GeoRankCard
           title="Goiânia — Por Zona"
           icon={<MapPin className="h-4 w-4 text-primary" />}

@@ -54,11 +54,11 @@ export default function Visitantes() {
   }, [data, search]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Visitantes</h1>
-          <p className="text-sm text-muted-foreground">Quem acessou o Site Principal</p>
+          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Visitantes</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Quem acessou o Site Principal</p>
         </div>
         <DateRangeSelector selectedDays={days} onChange={setDays} />
       </div>
@@ -108,52 +108,80 @@ export default function Visitantes() {
         ) : <EmptyState description="Sem dados de dispositivos." />}
       </div>
 
-      {/* Visitors Table */}
+      {/* Visitors — Table on desktop, Cards on mobile */}
       <div className="glass-card overflow-hidden">
-        <div className="flex items-center justify-between p-5 border-b border-border">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-4 md:p-5 border-b border-border">
           <h3 className="text-sm font-medium">Tabela de Visitantes</h3>
-          <div className="relative w-64">
+          <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Buscar cidade, estado..." value={search} onChange={(e) => setSearch(e.target.value)}
               className="pl-9 bg-white/[0.03] border-white/[0.08] text-xs" />
           </div>
         </div>
         {visitantes.isLoading ? (
-          <div className="p-5 space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+          <div className="p-5 space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 md:h-10" />)}</div>
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center text-xs text-muted-foreground">{EMPTY_STATE_MESSAGE}</div>
         ) : (
-          <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-            <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-card">
-                <tr className="border-b border-border text-muted-foreground">
-                  <th className="px-4 py-3 text-left font-medium">ID</th>
-                  <th className="px-4 py-3 text-left font-medium">Localização</th>
-                  <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
-                  <th className="px-4 py-3 text-left font-medium">Página</th>
-                  <th className="px-4 py-3 text-right font-medium">Visitas</th>
-                  <th className="px-4 py-3 text-left font-medium">Data</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.slice(0, 100).map((v) => {
-                  const DeviceIcon = deviceIcon[v.dispositivo || ""] || Smartphone;
-                  return (
-                    <tr key={v.id} className="border-b border-border/50 hover:bg-white/[0.02] cursor-pointer" onClick={() => setSelectedVisitor(v)}>
-                      <td className="px-4 py-2 font-mono text-foreground/60">{(v.cookie_visitante || v.id).substring(0, 8)}</td>
-                      <td className="px-4 py-2 max-w-[200px]">
-                        <CompactLocation data={v} />
-                      </td>
-                      <td className="px-4 py-2"><DeviceIcon className="h-3.5 w-3.5 text-muted-foreground" /></td>
-                      <td className="px-4 py-2 font-mono text-foreground/60">{formatPageName(v.pagina)}</td>
-                      <td className="px-4 py-2 text-right tabular-nums">{v.contador_visitas ?? 1}</td>
-                      <td className="px-4 py-2 text-muted-foreground">{format(new Date(v.criado_em), "dd/MM HH:mm")}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <>
+            {/* Mobile: Cards */}
+            <div className="md:hidden divide-y divide-border/50 max-h-[500px] overflow-y-auto">
+              {filtered.slice(0, 100).map((v) => {
+                const DevIcon = deviceIcon[v.dispositivo || ""] || Smartphone;
+                return (
+                  <div key={v.id} className="p-3 hover:bg-white/[0.02] cursor-pointer" onClick={() => setSelectedVisitor(v)}>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary shrink-0">
+                        {(v.cookie_visitante || "??").substring(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <CompactLocation data={v} />
+                          <span className="text-[10px] text-muted-foreground tabular-nums ml-2">{format(new Date(v.criado_em), "dd/MM HH:mm")}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
+                          <DevIcon className="h-3 w-3" />
+                          <span>{formatPageName(v.pagina)}</span>
+                          {(v.contador_visitas ?? 1) > 1 && <span className="rounded-full bg-secondary/10 px-1.5 py-0.5 text-secondary font-medium">{v.contador_visitas}x</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop: Table */}
+            <div className="hidden md:block overflow-x-auto max-h-[500px] overflow-y-auto">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-card">
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="px-4 py-3 text-left font-medium">ID</th>
+                    <th className="px-4 py-3 text-left font-medium">Localização</th>
+                    <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
+                    <th className="px-4 py-3 text-left font-medium">Página</th>
+                    <th className="px-4 py-3 text-right font-medium">Visitas</th>
+                    <th className="px-4 py-3 text-left font-medium">Data</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.slice(0, 100).map((v) => {
+                    const DevIcon = deviceIcon[v.dispositivo || ""] || Smartphone;
+                    return (
+                      <tr key={v.id} className="border-b border-border/50 hover:bg-white/[0.02] cursor-pointer" onClick={() => setSelectedVisitor(v)}>
+                        <td className="px-4 py-2 font-mono text-foreground/60">{(v.cookie_visitante || v.id).substring(0, 8)}</td>
+                        <td className="px-4 py-2 max-w-[200px]"><CompactLocation data={v} /></td>
+                        <td className="px-4 py-2"><DevIcon className="h-3.5 w-3.5 text-muted-foreground" /></td>
+                        <td className="px-4 py-2 font-mono text-foreground/60">{formatPageName(v.pagina)}</td>
+                        <td className="px-4 py-2 text-right tabular-nums">{v.contador_visitas ?? 1}</td>
+                        <td className="px-4 py-2 text-muted-foreground">{format(new Date(v.criado_em), "dd/MM HH:mm")}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

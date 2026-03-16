@@ -345,12 +345,12 @@ export default function Interacoes() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 md:space-y-5">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Interações</h1>
-          <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Interações</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs md:text-sm text-muted-foreground">
             <span>Exibindo <strong className="text-foreground">{total.toLocaleString("pt-BR")}</strong> interações</span>
             {(lastHour.data ?? 0) > 0 && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-0.5 text-[10px] font-medium text-success">
@@ -361,27 +361,27 @@ export default function Interacoes() {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleExportXlsx} className="flex items-center gap-1.5 rounded-lg bg-white/[0.04] border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
-            <Download className="h-3 w-3" /> Exportar XLSX
+            <Download className="h-3 w-3" /> <span className="hidden sm:inline">Exportar</span> XLSX
           </button>
           <button onClick={handleExportCsv} className="flex items-center gap-1.5 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-xs text-primary hover:bg-primary/20 transition-colors">
-            <Download className="h-3 w-3" /> Leads CSV
+            <Download className="h-3 w-3" /> <span className="hidden sm:inline">Leads</span> CSV
           </button>
         </div>
       </div>
 
       {/* Summary Strip */}
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
         {(["acesso", "whatsapp", "instagram", "facebook", "formulario"] as InteractionType[]).map((t) => {
           const cfg = TIPO_CONFIG[t];
           const active = tipos.length === 1 && tipos[0] === t;
           return (
             <motion.button key={t} onClick={() => filterOnlyTipo(t)} whileTap={{ scale: 0.97 }}
-              className={`glass-card p-3 text-left transition-all ${active ? "ring-1 ring-primary/40" : "hover:bg-white/[0.04]"}`}>
-              <div className="flex items-center gap-2">
-                <div className={`rounded-lg p-1.5 ${cfg.bgColor}`}><cfg.Icon className={`h-3.5 w-3.5 ${cfg.color}`} /></div>
-                <span className="text-[10px] text-muted-foreground">{cfg.label}</span>
+              className={`glass-card p-2 md:p-3 text-left transition-all ${active ? "ring-1 ring-primary/40" : "hover:bg-white/[0.04]"}`}>
+              <div className="flex items-center gap-1.5">
+                <div className={`rounded-lg p-1 md:p-1.5 ${cfg.bgColor}`}><cfg.Icon className={`h-3 w-3 md:h-3.5 md:w-3.5 ${cfg.color}`} /></div>
+                <span className="text-[9px] md:text-[10px] text-muted-foreground truncate">{cfg.label.split(" ").pop()}</span>
               </div>
-              <div className="mt-1 text-lg font-bold"><AnimatedNumber value={counts[t]} /></div>
+              <div className="mt-1 text-base md:text-lg font-bold"><AnimatedNumber value={counts[t]} /></div>
             </motion.button>
           );
         })}
@@ -389,37 +389,35 @@ export default function Interacoes() {
 
       {/* Analytics Row: Section Breakdown + Heatmap */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Section Breakdown */}
-
         {/* Hourly Heatmap */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
-          <div className="flex items-center justify-between mb-3">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-4 md:p-5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
             <h3 className="text-sm font-medium">Mapa de Calor por Hora</h3>
-            <div className="flex gap-1">
+            <div className="flex gap-1 overflow-x-auto">
               {[{ label: "Todos", value: undefined }, { label: "WhatsApp", value: "whatsapp" }, { label: "Instagram", value: "instagram" }, { label: "Facebook", value: "facebook" }].map((opt) => (
                 <button key={opt.label} onClick={() => setHeatmapPlatform(opt.value)}
-                  className={`rounded-lg px-3 py-1 text-[10px] font-medium transition-colors ${heatmapPlatform === opt.value ? "bg-primary text-primary-foreground" : "bg-white/[0.04] text-muted-foreground hover:text-foreground"}`}>
+                  className={`rounded-lg px-2.5 py-1 text-[10px] font-medium transition-colors whitespace-nowrap ${heatmapPlatform === opt.value ? "bg-primary text-primary-foreground" : "bg-white/[0.04] text-muted-foreground hover:text-foreground"}`}>
                   {opt.label}
                 </button>
               ))}
             </div>
           </div>
           {heatmap.isLoading ? <Skeleton className="h-[200px]" /> : heatmap.data ? (
-            <div className="overflow-x-auto">
-              <div className="min-w-[600px]">
-                <div className="flex gap-0.5 mb-1 pl-10">
+            <div className="overflow-x-auto -mx-2 px-2">
+              <div className="min-w-[500px]">
+                <div className="flex gap-0.5 mb-1 pl-8">
                   {Array.from({ length: 24 }, (_, h) => (
-                    <div key={h} className="flex-1 text-center text-[8px] text-muted-foreground">{h}</div>
+                    <div key={h} className="flex-1 text-center text-[7px] md:text-[8px] text-muted-foreground">{h}</div>
                   ))}
                 </div>
                 {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((dia) => (
                   <div key={dia} className="flex gap-0.5 mb-0.5">
-                    <div className="w-10 text-right pr-2 text-[9px] text-muted-foreground leading-[18px]">{dia}</div>
+                    <div className="w-8 text-right pr-1.5 text-[8px] md:text-[9px] text-muted-foreground leading-[16px] md:leading-[18px]">{dia}</div>
                     {Array.from({ length: 24 }, (_, h) => {
                       const cell = heatmap.data!.find((c) => c.dia === dia && c.hora === h);
                       const intensity = cell ? cell.valor / heatmapMax : 0;
                       return (
-                        <div key={h} className="flex-1 h-[18px] rounded-sm transition-colors" title={`${dia} ${h}h: ${cell?.valor || 0} interações`}
+                        <div key={h} className="flex-1 h-4 md:h-[18px] rounded-sm transition-colors" title={`${dia} ${h}h: ${cell?.valor || 0} interações`}
                           style={{ backgroundColor: intensity > 0 ? `hsl(341, 90%, ${65 - intensity * 25}%)` : "hsl(var(--muted))", opacity: intensity > 0 ? 0.5 + intensity * 0.5 : 0.3 }} />
                       );
                     })}
@@ -428,7 +426,7 @@ export default function Interacoes() {
                 <div className="flex items-center gap-2 mt-3 text-[9px] text-muted-foreground">
                   <span>Menos</span>
                   {[0.1, 0.3, 0.5, 0.7, 1].map((i) => (
-                    <div key={i} className="h-3 w-6 rounded-sm" style={{ backgroundColor: `hsl(341, 90%, ${65 - i * 25}%)`, opacity: 0.5 + i * 0.5 }} />
+                    <div key={i} className="h-3 w-5 md:w-6 rounded-sm" style={{ backgroundColor: `hsl(341, 90%, ${65 - i * 25}%)`, opacity: 0.5 + i * 0.5 }} />
                   ))}
                   <span>Mais</span>
                 </div>
@@ -465,64 +463,70 @@ export default function Interacoes() {
         </div>
       )}
 
-      {/* Filter Bar */}
+      {/* Filter Bar — mobile-friendly */}
       <div className="glass-card p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex gap-1">
+        <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center">
+          {/* Date filters */}
+          <div className="flex gap-1 overflow-x-auto">
             {[{ label: "Hoje", d: 1 }, { label: "Ontem", d: -1 }, { label: "7 dias", d: 7 }, { label: "30 dias", d: 30 }].map((p) => (
               <button key={p.d} onClick={() => { setDays(p.d); setPage(0); }}
-                className={`rounded-lg px-3 py-1.5 text-[11px] font-medium transition-colors ${days === p.d ? "bg-primary text-primary-foreground" : "bg-white/[0.04] text-muted-foreground hover:text-foreground"}`}>
+                className={`rounded-lg px-3 py-1.5 text-[11px] font-medium transition-colors whitespace-nowrap ${days === p.d ? "bg-primary text-primary-foreground" : "bg-white/[0.04] text-muted-foreground hover:text-foreground"}`}>
                 {p.label}
               </button>
             ))}
           </div>
-          <div className="h-5 w-px bg-border" />
-          <div className="flex gap-1">
+          <div className="hidden md:block h-5 w-px bg-border" />
+          {/* Type filters */}
+          <div className="flex gap-1 overflow-x-auto">
             {(["acesso", "whatsapp", "instagram", "facebook", "formulario"] as InteractionType[]).map((t) => {
               const cfg = TIPO_CONFIG[t]; const active = tipos.includes(t);
               return (
                 <button key={t} onClick={() => toggleTipo(t)}
-                  className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-medium transition-colors ${active ? `${cfg.bgColor} ${cfg.color}` : "bg-white/[0.02] text-muted-foreground/50"}`}>
+                  className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-medium transition-colors whitespace-nowrap ${active ? `${cfg.bgColor} ${cfg.color}` : "bg-white/[0.02] text-muted-foreground/50"}`}>
                   <cfg.Icon className="h-3 w-3" />
-                  <span className="hidden sm:inline">{t === "acesso" ? "Acessos" : t === "formulario" ? "Forms" : t.charAt(0).toUpperCase() + t.slice(1)}</span>
+                  <span className="hidden xs:inline">{t === "acesso" ? "Acessos" : t === "formulario" ? "Forms" : t.charAt(0).toUpperCase() + t.slice(1)}</span>
                 </button>
               );
             })}
           </div>
-          <div className="h-5 w-px bg-border" />
-          <select value={cidade} onChange={(e) => { setCidade(e.target.value); setPage(0); }}
-            className="rounded-lg bg-white/[0.04] border border-border px-2 py-1.5 text-[11px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 max-w-[140px]">
-            <option value="">Todas as cidades</option>
-            {(cities.data || []).map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <div className="flex gap-1">
-            {["Mobile", "Desktop", "Tablet"].map((d) => {
-              const active = dispositivo.includes(d);
-              return (
-                <button key={d} onClick={() => { setDispositivo((prev) => active ? prev.filter((x) => x !== d) : [...prev, d]); setPage(0); }}
-                  className={`rounded-lg px-2 py-1.5 text-[10px] font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "bg-white/[0.02] text-muted-foreground/50 hover:text-muted-foreground"}`}>
-                  {d === "Mobile" ? <Smartphone className="h-3 w-3" /> : d === "Desktop" ? <Monitor className="h-3 w-3" /> : <Tablet className="h-3 w-3" />}
-                </button>
-              );
-            })}
+          <div className="hidden md:block h-5 w-px bg-border" />
+          {/* Secondary filters row */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <select value={cidade} onChange={(e) => { setCidade(e.target.value); setPage(0); }}
+              className="rounded-lg bg-white/[0.04] border border-border px-2 py-1.5 text-[11px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 max-w-[140px]">
+              <option value="">Todas cidades</option>
+              {(cities.data || []).map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <div className="flex gap-1">
+              {["Mobile", "Desktop", "Tablet"].map((d) => {
+                const active = dispositivo.includes(d);
+                return (
+                  <button key={d} onClick={() => { setDispositivo((prev) => active ? prev.filter((x) => x !== d) : [...prev, d]); setPage(0); }}
+                    className={`rounded-lg px-2 py-1.5 text-[10px] font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "bg-white/[0.02] text-muted-foreground/50 hover:text-muted-foreground"}`}>
+                    {d === "Mobile" ? <Smartphone className="h-3 w-3" /> : d === "Desktop" ? <Monitor className="h-3 w-3" /> : <Tablet className="h-3 w-3" />}
+                  </button>
+                );
+              })}
+            </div>
+            {activeFilterCount > 0 && (
+              <button onClick={clearFilters} className="flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1.5 text-[10px] font-medium text-primary hover:bg-primary/20 transition-colors">
+                <Filter className="h-3 w-3" /> {activeFilterCount} <X className="h-3 w-3" />
+              </button>
+            )}
           </div>
-          <div className="relative flex-1 min-w-[180px]">
+          {/* Search */}
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder="Buscar nome, telefone, cidade, IP, UTM..." value={searchInput}
+            <Input placeholder="Buscar..." value={searchInput}
               onChange={(e) => handleSearch(e.target.value)} className="h-8 pl-8 bg-white/[0.03] border-white/[0.08] text-xs" />
           </div>
-          {activeFilterCount > 0 && (
-            <button onClick={clearFilters} className="flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1.5 text-[10px] font-medium text-primary hover:bg-primary/20 transition-colors">
-              <Filter className="h-3 w-3" /> {activeFilterCount} filtro{activeFilterCount > 1 ? "s" : ""} <X className="h-3 w-3" />
-            </button>
-          )}
         </div>
       </div>
 
-      {/* Table */}
+      {/* Data: Table on desktop, Cards on mobile */}
       <div className="glass-card overflow-hidden">
         {isLoading ? (
-          <div className="p-5 space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
+          <div className="p-4 space-y-2">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16 md:h-12 rounded-lg" />)}</div>
         ) : interactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Eye className="h-10 w-10 text-muted-foreground/20 mb-3" />
@@ -535,7 +539,21 @@ export default function Interacoes() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Mobile: Card layout */}
+            <div className="md:hidden divide-y divide-border/30">
+              {interactions.map((row) => (
+                <MobileInteractionCard
+                  key={`${row.source_table}-${row.id}`}
+                  row={row}
+                  expanded={expandedId === `${row.source_table}-${row.id}`}
+                  onToggle={() => setExpandedId(expandedId === `${row.source_table}-${row.id}` ? null : `${row.source_table}-${row.id}`)}
+                  toast={toast}
+                />
+              ))}
+            </div>
+
+            {/* Desktop: Table layout */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="sticky top-0 z-10 bg-card border-b border-border">
                   <tr className="text-muted-foreground">
@@ -560,8 +578,10 @@ export default function Interacoes() {
                 </tbody>
               </table>
             </div>
-            <div className="flex items-center justify-between border-t border-border px-4 py-3">
-              <span className="text-[11px] text-muted-foreground">Página {page + 1} de {totalPages} · {total} registros</span>
+
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-border px-4 py-3">
+              <span className="text-[11px] text-muted-foreground">Pág. {page + 1}/{totalPages} · {total} registros</span>
               <div className="flex gap-1">
                 <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0}
                   className="rounded-lg px-3 py-1.5 text-[11px] font-medium bg-white/[0.04] text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">Anterior</button>
@@ -582,6 +602,48 @@ export default function Interacoes() {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Mobile Card ──
+function MobileInteractionCard({ row, expanded, onToggle, toast }: { row: UnifiedInteraction; expanded: boolean; onToggle: () => void; toast: any }) {
+  const cfg = TIPO_CONFIG[row.tipo];
+  const origin = row.utm_source || (row.referrer?.includes("google") ? "Google" : row.referrer?.includes("instagram") ? "Instagram" : row.referrer?.includes("whatsapp") ? "WhatsApp" : row.referrer?.includes("facebook") ? "Facebook" : row.referrer ? "Outro" : "Direto");
+
+  return (
+    <div className="p-3" onClick={onToggle}>
+      <div className="flex items-start gap-3">
+        <div className={`rounded-lg p-2 ${cfg.bgColor} shrink-0`}>
+          <cfg.Icon className={`h-4 w-4 ${cfg.color}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className={`text-[10px] font-medium ${cfg.color}`}>{cfg.label}</span>
+            <span className="text-[10px] text-muted-foreground tabular-nums">{format(parseISO(row.data_hora), "dd/MM HH:mm")}</span>
+          </div>
+          <div className="mt-0.5 text-xs text-foreground/80">
+            {row.nome ? <span className="font-medium">{row.nome}</span> : <CompactLocation data={row} />}
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
+            {row.dispositivo && (
+              <span className="flex items-center gap-1"><DeviceIcon device={row.dispositivo} />{row.sistema_operacional || ""}</span>
+            )}
+            <span className="rounded-full bg-white/[0.04] px-1.5 py-0.5">{origin}</span>
+            {row.utm_campaign && <span className="rounded bg-primary/5 px-1.5 py-0.5 text-primary/70">{row.utm_campaign}</span>}
+          </div>
+        </div>
+        <ChevronDown className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
+      </div>
+      <AnimatePresence>
+        {expanded && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+            <div className="mt-3 pt-3 border-t border-border/20">
+              <ExpandedDetail row={row} toast={toast} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

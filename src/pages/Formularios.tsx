@@ -63,15 +63,15 @@ export default function Formularios() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Formulários</h1>
-          <p className="text-sm text-muted-foreground">Submissões de formulário de contato do Site Principal</p>
+          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Formulários</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Submissões do Site Principal</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <DateRangeSelector selectedDays={days} onChange={setDays} />
-          <button onClick={handleExport} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors rose-glow">
+          <button onClick={handleExport} className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs md:text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors rose-glow">
             <Download className="h-4 w-4" /> Excel
           </button>
         </div>
@@ -95,14 +95,67 @@ export default function Formularios() {
         <Input placeholder="Buscar por nome, telefone ou cidade..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-white/[0.03] border-white/[0.08]" />
       </div>
 
-      {/* Table */}
+      {/* Table on desktop, Cards on mobile */}
       {formularios.isLoading ? (
-        <div className="glass-card p-5 space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+        <div className="glass-card p-5 space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 md:h-10" />)}</div>
       ) : data.length === 0 ? (
         <EmptyState description={EMPTY_STATE_MESSAGE} />
       ) : (
         <div className="glass-card overflow-hidden">
-          <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+          {/* Mobile: Card layout */}
+          <div className="md:hidden divide-y divide-border/50 max-h-[500px] overflow-y-auto">
+            {filtered.slice(0, 50).map((s: any) => (
+              <div key={s.id} className="p-3" onClick={() => setExpandedRow(expandedRow === s.id ? null : s.id)}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-xs font-medium text-foreground/80">{s.nome}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">{s.telefone}</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <CompactLocation data={{
+                        cidade: s.cidade, estado: s.estado, bairro: (s as any).bairro,
+                        zona_eleitoral: (s as any).zona_eleitoral, latitude: s.latitude, longitude: s.longitude,
+                      }} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-[10px] text-muted-foreground tabular-nums">{format(parseISO(s.criado_em), "dd/MM HH:mm")}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] ${s.lida ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                      {s.lida ? "Lida" : "Nova"}
+                    </span>
+                  </div>
+                </div>
+                {expandedRow === s.id && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="border-t border-border/30 mt-3 pt-3">
+                    <div className="space-y-3">
+                      <FullLocationDetail
+                        data={{
+                          cidade: s.cidade, estado: s.estado, bairro: (s as any).bairro,
+                          cep: (s as any).cep, endereco_completo: (s as any).endereco_completo,
+                          rua: (s as any).rua, zona_eleitoral: (s as any).zona_eleitoral,
+                          regiao_planejamento: (s as any).regiao_planejamento,
+                          latitude: s.latitude, longitude: s.longitude,
+                        }}
+                        onCopy={() => toast({ title: "Copiado!" })}
+                      />
+                      <div className="rounded-lg bg-white/[0.02] p-2">
+                        <span className="text-[10px] text-muted-foreground">Mensagem:</span>
+                        <p className="text-xs text-foreground/80 mt-1">{s.mensagem}</p>
+                      </div>
+                      {s.telefone && (
+                        <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(s.telefone); toast({ title: "Telefone copiado!" }); }}
+                          className="flex items-center gap-1.5 rounded-lg bg-success/10 px-3 py-1.5 text-[11px] font-medium text-success hover:bg-success/20 transition-colors">
+                          <Copy className="h-3 w-3" /> Copiar Telefone
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: Table */}
+          <div className="hidden md:block overflow-x-auto max-h-[500px] overflow-y-auto">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-card">
                 <tr className="border-b border-border text-muted-foreground">
@@ -138,7 +191,6 @@ export default function Formularios() {
                       {expandedRow === s.id && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="border-t border-border/30 bg-white/[0.01] px-4 py-4">
                           <div className="grid gap-4 md:grid-cols-2">
-                            {/* Location with map */}
                             <FullLocationDetail
                               data={{
                                 cidade: s.cidade, estado: s.estado, bairro: (s as any).bairro,
@@ -149,8 +201,6 @@ export default function Formularios() {
                               }}
                               onCopy={() => toast({ title: "Copiado!" })}
                             />
-
-                            {/* Form details */}
                             <div className="space-y-2">
                               <h4 className="text-[11px] font-semibold text-foreground/70 uppercase tracking-wider">Dados do Formulário</h4>
                               <div className="grid grid-cols-2 gap-2 text-[10px]">
