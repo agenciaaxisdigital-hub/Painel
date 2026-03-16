@@ -111,24 +111,32 @@ export function CompactLocation({ data }: { data: LocationData }) {
   const bairro = data.bairro?.trim();
   const cidade = data.cidade?.trim();
   const estado = data.estado?.trim();
+  const rua = data.rua?.trim();
   const zone = identifyZone(data);
+
+  // Build the most complete address possible regardless of precision
+  let mainText = "";
+  if (rua && bairro && cidade) {
+    mainText = `${rua}, ${bairro}, ${cidade}`;
+  } else if (bairro && cidade) {
+    mainText = `${bairro}, ${cidade}`;
+  } else if (cidade) {
+    mainText = `${cidade}${estado ? `, ${estado}` : ""}`;
+  } else {
+    mainText = "Cidade não identificada";
+  }
 
   return (
     <div className="space-y-0.5 min-w-0">
-      {/* Precision dot inline with location */}
       <div className="flex items-center gap-1.5">
         <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${isGps ? "bg-success" : "bg-muted-foreground/40"}`} />
-        {isGps && bairro ? (
-          <span className="text-foreground/80 text-xs truncate">{bairro}, {cidade || ""}</span>
-        ) : (
-          <span className="text-foreground/70 text-xs truncate">{cidade || "Cidade não identificada"}{estado ? `, ${estado}` : ""}</span>
-        )}
+        <span className={`text-xs truncate ${isGps ? "text-foreground/80" : "text-foreground/70"}`}>{mainText}</span>
       </div>
-      {/* Zone badge with ~ for IP */}
       {zone.zona !== "Não identificada" && (
-        <span className="inline-flex items-center gap-1 text-[9px]" style={{ opacity: isGps ? 1 : 0.6 }}>
+        <span className="inline-flex items-center gap-1 text-[9px]" style={{ opacity: isGps ? 1 : 0.7 }}>
           <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: zone.cor }} />
           <span style={{ color: zone.cor }}>{isGps ? "" : "~"}{zone.zona}</span>
+          {!isGps && <span className="text-muted-foreground/40 text-[8px]">(IP)</span>}
         </span>
       )}
     </div>
