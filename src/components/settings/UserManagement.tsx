@@ -62,7 +62,7 @@ export default function UserManagement() {
       if (!token) throw new Error("Não autenticado");
 
       const { data, error } = await supabase.functions.invoke("criar-usuario", {
-        body: { username, password, cargo },
+        body: { username, password },
         headers: { Authorization: `Bearer ${token}` },
       });
 
