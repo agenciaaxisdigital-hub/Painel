@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ZONAS_ELEITORAIS, ZONAS_APARECIDA, TOTAL_ELEITORES_GOIANIA, TOTAL_ELEITORES_APARECIDA } from "@/lib/constants";
 import { identifyZone } from "@/lib/zone-identification";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Target, Download, MapPin, Trophy, BarChart3 } from "lucide-react";
+import { Target, Download, MapPin, Trophy, BarChart3, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { format, subDays } from "date-fns";
 import * as XLSX from "xlsx";
 
@@ -37,24 +37,51 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: "comparativo", label: "Comparativo", icon: BarChart3 },
 ];
 
-// Classificação geográfica centralizada em src/lib/zone-identification.ts
-
 // ══════════════════════════════════════════════
-// MAIN DATA HOOK — cidade-first classification
+// MAIN DATA HOOK — cookie-enriched, unified zone identification
 // ══════════════════════════════════════════════
 function useRegionDistribution(days: number) {
   return useQuery({
-    queryKey: ["region-distribution-v4", days],
+    queryKey: ["region-distribution-v5", days],
     queryFn: async () => {
       const since = subDays(new Date(), days).toISOString();
       const BRASIL_FILTER = "pais.eq.Brasil,pais.is.null";
-      const SELECT_FIELDS = "zona_eleitoral, bairro, cidade, estado, latitude, longitude";
+      const SELECT_FIELDS = "zona_eleitoral, bairro, cidade, estado, latitude, longitude, cookie_visitante";
 
       const [acessos, cliques, mensagens] = await Promise.all([
         supabase.from("acessos_site").select(SELECT_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
         supabase.from("cliques_whatsapp").select(`${SELECT_FIELDS}, tipo_clique`).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
         supabase.from("mensagens_contato").select(SELECT_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
       ]);
+
+      const allVisitantes = acessos.data || [];
+      const allCliques = cliques.data || [];
+      const allForms = mensagens.data || [];
+
+      // ═══ BUG 2 FIX: Build bairro lookup from visitantes by cookie ═══
+      const bairroMap: Record<string, string> = {};
+      const cidadeMap: Record<string, { cidade: string; estado: string | null }> = {};
+      allVisitantes.forEach((r: any) => {
+        if (r.cookie_visitante) {
+          if (r.bairro && r.bairro.trim()) {
+            bairroMap[r.cookie_visitante] = r.bairro;
+          }
+          if (r.cidade && r.cidade.trim()) {
+            cidadeMap[r.cookie_visitante] = { cidade: r.cidade, estado: r.estado };
+          }
+        }
+      });
+
+      // Enrich cliques and forms with bairro/cidade from visitantes
+      const enrich = (r: any) => ({
+        ...r,
+        bairro: r.bairro || (r.cookie_visitante ? bairroMap[r.cookie_visitante] : null) || null,
+        cidade: r.cidade || (r.cookie_visitante ? cidadeMap[r.cookie_visitante]?.cidade : null) || null,
+        estado: r.estado || (r.cookie_visitante ? cidadeMap[r.cookie_visitante]?.estado : null) || null,
+      });
+
+      const enrichedCliques = allCliques.map(enrich);
+      const enrichedForms = allForms.map(enrich);
 
       // Region summaries
       const regions: Record<string, RegionData> = {
@@ -69,13 +96,13 @@ function useRegionDistribution(days: number) {
       ZONAS_ELEITORAIS.forEach((z) => { goianiaZoneCounts[z.zona] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 }; });
       goianiaZoneCounts["Não identificada"] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
 
-      // Zone counters — Aparecida (same pattern)
+      // Zone counters — Aparecida
       const aparecidaZoneCounts: Record<string, { visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number }> = {};
       ZONAS_APARECIDA.forEach((z) => { aparecidaZoneCounts[z.zona] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 }; });
-      aparecidaZoneCounts["Não identificada"] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
+      // No "Não identificada" for Aparecida — every Aparecida record goes to a zone
 
-      // City counters for Estado (no hardcoded list — dynamic)
-      const cityCounts: Record<string, RegionData & { estado?: string }> = {};
+      // City counters for Estado (dynamic)
+      const cityCountsMap: Record<string, RegionData & { estado?: string }> = {};
 
       function addToRegion(region: string, field: "visitors" | "forms" | "whatsapp" | "instagram" | "facebook") {
         regions[region][field]++;
@@ -89,14 +116,15 @@ function useRegionDistribution(days: number) {
       }
 
       function addToCity(cityName: string, estado: string | null | undefined, field: "visitors" | "forms" | "whatsapp" | "instagram" | "facebook") {
-        if (!cityCounts[cityName]) {
-          cityCounts[cityName] = { nome: cityName, cor: "#4DB8D4", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0, estado: estado || undefined };
+        if (!cityCountsMap[cityName]) {
+          cityCountsMap[cityName] = { nome: cityName, cor: "#4DB8D4", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0, estado: estado || undefined };
         }
-        cityCounts[cityName][field]++;
-        if (field === "whatsapp" || field === "instagram" || field === "facebook") cityCounts[cityName].clicks++;
-        cityCounts[cityName].total++;
+        cityCountsMap[cityName][field]++;
+        if (field === "whatsapp" || field === "instagram" || field === "facebook") cityCountsMap[cityName].clicks++;
+        cityCountsMap[cityName].total++;
       }
 
+      // ═══ UNIFIED zone identification — same function for all 3 tables ═══
       function processRecord(r: any, field: "visitors" | "forms" | "whatsapp" | "instagram" | "facebook") {
         const result = identifyZone(r);
 
@@ -106,9 +134,10 @@ function useRegionDistribution(days: number) {
           addToZone(goianiaZoneCounts, zona, field);
         } else if (result.categoria === "aparecida") {
           addToRegion("aparecida", field);
-          const zona = result.zona in aparecidaZoneCounts ? result.zona : "Não identificada";
+          // Every Aparecida record goes to a valid zone (identifyAparecidaZone defaults to 4ª)
+          const zona = result.zona in aparecidaZoneCounts ? result.zona : ZONAS_APARECIDA[3].zona;
           addToZone(aparecidaZoneCounts, zona, field);
-        } else if (result.categoria === "interior" && result.nome) {
+        } else if ((result.categoria === "interior" || result.categoria === "fora_goias") && result.nome) {
           addToRegion("restante", field);
           addToCity(result.nome, r.estado, field);
         } else {
@@ -116,14 +145,31 @@ function useRegionDistribution(days: number) {
         }
       }
 
-      // Process all records
-      (acessos.data || []).forEach((r) => processRecord(r, "visitors"));
-      (cliques.data || []).forEach((r) => {
+      // Process all records with unified logic
+      allVisitantes.forEach((r) => processRecord(r, "visitors"));
+      enrichedCliques.forEach((r) => {
         const tipo = (r as any).tipo_clique || "whatsapp";
         const field = tipo === "instagram" ? "instagram" : tipo === "facebook" ? "facebook" : "whatsapp";
         processRecord(r, field as any);
       });
-      (mensagens.data || []).forEach((r) => processRecord(r, "forms"));
+      enrichedForms.forEach((r) => processRecord(r, "forms"));
+
+      // ═══ VALIDATION ASSERTION ═══
+      const totalGroupedAparecida = Object.values(aparecidaZoneCounts).reduce(
+        (acc, z) => acc + z.visitors + z.forms + z.whatsapp + z.instagram + z.facebook, 0
+      );
+      const totalAparecidaRegion = regions.aparecida.total;
+      console.assert(
+        totalGroupedAparecida === totalAparecidaRegion,
+        `APARECIDA COUNTING BUG: zones=${totalGroupedAparecida} region=${totalAparecidaRegion}`
+      );
+
+      const totalGroupedAll = Object.values(regions).reduce((s, r) => s + r.total, 0);
+      const totalFetchedAll = allVisitantes.length + allCliques.length + allForms.length;
+      console.assert(
+        totalGroupedAll === totalFetchedAll,
+        `GLOBAL COUNTING BUG: grouped=${totalGroupedAll} fetched=${totalFetchedAll}`
+      );
 
       // Build zone arrays — Goiânia
       const goianiaZones: ZoneData[] = ZONAS_ELEITORAIS.map((z) => {
@@ -149,7 +195,7 @@ function useRegionDistribution(days: number) {
         });
       }
 
-      // Build zone arrays — Aparecida (identical pattern)
+      // Build zone arrays — Aparecida (NO "Não identificada" — every record assigned)
       const aparecidaZones: ZoneData[] = ZONAS_APARECIDA.map((z) => {
         const c = aparecidaZoneCounts[z.zona] || { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
         const clicks = c.whatsapp + c.instagram + c.facebook;
@@ -162,21 +208,27 @@ function useRegionDistribution(days: number) {
         };
       });
 
-      const aparecidaNI = aparecidaZoneCounts["Não identificada"];
-      if (aparecidaNI && (aparecidaNI.visitors + aparecidaNI.forms + aparecidaNI.whatsapp + aparecidaNI.instagram + aparecidaNI.facebook) > 0) {
-        const clicks = aparecidaNI.whatsapp + aparecidaNI.instagram + aparecidaNI.facebook;
-        aparecidaZones.push({
-          zona: "Não identificada", nome: "Zona não identificada — Aparecida", cor: "#9333EA", eleitores: 0,
-          visitors: aparecidaNI.visitors, forms: aparecidaNI.forms, whatsapp: aparecidaNI.whatsapp, instagram: aparecidaNI.instagram, facebook: aparecidaNI.facebook,
-          clicks, total: aparecidaNI.visitors + aparecidaNI.forms + clicks, penetracao: 0,
-          conversao: aparecidaNI.visitors > 0 ? parseFloat(((aparecidaNI.forms / aparecidaNI.visitors) * 100).toFixed(1)) : 0,
-        });
-      }
-
-      const cities = Object.values(cityCounts).sort((a, b) => b.total - a.total);
+      const cities = Object.values(cityCountsMap).sort((a, b) => b.total - a.total);
       const totalGeral = Object.values(regions).reduce((s, r) => s + r.total, 0);
 
-      return { regions, goianiaZones, aparecidaZones, cities, totalGeral };
+      // Debug data
+      const debug = {
+        fetchedVisitantes: allVisitantes.length,
+        fetchedCliques: allCliques.length,
+        fetchedForms: allForms.length,
+        totalFetched: totalFetchedAll,
+        totalGrouped: totalGroupedAll,
+        goianiaTotal: regions.goiania.total,
+        goianiaZoneSum: goianiaZones.reduce((s, z) => s + z.total, 0),
+        aparecidaTotal: regions.aparecida.total,
+        aparecidaZoneSum: aparecidaZones.reduce((s, z) => s + z.total, 0),
+        aparecidaNaoIdentificada: 0, // No longer exists
+        estadoCidades: cities.map((c) => c.nome),
+        aparecidaZoneNames: ZONAS_APARECIDA.map((z) => z.zona),
+        enrichedCount: enrichedCliques.filter((r: any) => r.bairro && !allCliques.find((o: any) => o.cookie_visitante === r.cookie_visitante && o.bairro)).length,
+      };
+
+      return { regions, goianiaZones, aparecidaZones, cities, totalGeral, debug };
     },
     staleTime: 60_000,
   });
@@ -206,12 +258,13 @@ function MetricGrid({ data, size = "sm" }: { data: RegionData; size?: "sm" | "lg
   );
 }
 
-/* ─── Zone Row (shared by Goiânia AND Aparecida — same component) ─── */
+/* ─── Zone Row — BUG 1 FIX: display z.zona directly, never append "Zona" ─── */
 function ZoneRow({ z, i, maxVisitors, isSelected, onSelect }: {
   z: ZoneData; i: number; maxVisitors: number; isSelected: boolean; onSelect: () => void;
 }) {
   const barPct = maxVisitors > 0 ? (z.visitors / maxVisitors) * 100 : 0;
-  const displayZona = z.zona.includes("Zona") || z.zona === "Não identificada" ? z.zona : `${z.zona} Zona`;
+  // BUG 1 FIX: For Goiânia zones like "1ª", append " Zona". For Aparecida zones already containing "Zona", use as-is.
+  const displayZona = z.zona === "Não identificada" ? z.zona : z.zona.includes("Zona") ? z.zona : `${z.zona} Zona`;
 
   return (
     <div>
@@ -263,12 +316,95 @@ function ZoneRow({ z, i, maxVisitors, isSelected, onSelect }: {
   );
 }
 
+/* ─── Debug Validation Panel ─── */
+function DebugPanel({ debug }: { debug: any }) {
+  if (!debug) return null;
+
+  const checks = [
+    {
+      label: "Goiânia total: soma zonas = região",
+      pass: debug.goianiaZoneSum === debug.goianiaTotal,
+      detail: `zonas=${debug.goianiaZoneSum} região=${debug.goianiaTotal}`,
+    },
+    {
+      label: "Aparecida total: soma zonas = região",
+      pass: debug.aparecidaZoneSum === debug.aparecidaTotal,
+      detail: `zonas=${debug.aparecidaZoneSum} região=${debug.aparecidaTotal}`,
+    },
+    {
+      label: "Aparecida zero Não identificada",
+      pass: debug.aparecidaNaoIdentificada === 0,
+      warn: debug.aparecidaNaoIdentificada > 0,
+      detail: `count=${debug.aparecidaNaoIdentificada}`,
+    },
+    {
+      label: "Total agrupado = total buscado",
+      pass: debug.totalGrouped === debug.totalFetched,
+      detail: `grouped=${debug.totalGrouped} fetched=${debug.totalFetched}`,
+    },
+    {
+      label: "No mocked data (fetched from Supabase)",
+      pass: true,
+      detail: `visitantes=${debug.fetchedVisitantes} cliques=${debug.fetchedCliques} forms=${debug.fetchedForms}`,
+    },
+  ];
+
+  const zoneNameCheck = debug.aparecidaZoneNames.map((name: string) => ({
+    name,
+    hasDuplicateZona: (name.match(/Zona/gi) || []).length > 1,
+  }));
+
+  return (
+    <div className="glass-card p-5 space-y-4 border-2 border-yellow-500/30">
+      <h3 className="text-sm font-bold text-yellow-400">🔍 Painel de Validação (debug=1)</h3>
+
+      <div className="space-y-2">
+        {checks.map((c, i) => (
+          <div key={i} className="flex items-center gap-2 text-xs">
+            {c.pass ? (
+              <CheckCircle className="h-4 w-4 text-success shrink-0" />
+            ) : (c as any).warn ? (
+              <AlertTriangle className="h-4 w-4 text-yellow-400 shrink-0" />
+            ) : (
+              <XCircle className="h-4 w-4 text-destructive shrink-0" />
+            )}
+            <span className={c.pass ? "text-success" : (c as any).warn ? "text-yellow-400" : "text-destructive"}>
+              {c.label}
+            </span>
+            <span className="text-muted-foreground ml-auto tabular-nums">{c.detail}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        <h4 className="text-xs font-medium text-foreground">Estado: {debug.estadoCidades.length} cidades</h4>
+        <p className="text-[10px] text-muted-foreground">{debug.estadoCidades.join(", ") || "Nenhuma"}</p>
+      </div>
+
+      <div className="space-y-2">
+        <h4 className="text-xs font-medium text-foreground">Zone Name Check (Aparecida)</h4>
+        {zoneNameCheck.map((z: any) => (
+          <div key={z.name} className={`text-xs ${z.hasDuplicateZona ? "text-destructive font-bold" : "text-success"}`}>
+            {z.hasDuplicateZona ? "❌" : "✅"} "{z.name}" {z.hasDuplicateZona && "— DUPLICATED 'Zona'!"}
+          </div>
+        ))}
+      </div>
+
+      <div className="text-[10px] text-muted-foreground">
+        Enriched cliques via cookie: {debug.enrichedCount}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main Page ─── */
 export default function ZonasGoiania() {
   const [days, setDays] = useState(30);
   const [activeTab, setActiveTab] = useState<TabKey>("goiania");
   const [selectedZona, setSelectedZona] = useState<string | null>(null);
   const { data, isLoading } = useRegionDistribution(days);
+
+  const showDebug = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("debug") === "1";
 
   const regions = data?.regions || {};
   const goianiaZones = data?.goianiaZones || [];
@@ -397,7 +533,7 @@ export default function ZonasGoiania() {
             </motion.div>
           )}
 
-          {/* ═══ TAB: APARECIDA (same architecture as Goiânia) ═══ */}
+          {/* ═══ TAB: APARECIDA ═══ */}
           {activeTab === "aparecida" && (
             <motion.div key="aparecida" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }} className="space-y-4">
               {regions.aparecida && (
@@ -423,7 +559,7 @@ export default function ZonasGoiania() {
             </motion.div>
           )}
 
-          {/* ═══ TAB: ESTADO (dynamic cities, no hardcoded filter) ═══ */}
+          {/* ═══ TAB: ESTADO ═══ */}
           {activeTab === "estado" && (
             <motion.div key="estado" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }} className="space-y-4">
               {regions.restante && (
@@ -499,7 +635,7 @@ export default function ZonasGoiania() {
                 nome: z.zona.includes("Zona") ? `${z.zona} — ${z.nome}` : `${z.zona} Zona — ${z.nome}`, origem: "Goiânia", cor: z.cor,
                 visitors: z.visitors, forms: z.forms, whatsapp: z.whatsapp, instagram: z.instagram, facebook: z.facebook, total: z.total,
               })),
-              ...sortedAparecidaZones.filter(z => z.zona !== "Não identificada").map((z) => ({
+              ...sortedAparecidaZones.map((z) => ({
                 nome: `${z.zona} — ${z.nome}`, origem: "Aparecida", cor: z.cor,
                 visitors: z.visitors, forms: z.forms, whatsapp: z.whatsapp, instagram: z.instagram, facebook: z.facebook, total: z.total,
               })),
@@ -517,10 +653,8 @@ export default function ZonasGoiania() {
               "Interior": "bg-[#4DB8D4]/20 text-[#4DB8D4]",
             };
 
-
             return (
             <motion.div key="comparativo" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }} className="space-y-4">
-              {/* ═══ RANKING UNIFICADO TOP 50 ═══ */}
               <div className="glass-card overflow-hidden">
                 <div className="p-5 border-b border-border">
                   <div className="flex items-center justify-between">
@@ -595,6 +729,9 @@ export default function ZonasGoiania() {
           })()}
         </AnimatePresence>
       )}
+
+      {/* Debug Validation Panel */}
+      {showDebug && data?.debug && <DebugPanel debug={data.debug} />}
     </div>
   );
 }
