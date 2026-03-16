@@ -47,12 +47,14 @@ function useRegionDistribution(days: number) {
     queryFn: async () => {
       const since = subDays(new Date(), days).toISOString();
       const BRASIL_FILTER = "pais.eq.Brasil,pais.is.null";
-      const SELECT_FIELDS = "zona_eleitoral, bairro, cidade, estado, latitude, longitude, cookie_visitante, endereco_ip, cep, rua, endereco_completo, regiao_planejamento";
+      const VISITOR_FIELDS = "zona_eleitoral, bairro, cidade, estado, latitude, longitude, cookie_visitante, endereco_ip, cep, rua, endereco_completo, regiao_planejamento";
+      const CLICK_FIELDS = `${VISITOR_FIELDS}, tipo_clique`;
+      const FORM_FIELDS = "zona_eleitoral, bairro, cidade, estado, latitude, longitude, endereco_ip, cep, rua, endereco_completo, regiao_planejamento";
 
       const [acessos, cliques, mensagens] = await Promise.all([
-        supabase.from("acessos_site").select(SELECT_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
-        supabase.from("cliques_whatsapp").select(`${SELECT_FIELDS}, tipo_clique`).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
-        supabase.from("mensagens_contato").select(SELECT_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
+        supabase.from("acessos_site").select(VISITOR_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
+        supabase.from("cliques_whatsapp").select(CLICK_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
+        supabase.from("mensagens_contato").select(FORM_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
       ]);
 
       const allVisitantes = filterValidLocationRecords(acessos.data);
