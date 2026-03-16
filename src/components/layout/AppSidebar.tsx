@@ -27,19 +27,21 @@ export function AppSidebar() {
 
   return (
     <>
-      {/* Mobile bottom nav */}
-      <div className="fixed inset-x-0 bottom-0 z-50 flex border-t border-border bg-background/95 backdrop-blur-xl md:hidden">
-        {modules.slice(0, 5).map((m) => {
-          const active = location.pathname === m.path;
-          return (
-            <NavLink key={m.path} to={m.path} className="flex flex-1 flex-col items-center gap-0.5 py-2">
-              <m.icon className={cn("h-5 w-5", active ? "text-primary" : "text-muted-foreground")} />
-              <span className={cn("text-[9px]", active ? "text-primary font-medium" : "text-muted-foreground")}>
-                {m.label.split(" ")[0]}
-              </span>
-            </NavLink>
-          );
-        })}
+      {/* Mobile bottom nav — scrollable, all modules */}
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur-xl md:hidden">
+        <div className="flex overflow-x-auto scrollbar-hide">
+          {modules.map((m) => {
+            const active = location.pathname === m.path;
+            return (
+              <NavLink key={m.path} to={m.path} className="flex shrink-0 flex-col items-center gap-0.5 px-3 py-2">
+                <m.icon className={cn("h-5 w-5", active ? "text-primary" : "text-muted-foreground")} />
+                <span className={cn("text-[9px] whitespace-nowrap", active ? "text-primary font-medium" : "text-muted-foreground")}>
+                  {m.label.split(" ")[0]}
+                </span>
+              </NavLink>
+            );
+          })}
+        </div>
       </div>
 
       {/* Desktop sidebar */}
