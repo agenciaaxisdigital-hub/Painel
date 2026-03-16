@@ -185,7 +185,7 @@ export default function VisaoGeral() {
       </motion.div>
 
       {/* Geographic Breakdown + Location Quality */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
         <GeoRankCard
           title="Goiânia — Por Zona"
           icon={<MapPin className="h-4 w-4 text-primary" />}
