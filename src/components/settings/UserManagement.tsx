@@ -65,7 +65,20 @@ export default function UserManagement() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Try to extract the actual error message from the response
+        try {
+          const errorBody = JSON.parse(error.message);
+          throw new Error(errorBody.error || error.message);
+        } catch (parseErr) {
+          // If the error context has a json body
+          if (error.context && typeof error.context.json === 'function') {
+            const body = await error.context.json();
+            throw new Error(body?.error || error.message);
+          }
+          throw new Error(data?.error || error.message);
+        }
+      }
       if (data?.error) throw new Error(data.error);
       return data;
     },
