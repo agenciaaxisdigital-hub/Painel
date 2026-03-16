@@ -255,7 +255,7 @@ function ZoneRow({ z, i, maxVisitors, isSelected, onSelect }: {
 }) {
   const barPct = maxVisitors > 0 ? (z.visitors / maxVisitors) * 100 : 0;
   // BUG 1 FIX: For Goiânia zones like "1ª", append " Zona". For Aparecida zones already containing "Zona", use as-is.
-  const displayZona = z.zona === "Sem localização" ? z.zona : z.zona.includes("Zona") ? z.zona : `${z.zona} Zona`;
+  const displayZona = z.zona.includes("Zona") ? z.zona : `${z.zona} Zona`;
 
   return (
     <div>
