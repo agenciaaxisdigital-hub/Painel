@@ -220,9 +220,9 @@ export default function UserManagement() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={cargoLabels[u.cargo]?.variant || "outline"} className="gap-1">
-                          {cargoIcon(u.cargo)}
-                          {cargoLabels[u.cargo]?.label || u.cargo}
+                        <Badge variant="secondary" className="gap-1">
+                          <Shield className="h-3.5 w-3.5" />
+                          Administrador
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
