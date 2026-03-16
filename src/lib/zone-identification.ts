@@ -360,8 +360,8 @@ function identifyAparecidaZone(params: {
     const normalizedBairro = normalize(bairro);
     for (const [zona, neighborhoods] of Object.entries(APARECIDA_ZONE_NEIGHBORHOODS)) {
       if (neighborhoods.some((n) => normalize(n) === normalizedBairro)) {
-        const z = ZONAS_APARECIDA.find((z) => z.zona === zona)!;
-        return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "bairro", categoria: "aparecida" };
+        const z = ZONAS_APARECIDA.find((zz) => zz.zona === zona);
+        if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "bairro" as const, categoria: "aparecida" as const };
       }
     }
   }
