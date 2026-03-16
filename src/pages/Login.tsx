@@ -163,7 +163,7 @@ export default function Login() {
               Dra. Fernanda Sarelli
             </h1>
             <p className="mt-1 text-xs uppercase tracking-[0.2em] text-primary font-medium">
-              Chama a Doutora
+              Painel de Dados
             </p>
           </div>
 
