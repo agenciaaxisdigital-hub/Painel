@@ -146,7 +146,7 @@ export default function VisaoGeral() {
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>
       ) : c ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <KPICard titulo="Total Visitantes" valor={c.visitantes} variacao={v?.visitantes ?? 0} sparkline={timeSeries.data?.map(d => d.visitantes) ?? []} tooltip="Pessoas que acessaram o Site Principal." delay={0} />
           <KPICard titulo="Formulários" valor={c.formularios} variacao={v?.formularios ?? 0} sparkline={timeSeries.data?.map(d => d.formularios) ?? []} tooltip="Formulários de contato enviados." delay={1} />
           <KPICard titulo="Cliques WhatsApp" valor={c.whatsapp} variacao={v?.whatsapp ?? 0} sparkline={timeSeries.data?.map(d => d.whatsapp) ?? []} tooltip="Cliques no botão de WhatsApp." delay={2} />
