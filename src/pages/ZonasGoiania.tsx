@@ -527,15 +527,6 @@ export default function ZonasGoiania() {
                     <span className="ml-auto text-[10px] text-muted-foreground">~{TOTAL_ELEITORES_APARECIDA.toLocaleString("pt-BR")} eleitores • 4 zonas</span>
                   </div>
                   <MetricGrid data={regions.aparecida} size="lg" />
-                  {(() => {
-                    const zoneSum = aparecidaZones.reduce((s, z) => s + z.total, 0);
-                    const regionTotal = regions.aparecida.total;
-                    return zoneSum !== regionTotal ? (
-                      <p className="text-[10px] text-destructive mt-2">⚠ Soma das zonas ({zoneSum}) ≠ total da região ({regionTotal})</p>
-                    ) : (
-                      <p className="text-[10px] text-success/50 mt-2">✓ Soma das zonas ({zoneSum}) = total da região ({regionTotal})</p>
-                    );
-                  })()}
                 </div>
               )}
               <div className="glass-card p-5">
