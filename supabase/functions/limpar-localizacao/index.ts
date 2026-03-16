@@ -113,10 +113,16 @@ Deno.serve(async (req) => {
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
+    // Auth: accept service role key OR admin user token
     const authHeader = req.headers.get("authorization");
     const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
+    
+    // Also accept a cleanup_key in body for automated calls
+    let body: any = {};
+    try { body = await req.json(); } catch {}
+    const hasCleanupKey = body?.cleanup_key === serviceRoleKey;
 
-    if (!isServiceRole) {
+    if (!isServiceRole && !hasCleanupKey) {
       if (!authHeader?.startsWith("Bearer ")) {
         return jsonResponse({ error: "Não autorizado" }, 401);
       }
