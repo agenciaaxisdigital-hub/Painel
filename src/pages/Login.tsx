@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import fernandaPhoto from "@/assets/fernanda-sarelli.jpeg";
-import NeuralNetworkBackground from "@/components/NeuralNetworkBackground";
+
 
 export default function Login() {
   const { signIn } = useAuth();
