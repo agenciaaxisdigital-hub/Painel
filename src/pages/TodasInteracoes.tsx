@@ -227,7 +227,7 @@ function useCities(days: number) {
       }
       const { data } = await supabase.from("acessos_site").select("cidade, endereco_ip, latitude, longitude, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(5000);
       const set = new Set<string>();
-      filterValidLocationRecords(data).forEach((r) => { if (r.cidade) set.add(r.cidade); });
+      (data || []).forEach((r) => { if (r.cidade) set.add(r.cidade); });
       return Array.from(set).sort();
     },
     staleTime: 120_000,
