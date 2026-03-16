@@ -197,10 +197,10 @@ export default function Formularios() {
             <h3 className="text-sm font-medium mb-3">Submissões por Dia</h3>
             <div className="h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dailyData}>
+                <BarChart data={dailyData} barCategoryGap="20%" barSize={dailyData.length <= 3 ? 40 : undefined}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(240, 5%, 12%)" />
                   <XAxis dataKey="day" stroke="hsl(240, 5%, 40%)" fontSize={10} />
-                  <YAxis stroke="hsl(240, 5%, 40%)" fontSize={10} />
+                  <YAxis stroke="hsl(240, 5%, 40%)" fontSize={10} allowDecimals={false} domain={[0, (max: number) => Math.max(max, 2)]} />
                   <Bar dataKey="count" fill="hsl(341, 90%, 65%)" radius={[4, 4, 0, 0]} />
                   <Tooltip contentStyle={{ background: "hsl(240, 15%, 8%)", border: "1px solid hsl(240, 5%, 15%)", borderRadius: "8px", fontSize: "12px" }} />
                 </BarChart>
