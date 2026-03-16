@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  BarChart3, Users, FileText, Layers, MousePointerClick, MapPin, Map, Download, Settings, LogOut, ChevronLeft, ChevronRight,
+  BarChart3, Users, FileText, Layers, MapPin, Map, Download, Settings, LogOut, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
