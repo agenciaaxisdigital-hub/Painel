@@ -29,6 +29,20 @@ const utmInstructions = [
 
 export default function Configuracoes() {
   const connection = useConnectionStatus();
+  const [cleaning, setCleaning] = useState(false);
+
+  const handleCleanup = async () => {
+    setCleaning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("limpar-localizacao", { method: "POST" });
+      if (error) throw error;
+      toast({ title: "Limpeza concluída", description: `${data.total_removido || 0} registros sem localização removidos.` });
+    } catch (err: any) {
+      toast({ title: "Erro na limpeza", description: err.message, variant: "destructive" });
+    } finally {
+      setCleaning(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
