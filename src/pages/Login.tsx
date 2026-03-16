@@ -117,7 +117,7 @@ export default function Login() {
             </p>
           </div>
 
-          <div className="glass-card p-8 backdrop-blur-xl bg-background/60">
+          <div className="rounded-2xl border border-white/[0.08] p-8 backdrop-blur-md bg-black/40 shadow-2xl shadow-black/50">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
