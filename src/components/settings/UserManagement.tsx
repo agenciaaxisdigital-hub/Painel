@@ -76,7 +76,6 @@ export default function UserManagement() {
       setOpen(false);
       setUsername("");
       setPassword("");
-      setCargo("editor");
     },
     onError: (err: Error) => toast.error(err.message || "Erro ao criar usuário"),
   });
