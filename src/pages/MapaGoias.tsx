@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { REGIOES_GOIAS } from "@/lib/constants";
-import { useTableCounts, useTopCities } from "@/hooks/use-supabase-data";
+import { useTableCounts } from "@/hooks/use-supabase-data";
 import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
 import { X, Download } from "lucide-react";
 import { format } from "date-fns";
