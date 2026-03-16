@@ -43,100 +43,15 @@ const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u
 function classifyCidade(cidade?: string | null): "goiania" | "aparecida" | "interior" | "unknown" {
   if (!cidade) return "unknown";
   const c = norm(cidade);
-  if (c === "goiania" || c === "goiânia" || c.includes("goiania") && !c.includes("aparecida")) return "goiania";
+  if ((c === "goiania") || (c.includes("goiania") && !c.includes("aparecida"))) return "goiania";
   if (c.includes("aparecida") && c.includes("goian")) return "aparecida";
   if (c.length > 0) return "interior";
   return "unknown";
 }
 
-// ── Aparecida bairro → zone mapping (simplified/normalized) ──
-const APARECIDA_BAIRRO_MAP: Record<string, string[]> = {
-  "1ª Zona Aparecida": [
-    "centro", "centro de aparecida", "garavelo", "garavelo park", "jardim primavera", "expansao",
-    "vila brasilia", "ataide", "ataíde", "funcionarios", "santa helena", "acacias", "acaias",
-    "belvedere", "bueno", "rossi", "copacabana", "nova vila", "jardim america", "esperanca",
-    "santa fe", "laranjeiras norte", "guanabara norte", "novo mundo",
-    "setor garavelo", "setor expansao", "setor ataíde", "setor ataide",
-    "setor dos funcionarios aparecida", "vila santa helena aparecida",
-    "parque das acacias", "jardim belvedere", "setor bueno aparecida",
-    "vila rossi", "jardim copacabana", "setor bela vista aparecida",
-    "residencial bela vista aparecida", "setor nova vila aparecida",
-    "jardim america aparecida", "vila esperanca aparecida",
-    "residencial santa fe aparecida", "parque das laranjeiras aparecida norte",
-    "jardim guanabara aparecida norte", "jardim novo mundo aparecida",
-  ],
-  "2ª Zona Aparecida": [
-    "tiradentes", "jardim tiradentes", "conde dos arcos", "setor conde dos arcos",
-    "parque trindade", "trindade", "vale verde", "residencial vale verde",
-    "flamboyant", "parque flamboyant aparecida", "dom fernando", "jardim dom fernando aparecida",
-    "interlagos", "residencial interlagos", "florenca", "jardim florenca aparecida",
-    "sao tomas", "vila sao tomas aparecida", "guanabara", "jardim guanabara aparecida",
-    "olimpico", "jardim olimpico", "independencia", "residencial independencia aparecida",
-    "cerrado norte", "jardim cerrado aparecida norte",
-    "morada do sol norte", "setor morada do sol aparecida norte",
-    "coimbra norte", "residencial coimbra aparecida norte",
-    "santa luzia norte", "setor santa luzia aparecida norte",
-    "novo horizonte norte", "jardim novo horizonte aparecida norte",
-    "planalto norte", "jardim planalto aparecida norte",
-  ],
-  "3ª Zona Aparecida": [
-    "vila brasilia aparecida", "setor vila brasilia aparecida",
-    "bela vista", "jardim bela vista aparecida",
-    "anhanguera", "parque anhanguera", "parque anhanguera aparecida",
-    "montes claros", "residencial montes claros",
-    "helveica", "helvecia", "jardim helveica aparecida", "jardim helvecia aparecida",
-    "industrial", "setor industrial", "setor industrial aparecida",
-    "sao luis", "jardim sao luis aparecida",
-    "laranjeiras", "parque das laranjeiras aparecida",
-    "canaa", "vila canaa aparecida",
-    "sao mateus", "parque sao mateus aparecida",
-    "cruzeiro do sul", "conjunto cruzeiro do sul aparecida",
-    "perim", "setor perim aparecida",
-    "feliz", "bairro feliz aparecida",
-    "redencao", "vila redencao aparecida",
-    "sao goncalo", "jardim sao goncalo aparecida",
-    "buena vista norte", "residencial buena vista aparecida norte",
-    "tremendao", "parque tremendao aparecida",
-    "afonsos", "setor dos afonsos aparecida",
-    "mutirao norte", "vila mutirao aparecida norte",
-    "fonte nova", "jardim fonte nova aparecida",
-  ],
-  "4ª Zona Aparecida": [
-    "eldorado", "residencial eldorado", "residencial eldorado aparecida",
-    "santa luzia", "setor santa luzia aparecida",
-    "novo horizonte", "jardim novo horizonte", "jardim novo horizonte aparecida",
-    "planalto", "jardim planalto", "jardim planalto aparecida",
-    "buena vista", "residencial buena vista aparecida",
-    "tremendao sul", "parque tremendao aparecida sul",
-    "morada do sol", "setor morada do sol aparecida",
-    "cerrado", "jardim cerrado", "jardim cerrado aparecida",
-    "mutirao", "vila mutirao", "vila mutirao aparecida",
-    "coimbra", "residencial coimbra aparecida",
-    "parque industrial aparecida",
-    "vera cruz", "conjunto vera cruz aparecida",
-    "curitiba", "jardim curitiba aparecida",
-    "flamboyant norte", "residencial flamboyant aparecida",
-    "morumbi", "jardim morumbi aparecida",
-    "araguaia", "residencial araguaia aparecida",
-    "recanto do bosque", "setor recanto do bosque aparecida",
-    "tres marias", "residencial tres marias aparecida",
-    "marcelino", "jardim marcelino aparecida",
-    "esplanada", "parque esplanada aparecida",
-  ],
-};
-
-function identifyAparecidaZone(bairro?: string | null): string {
-  if (!bairro || !bairro.trim()) return "Não identificada";
-  const b = norm(bairro);
-  for (const [zona, bairros] of Object.entries(APARECIDA_BAIRRO_MAP)) {
-    if (bairros.some((n) => b === n || b.includes(n) || n.includes(b))) {
-      return zona;
-    }
-  }
-  return "Não identificada";
-}
-
-// ── Goiânia zone identification from bairro ──
+// ══════════════════════════════════════════════
+// GOIÂNIA: bairro → zone identification
+// ══════════════════════════════════════════════
 const GOIANIA_ZONE_BAIRROS: Record<string, string[]> = {
   "1ª": ["jardim goias","setor bueno","st bueno","st. bueno","setor marista","setor sul","setor sudoeste","setor pedro ludovico","setor bela vista","jardim america","setor nova suica","setor aeroporto","setor leste universitario","setor coimbra","parque amazonia","alto da gloria","setor acaba mundo","jardim guanabara","parque flamboyant","setor leste","jardim planalto","setor nova vila","parque lozandes","bela alianca","setor nova alianca","jardim sao paulo","jardim novo mundo","vila nova","setor campinas","setor santos dumont","setor aeroviario","setor marechal rondon","jardim balneario","setor tocantins","setor cruzeiro","setor dom bosco","vila jaragua","vila ipiranga","vila aurora","vila canaa"],
   "2ª": ["setor central","setor norte ferroviario","vila uniao","setor crimeia leste","setor crimeia oeste","setor dos funcionarios","setor dom fernando","vila brasilia","jardim helveica","jardim helvecia","setor universitario","setor cruzeiro do sul","jardim das flores","vila esperanca"],
@@ -150,7 +65,6 @@ const GOIANIA_ZONE_BAIRROS: Record<string, string[]> = {
 };
 
 function identifyGoianiaZoneFromBairro(bairro?: string | null, zonaEleitoral?: string | null): string {
-  // Try zona_eleitoral field first
   if (zonaEleitoral && zonaEleitoral.trim() && zonaEleitoral !== "Não identificada") {
     const match = ZONAS_ELEITORAIS.find((z) => z.zona === zonaEleitoral);
     if (match) return match.zona;
@@ -164,11 +78,92 @@ function identifyGoianiaZoneFromBairro(bairro?: string | null, zonaEleitoral?: s
 }
 
 // ══════════════════════════════════════════════
+// APARECIDA: bairro → zone identification
+// Same architecture as Goiânia
+// ══════════════════════════════════════════════
+const APARECIDA_ZONE_BAIRROS: Record<string, string[]> = {
+  "1ª Zona Aparecida": [
+    "centro", "garavelo", "jardim primavera", "expansao", "vila brasilia",
+    "ataide", "ataíde", "funcionarios", "santa helena", "acacias", "acaias",
+    "belvedere", "bueno", "rossi", "copacabana", "nova vila", "jardim america",
+    "america", "esperanca", "santa fe", "novo mundo", "bela vista",
+    "setor garavelo", "setor expansao", "setor ataide", "setor ataíde",
+    "setor dos funcionarios", "vila santa helena", "parque das acacias",
+    "jardim belvedere", "setor bueno", "vila rossi", "jardim copacabana",
+    "setor nova vila", "residencial santa fe", "laranjeiras norte",
+    "guanabara norte", "residencial vila brasilia",
+  ],
+  "2ª Zona Aparecida": [
+    "tiradentes", "jardim tiradentes", "conde dos arcos", "setor conde dos arcos",
+    "setor conde", "trindade", "parque trindade", "vale verde", "residencial vale verde",
+    "flamboyant", "parque flamboyant", "dom fernando", "jardim dom fernando",
+    "interlagos", "residencial interlagos", "florenca", "jardim florenca",
+    "sao tomas", "vila sao tomas", "olimpico", "jardim olimpico",
+    "independencia", "residencial independencia", "guanabara", "jardim guanabara",
+    "morada do sol norte", "coimbra norte", "santa luzia norte",
+    "novo horizonte norte", "planalto norte", "buena vista norte",
+    "guanabara norte", "riviera", "conjunto riviera", "dom fernando ii",
+  ],
+  "3ª Zona Aparecida": [
+    "anhanguera", "parque anhanguera", "montes claros", "residencial montes claros",
+    "helveica", "helvecia", "jardim helveica", "jardim helvecia",
+    "industrial", "setor industrial", "sao luis", "jardim sao luis",
+    "canaa", "vila canaa", "sao mateus", "parque sao mateus",
+    "cruzeiro do sul", "conjunto cruzeiro do sul", "cruzeiro",
+    "perim", "setor perim", "feliz", "bairro feliz",
+    "redencao", "vila redencao", "sao goncalo", "jardim sao goncalo",
+    "fonte nova", "jardim fonte nova", "afonsos", "setor dos afonsos",
+    "mutirao norte", "vila mutirao norte", "laranjeiras", "parque das laranjeiras",
+    "vila brasilia aparecida", "setor vila brasilia",
+  ],
+  "4ª Zona Aparecida": [
+    "eldorado", "residencial eldorado", "santa luzia", "setor santa luzia",
+    "novo horizonte", "jardim novo horizonte", "buena vista", "residencial buena vista",
+    "tremendao", "parque tremendao", "tremendao sul",
+    "morada do sol", "setor morada do sol", "cerrado", "jardim cerrado",
+    "mutirao", "vila mutirao", "coimbra", "residencial coimbra",
+    "parque industrial", "vera cruz", "conjunto vera cruz",
+    "curitiba", "jardim curitiba", "morumbi", "jardim morumbi",
+    "araguaia", "residencial araguaia", "recanto do bosque", "setor recanto do bosque",
+    "tres marias", "residencial tres marias", "marcelino", "jardim marcelino",
+    "esplanada", "parque esplanada", "luzio", "setor luzio veiga",
+    "baliza", "conjunto baliza", "sao joaquim", "jardim sao joaquim",
+    "barravento", "residencial barravento", "botanico", "residencial botanico",
+    "vitoria", "jardim vitoria", "atheneu", "parque atheneu",
+    "planalto sul", "jardim planalto sul", "planalto", "jardim planalto",
+    "flamboyant norte", "residencial flamboyant",
+  ],
+};
+
+function identifyAparecidaZone(bairro?: string | null, zonaEleitoral?: string | null): string {
+  // Layer 1: zona_eleitoral field
+  if (zonaEleitoral && zonaEleitoral.trim()) {
+    const z = zonaEleitoral.toLowerCase();
+    if (z.includes("ap_zona_1") || (z.includes("1") && z.includes("aparecida"))) return "1ª Zona Aparecida";
+    if (z.includes("ap_zona_2") || (z.includes("2") && z.includes("aparecida"))) return "2ª Zona Aparecida";
+    if (z.includes("ap_zona_3") || (z.includes("3") && z.includes("aparecida"))) return "3ª Zona Aparecida";
+    if (z.includes("ap_zona_4") || (z.includes("4") && z.includes("aparecida"))) return "4ª Zona Aparecida";
+    // Check exact match with constants
+    const match = ZONAS_APARECIDA.find((za) => za.zona === zonaEleitoral);
+    if (match) return match.zona;
+  }
+
+  // Layer 2: bairro matching (same pattern as Goiânia)
+  if (!bairro || !bairro.trim()) return "Não identificada";
+  const b = norm(bairro);
+  for (const [zona, bairros] of Object.entries(APARECIDA_ZONE_BAIRROS)) {
+    if (bairros.some((n) => b === n || b.includes(n) || n.includes(b))) return zona;
+  }
+
+  return "Não identificada";
+}
+
+// ══════════════════════════════════════════════
 // MAIN DATA HOOK — cidade-first classification
 // ══════════════════════════════════════════════
 function useRegionDistribution(days: number) {
   return useQuery({
-    queryKey: ["region-distribution-v3", days],
+    queryKey: ["region-distribution-v4", days],
     queryFn: async () => {
       const since = subDays(new Date(), days).toISOString();
       const BRASIL_FILTER = "pais.eq.Brasil,pais.is.null";
@@ -180,12 +175,6 @@ function useRegionDistribution(days: number) {
         supabase.from("mensagens_contato").select(SELECT_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
       ]);
 
-      const rawCounts = {
-        acessos: acessos.data?.length || 0,
-        cliques: cliques.data?.length || 0,
-        mensagens: mensagens.data?.length || 0,
-      };
-
       // Region summaries
       const regions: Record<string, RegionData> = {
         goiania: { nome: "Goiânia", cor: "#E8825C", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 },
@@ -194,17 +183,18 @@ function useRegionDistribution(days: number) {
         nao_identificado: { nome: "Não Identificado", cor: "#6B7280", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 },
       };
 
-      // Zone counters
+      // Zone counters — Goiânia
       const goianiaZoneCounts: Record<string, { visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number }> = {};
       ZONAS_ELEITORAIS.forEach((z) => { goianiaZoneCounts[z.zona] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 }; });
       goianiaZoneCounts["Não identificada"] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
 
+      // Zone counters — Aparecida (same pattern)
       const aparecidaZoneCounts: Record<string, { visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number }> = {};
       ZONAS_APARECIDA.forEach((z) => { aparecidaZoneCounts[z.zona] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 }; });
       aparecidaZoneCounts["Não identificada"] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
 
-      // City counters for Estado
-      const cityCounts: Record<string, RegionData> = {};
+      // City counters for Estado (no hardcoded list — dynamic)
+      const cityCounts: Record<string, RegionData & { estado?: string }> = {};
 
       function addToRegion(region: string, field: "visitors" | "forms" | "whatsapp" | "instagram" | "facebook") {
         regions[region][field]++;
@@ -217,9 +207,9 @@ function useRegionDistribution(days: number) {
         zoneCounts[zona][field]++;
       }
 
-      function addToCity(cityName: string, field: "visitors" | "forms" | "whatsapp" | "instagram" | "facebook") {
+      function addToCity(cityName: string, estado: string | null | undefined, field: "visitors" | "forms" | "whatsapp" | "instagram" | "facebook") {
         if (!cityCounts[cityName]) {
-          cityCounts[cityName] = { nome: cityName, cor: "#4DB8D4", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 };
+          cityCounts[cityName] = { nome: cityName, cor: "#4DB8D4", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0, estado: estado || undefined };
         }
         cityCounts[cityName][field]++;
         if (field === "whatsapp" || field === "instagram" || field === "facebook") cityCounts[cityName].clicks++;
@@ -235,11 +225,11 @@ function useRegionDistribution(days: number) {
           addToZone(goianiaZoneCounts, zona, field);
         } else if (cat === "aparecida") {
           addToRegion("aparecida", field);
-          const zona = identifyAparecidaZone(r.bairro);
+          const zona = identifyAparecidaZone(r.bairro, r.zona_eleitoral);
           addToZone(aparecidaZoneCounts, zona, field);
         } else if (cat === "interior") {
           addToRegion("restante", field);
-          addToCity(r.cidade!, field);
+          addToCity(r.cidade!, r.estado, field);
         } else {
           addToRegion("nao_identificado", field);
         }
@@ -254,7 +244,7 @@ function useRegionDistribution(days: number) {
       });
       (mensagens.data || []).forEach((r) => processRecord(r, "forms"));
 
-      // Build zone arrays
+      // Build zone arrays — Goiânia
       const goianiaZones: ZoneData[] = ZONAS_ELEITORAIS.map((z) => {
         const c = goianiaZoneCounts[z.zona] || { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
         const clicks = c.whatsapp + c.instagram + c.facebook;
@@ -267,18 +257,18 @@ function useRegionDistribution(days: number) {
         };
       });
 
-      // Include "Não identificada" for Goiânia
       const goianiaNI = goianiaZoneCounts["Não identificada"];
       if (goianiaNI && (goianiaNI.visitors + goianiaNI.forms + goianiaNI.whatsapp + goianiaNI.instagram + goianiaNI.facebook) > 0) {
         const clicks = goianiaNI.whatsapp + goianiaNI.instagram + goianiaNI.facebook;
         goianiaZones.push({
           zona: "Não identificada", nome: "Zona não identificada", cor: "#E8825C", eleitores: 0,
           visitors: goianiaNI.visitors, forms: goianiaNI.forms, whatsapp: goianiaNI.whatsapp, instagram: goianiaNI.instagram, facebook: goianiaNI.facebook,
-          clicks, total: goianiaNI.visitors + goianiaNI.forms + clicks,
-          penetracao: 0, conversao: goianiaNI.visitors > 0 ? parseFloat(((goianiaNI.forms / goianiaNI.visitors) * 100).toFixed(1)) : 0,
+          clicks, total: goianiaNI.visitors + goianiaNI.forms + clicks, penetracao: 0,
+          conversao: goianiaNI.visitors > 0 ? parseFloat(((goianiaNI.forms / goianiaNI.visitors) * 100).toFixed(1)) : 0,
         });
       }
 
+      // Build zone arrays — Aparecida (identical pattern)
       const aparecidaZones: ZoneData[] = ZONAS_APARECIDA.map((z) => {
         const c = aparecidaZoneCounts[z.zona] || { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
         const clicks = c.whatsapp + c.instagram + c.facebook;
@@ -291,28 +281,27 @@ function useRegionDistribution(days: number) {
         };
       });
 
-      // Include "Não identificada" for Aparecida
       const aparecidaNI = aparecidaZoneCounts["Não identificada"];
       if (aparecidaNI && (aparecidaNI.visitors + aparecidaNI.forms + aparecidaNI.whatsapp + aparecidaNI.instagram + aparecidaNI.facebook) > 0) {
         const clicks = aparecidaNI.whatsapp + aparecidaNI.instagram + aparecidaNI.facebook;
         aparecidaZones.push({
           zona: "Não identificada", nome: "Zona não identificada — Aparecida", cor: "#9333EA", eleitores: 0,
           visitors: aparecidaNI.visitors, forms: aparecidaNI.forms, whatsapp: aparecidaNI.whatsapp, instagram: aparecidaNI.instagram, facebook: aparecidaNI.facebook,
-          clicks, total: aparecidaNI.visitors + aparecidaNI.forms + clicks,
-          penetracao: 0, conversao: aparecidaNI.visitors > 0 ? parseFloat(((aparecidaNI.forms / aparecidaNI.visitors) * 100).toFixed(1)) : 0,
+          clicks, total: aparecidaNI.visitors + aparecidaNI.forms + clicks, penetracao: 0,
+          conversao: aparecidaNI.visitors > 0 ? parseFloat(((aparecidaNI.forms / aparecidaNI.visitors) * 100).toFixed(1)) : 0,
         });
       }
 
       const cities = Object.values(cityCounts).sort((a, b) => b.total - a.total);
       const totalGeral = Object.values(regions).reduce((s, r) => s + r.total, 0);
 
-      return { regions, goianiaZones, aparecidaZones, cities, totalGeral, rawCounts };
+      return { regions, goianiaZones, aparecidaZones, cities, totalGeral };
     },
     staleTime: 60_000,
   });
 }
 
-/* ─── Metric Grid ─── */
+/* ─── Metric Grid (shared by all tabs) ─── */
 function MetricGrid({ data, size = "sm" }: { data: RegionData; size?: "sm" | "lg" }) {
   const isLg = size === "lg";
   return (
@@ -336,12 +325,11 @@ function MetricGrid({ data, size = "sm" }: { data: RegionData; size?: "sm" | "lg
   );
 }
 
-/* ─── Zone Bar Row — FIXED: no extra "Zona" for Aparecida zones ─── */
+/* ─── Zone Row (shared by Goiânia AND Aparecida — same component) ─── */
 function ZoneRow({ z, i, maxVisitors, isSelected, onSelect }: {
   z: ZoneData; i: number; maxVisitors: number; isSelected: boolean; onSelect: () => void;
 }) {
   const barPct = maxVisitors > 0 ? (z.visitors / maxVisitors) * 100 : 0;
-  // If zone name already contains "Zona", don't append it again
   const displayZona = z.zona.includes("Zona") || z.zona === "Não identificada" ? z.zona : `${z.zona} Zona`;
 
   return (
@@ -394,11 +382,6 @@ function ZoneRow({ z, i, maxVisitors, isSelected, onSelect }: {
   );
 }
 
-/* ─── Debug line ─── */
-function DebugLine({ label, count }: { label: string; count: number }) {
-  return <p className="text-[10px] text-muted-foreground/40 mt-2 font-mono">Query returned {count} rows before grouping ({label})</p>;
-}
-
 /* ─── Main Page ─── */
 export default function ZonasGoiania() {
   const [days, setDays] = useState(30);
@@ -411,7 +394,6 @@ export default function ZonasGoiania() {
   const aparecidaZones = data?.aparecidaZones || [];
   const cities = data?.cities || [];
   const totalGeral = data?.totalGeral || 0;
-  const rawCounts = data?.rawCounts || { acessos: 0, cliques: 0, mensagens: 0 };
 
   const regionList = useMemo(() => {
     return ["goiania", "aparecida", "restante", "nao_identificado"]
@@ -530,12 +512,11 @@ export default function ZonasGoiania() {
                       onSelect={() => setSelectedZona(selectedZona === z.zona ? null : z.zona)} />
                   ))}
                 </div>
-                <DebugLine label="acessos+cliques+forms" count={rawCounts.acessos + rawCounts.cliques + rawCounts.mensagens} />
               </div>
             </motion.div>
           )}
 
-          {/* ═══ TAB: APARECIDA ═══ */}
+          {/* ═══ TAB: APARECIDA (same architecture as Goiânia) ═══ */}
           {activeTab === "aparecida" && (
             <motion.div key="aparecida" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }} className="space-y-4">
               {regions.aparecida && (
@@ -546,7 +527,6 @@ export default function ZonasGoiania() {
                     <span className="ml-auto text-[10px] text-muted-foreground">~{TOTAL_ELEITORES_APARECIDA.toLocaleString("pt-BR")} eleitores • 4 zonas</span>
                   </div>
                   <MetricGrid data={regions.aparecida} size="lg" />
-                  {/* Verification: sum of all aparecida zones should match region total */}
                   {(() => {
                     const zoneSum = aparecidaZones.reduce((s, z) => s + z.total, 0);
                     const regionTotal = regions.aparecida.total;
@@ -567,12 +547,11 @@ export default function ZonasGoiania() {
                       onSelect={() => setSelectedZona(selectedZona === z.zona ? null : z.zona)} />
                   ))}
                 </div>
-                <DebugLine label="aparecida records" count={regions.aparecida?.total || 0} />
               </div>
             </motion.div>
           )}
 
-          {/* ═══ TAB: ESTADO ═══ */}
+          {/* ═══ TAB: ESTADO (dynamic cities, no hardcoded filter) ═══ */}
           {activeTab === "estado" && (
             <motion.div key="estado" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }} className="space-y-4">
               {regions.restante && (
@@ -615,7 +594,12 @@ export default function ZonasGoiania() {
                                 <span>{i + 1}</span>
                               )}
                             </td>
-                            <td className="px-4 py-2.5 font-medium">{c.nome}</td>
+                            <td className="px-4 py-2.5 font-medium">
+                              {c.nome}
+                              {(c as any).estado && (
+                                <span className="ml-1.5 text-[9px] text-muted-foreground/60 bg-white/[0.04] rounded px-1 py-0.5">{(c as any).estado}</span>
+                              )}
+                            </td>
                             <td className="px-4 py-2.5 text-right tabular-nums">{c.visitors}</td>
                             <td className="px-4 py-2.5 text-right tabular-nums">{c.forms}</td>
                             <td className="px-4 py-2.5 text-right tabular-nums text-success">{c.whatsapp}</td>
@@ -627,7 +611,6 @@ export default function ZonasGoiania() {
                       </tbody>
                     </table>
                   </div>
-                  <DebugLine label="cidades interior" count={cities.reduce((s, c) => s + c.total, 0)} />
                 </div>
               ) : (
                 <div className="glass-card p-8 text-center text-sm text-muted-foreground">
@@ -662,19 +645,11 @@ export default function ZonasGoiania() {
               "Interior": "bg-[#4DB8D4]/20 text-[#4DB8D4]",
             };
 
-            // Conversion rates by region
             const regionConversions = ["goiania", "aparecida", "restante"]
               .map((key) => {
                 const r = regions[key];
                 if (!r) return null;
-                return {
-                  nome: r.nome,
-                  cor: r.cor,
-                  visitors: r.visitors,
-                  forms: r.forms,
-                  total: r.total,
-                  conversao: r.visitors > 0 ? ((r.forms / r.visitors) * 100).toFixed(1) : "0",
-                };
+                return { nome: r.nome, cor: r.cor, visitors: r.visitors, forms: r.forms, total: r.total, conversao: r.visitors > 0 ? ((r.forms / r.visitors) * 100).toFixed(1) : "0" };
               })
               .filter(Boolean) as any[];
 
@@ -839,8 +814,6 @@ export default function ZonasGoiania() {
                   </table>
                 </div>
               </div>
-
-              <DebugLine label="total geral" count={totalGeral} />
             </motion.div>
             );
           })()}

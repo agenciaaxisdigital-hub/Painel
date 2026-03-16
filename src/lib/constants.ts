@@ -18,7 +18,7 @@ export const ZONAS_APARECIDA = [
   { zona: "1ª Zona Aparecida", nome: "Centro / Garavelo / Expansão", eleitores: 105000, cor: "#6A0DAD" },
   { zona: "2ª Zona Aparecida", nome: "Tiradentes / Conde dos Arcos / Trindade", eleitores: 105000, cor: "#8B008B" },
   { zona: "3ª Zona Aparecida", nome: "Vila Brasília / Anhanguera / Industrial", eleitores: 105000, cor: "#BA55D3" },
-  { zona: "4ª Zona Aparecida", nome: "Eldorado / Santa Luzia / Novo Horizonte", eleitores: 105000, cor: "#E6E6FA" },
+  { zona: "4ª Zona Aparecida", nome: "Eldorado / Santa Luzia / Novo Horizonte", eleitores: 105000, cor: "#9370DB" },
 ] as const;
 
 export const TOTAL_ELEITORES_APARECIDA = 420_000;
