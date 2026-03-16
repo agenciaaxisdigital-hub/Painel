@@ -133,20 +133,18 @@ Deno.serve(async (req) => {
         );
       }
 
-      const newEmail = `${trimmed.toLowerCase().replace(/\s+/g, ".")}@chamarosa.app`;
+      const currentUserResponse = await supabaseAdmin.auth.admin.getUserById(user_id);
+      const currentEmail = currentUserResponse.data.user?.email;
 
-      // Check if new email already taken by another user
-      const { data: { users: allUsers } } = await supabaseAdmin.auth.admin.listUsers();
-      const taken = allUsers?.find(u => u.email === newEmail && u.id !== user_id);
-      if (taken) {
+      if (!currentEmail) {
         return new Response(
-          JSON.stringify({ error: `Usuário "${trimmed}" já existe` }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: "Usuário não encontrado" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
-        email: newEmail,
+        email: currentEmail,
         user_metadata: { username: trimmed },
       });
 
@@ -158,7 +156,7 @@ Deno.serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, message: `Usuário renomeado para "${trimmed}"` }),
+        JSON.stringify({ success: true, message: `Nome atualizado para "${trimmed}"` }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
