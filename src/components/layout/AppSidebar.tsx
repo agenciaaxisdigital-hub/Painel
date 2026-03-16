@@ -53,7 +53,7 @@ export function AppSidebar() {
           <img src={chamaRosaLogo} alt="Chama Rosa" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
           {!collapsed && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-w-0 flex-1">
-              <h2 className="font-display text-lg font-bold leading-none text-foreground">Chama Rosa</h2>
+              <h2 className="font-display text-lg font-bold leading-none text-foreground">Painel de Dados</h2>
               <div className="mt-0.5 flex items-center gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                 <span className="text-[10px] text-muted-foreground">Supabase conectado</span>
