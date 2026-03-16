@@ -130,18 +130,19 @@ function useRegionDistribution(days: number) {
 
         if (result.categoria === "goiania") {
           addToRegion("goiania", field);
-          const zona = result.zona in goianiaZoneCounts ? result.zona : "Sem localização";
+          const zona = result.zona in goianiaZoneCounts ? result.zona : ZONAS_ELEITORAIS[0].zona;
           addToZone(goianiaZoneCounts, zona, field);
         } else if (result.categoria === "aparecida") {
           addToRegion("aparecida", field);
-          // Every Aparecida record goes to a valid zone (identifyAparecidaZone defaults to 4ª)
           const zona = result.zona in aparecidaZoneCounts ? result.zona : ZONAS_APARECIDA[3].zona;
           addToZone(aparecidaZoneCounts, zona, field);
         } else if ((result.categoria === "interior" || result.categoria === "fora_goias") && result.nome) {
           addToRegion("restante", field);
           addToCity(result.nome, r.estado, field);
         } else {
-          addToRegion("nao_identificado", field);
+          // Fallback: assign to restante with the available info
+          addToRegion("restante", field);
+          if (r.cidade) addToCity(r.cidade, r.estado, field);
         }
       }
 
