@@ -46,10 +46,11 @@ function useRegionDistribution(days: number) {
     queryFn: async () => {
       const since = subDays(new Date(), days).toISOString();
 
+      const BRASIL_FILTER = "pais.eq.Brasil,pais.is.null";
       const [acessos, cliques, mensagens] = await Promise.all([
-        supabase.from("acessos_site").select("zona_eleitoral, bairro, cidade, estado, latitude, longitude").gte("criado_em", since).limit(5000),
-        supabase.from("cliques_whatsapp").select("zona_eleitoral, bairro, cidade, estado, latitude, longitude, tipo_clique").gte("criado_em", since).limit(5000),
-        supabase.from("mensagens_contato").select("zona_eleitoral, bairro, cidade, estado, latitude, longitude").gte("criado_em", since).limit(5000),
+        supabase.from("acessos_site").select("zona_eleitoral, bairro, cidade, estado, latitude, longitude").gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
+        supabase.from("cliques_whatsapp").select("zona_eleitoral, bairro, cidade, estado, latitude, longitude, tipo_clique").gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
+        supabase.from("mensagens_contato").select("zona_eleitoral, bairro, cidade, estado, latitude, longitude").gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
       ]);
 
       const regions: Record<string, RegionData> = {
