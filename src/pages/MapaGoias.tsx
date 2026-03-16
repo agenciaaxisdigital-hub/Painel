@@ -4,8 +4,7 @@ import { REGIOES_GOIAS } from "@/lib/constants";
 import { useRegionCounts } from "@/hooks/use-supabase-data";
 import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
 import { X, Download } from "lucide-react";
-import { format } from "date-fns";
-import * as XLSX from "xlsx";
+import { mapRegiaoGoias, exportXlsx, exportFilename } from "@/lib/export-utils";
 
 export default function MapaGoias() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
