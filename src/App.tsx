@@ -11,6 +11,7 @@ import Visitantes from "./pages/Visitantes";
 import Formularios from "./pages/Formularios";
 import TodasInteracoes from "./pages/TodasInteracoes";
 import Interacoes from "./pages/TodasInteracoes";
+import ZonasGoiania from "./pages/ZonasGoiania";
 import MapaGoias from "./pages/MapaGoias";
 import Exportar from "./pages/Exportar";
 import Configuracoes from "./pages/Configuracoes";
