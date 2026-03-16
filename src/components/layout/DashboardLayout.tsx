@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import NeuralNetworkBackground from "@/components/NeuralNetworkBackground";
 import { motion, AnimatePresence } from "framer-motion";
