@@ -239,9 +239,9 @@ function useLastHourCount() {
     queryFn: async () => {
       const since = subDays(new Date(), 1 / 24).toISOString();
       const [a, c, f] = await Promise.all([
-        supabase.from("acessos_site").select("*", { count: "exact", head: true }).gte("criado_em", since),
-        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since),
-        supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).gte("criado_em", since),
+        supabase.from("acessos_site").select("*", { count: "exact", head: true }).gte("criado_em", since).or("pais.eq.Brasil,pais.is.null"),
+        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).or("pais.eq.Brasil,pais.is.null"),
+        supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).gte("criado_em", since).or("pais.eq.Brasil,pais.is.null"),
       ]);
       return (a.count ?? 0) + (c.count ?? 0) + (f.count ?? 0);
     },
