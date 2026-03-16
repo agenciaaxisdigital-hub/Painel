@@ -4,6 +4,7 @@ import { X, Send, Trash2, Copy, Check, Sparkles } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: string;
@@ -198,7 +199,13 @@ export function SarelliChat({ open, onClose }: { open: boolean; onClose: () => v
                         : "bg-white/[0.05] text-foreground border border-white/[0.06] rounded-bl-md"
                     )}
                   >
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    {msg.role === "user" ? (
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    ) : (
+                      <div className="prose prose-sm prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-table:my-2 prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-th:border prose-td:border prose-th:border-white/10 prose-td:border-white/10 prose-strong:text-primary">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    )}
                     <button
                       onClick={() => copyMessage(msg.id, msg.content)}
                       className="absolute -bottom-2 right-2 rounded-md bg-card p-1 opacity-0 shadow-lg transition-opacity group-hover:opacity-100 border border-white/[0.08]"
