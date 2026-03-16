@@ -55,7 +55,7 @@ function useGeographicBreakdown(days: number) {
         } else if (result.categoria === "aparecida") {
           const zona = aparecidaZoneNames.includes(result.zona) ? result.zona : aparecidaZoneNames[aparecidaZoneNames.length - 1];
           aparecidaZones[zona] = (aparecidaZones[zona] || 0) + 1;
-        } else if ((result.categoria === "interior" || result.categoria === "fora_goias") && result.zona) {
+        } else if (result.categoria === "interior" && result.zona) {
           otherCities[result.zona] = (otherCities[result.zona] || 0) + 1;
         }
       });

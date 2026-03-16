@@ -98,19 +98,19 @@ function useRegionDistribution(days: number) {
       }
 
       function processRecord(r: any, field: "visitors" | "forms" | "whatsapp" | "instagram" | "facebook") {
-        const cat = classifyCidade(r.cidade);
+        const result = identifyZone(r);
 
-        if (cat === "goiania") {
+        if (result.categoria === "goiania") {
           addToRegion("goiania", field);
-          const zona = identifyGoianiaZoneFromBairro(r.bairro, r.zona_eleitoral);
+          const zona = result.zona in goianiaZoneCounts ? result.zona : "Não identificada";
           addToZone(goianiaZoneCounts, zona, field);
-        } else if (cat === "aparecida") {
+        } else if (result.categoria === "aparecida") {
           addToRegion("aparecida", field);
-          const zona = identifyAparecidaZone(r.bairro, r.zona_eleitoral);
+          const zona = result.zona in aparecidaZoneCounts ? result.zona : "Não identificada";
           addToZone(aparecidaZoneCounts, zona, field);
-        } else if (cat === "interior") {
+        } else if (result.categoria === "interior" && result.nome) {
           addToRegion("restante", field);
-          addToCity(r.cidade!, r.estado, field);
+          addToCity(result.nome, r.estado, field);
         } else {
           addToRegion("nao_identificado", field);
         }

@@ -210,53 +210,54 @@ const APARECIDA_ZONE_SET = new Set(ZONAS_APARECIDA.map((z) => z.zona));
 // This determines which zone identification runs.
 // ══════════════════════════════════════════════
 
-// Normalized city names that are Aparecida
-const APARECIDA_CITY_VARIANTS = [
-  "aparecida de goiania",
-  "aparecida de goiânia",
-  "aparecida",
-];
+function inferCategoriaFromZonaEleitoral(zonaEleitoral?: string | null): "goiania" | "aparecida" | "unknown" {
+  if (!zonaEleitoral || !zonaEleitoral.trim()) return "unknown";
+  const zn = normalize(zonaEleitoral);
+
+  if (
+    zn.includes("ap_zona_") ||
+    (zn.includes("aparecida") && (zn.includes("1") || zn.includes("2") || zn.includes("3") || zn.includes("4"))) ||
+    ZONAS_APARECIDA.some((z) => normalize(z.zona) === zn)
+  ) {
+    return "aparecida";
+  }
+
+  if (ZONAS_ELEITORAIS.some((z) => normalize(z.zona) === zn)) {
+    return "goiania";
+  }
+
+  return "unknown";
+}
 
 function classifyCidade(cidade?: string | null, estado?: string | null, lat?: number | null, lng?: number | null): "goiania" | "aparecida" | "interior" | "fora_goias" | "unknown" {
   const cn = cidade ? normalize(cidade) : "";
   const en = estado ? normalize(estado) : "";
 
-  // ── PRIORITY 1: Exact cidade match ──
   if (cn) {
-    // Check Aparecida FIRST (more specific name — prevents "goiania" substring match)
-    if (cn === "aparecida de goiania" || cn === "aparecida de goiânia" ||
-        (cn.includes("aparecida") && cn.includes("goian"))) {
+    if (cn === "aparecida de goiania" || (cn.includes("aparecida") && cn.includes("goian"))) {
       return "aparecida";
     }
-    // Then Goiânia
-    if (cn === "goiania" || cn === "goiânia") {
+    if (cn === "goiania") {
       return "goiania";
     }
-    // Other city in Goiás
     if (en === "go" || en === "goias" || en.includes("goias")) {
       return "interior";
     }
-    // Has cidade but not GO
     if (en && en !== "go" && en !== "goias" && !en.includes("goias")) {
       return "fora_goias";
     }
-    // Has cidade, no estado — still count as interior if it's a known GO city
     return "interior";
   }
 
-  // ── PRIORITY 2: No cidade — use coordinates to disambiguate ──
   if (lat && lng) {
-    // Check Aparecida bounds first (more restrictive, south of Goiânia)
-    if (isInBounds(lat, lng, APARECIDA_BOUNDS) && !isInBounds(lat, lng, GOIANIA_BOUNDS)) {
-      return "aparecida";
-    }
-    if (isInBounds(lat, lng, GOIANIA_BOUNDS) && !isInBounds(lat, lng, APARECIDA_BOUNDS)) {
-      return "goiania";
-    }
-    // In the overlap zone (border area ~lat -16.73 to -16.76) — default to Goiânia
-    if (isInBounds(lat, lng, GOIANIA_BOUNDS)) {
-      return "goiania";
-    }
+    const inAparecida = isInBounds(lat, lng, APARECIDA_BOUNDS);
+    const inGoiania = isInBounds(lat, lng, GOIANIA_BOUNDS);
+
+    if (inAparecida && !inGoiania) return "aparecida";
+    if (inGoiania && !inAparecida) return "goiania";
+
+    // Área de sobreposição = ambígua. Melhor não classificar do que poluir os dados.
+    if (inAparecida && inGoiania) return "unknown";
   }
 
   return "unknown";
@@ -277,10 +278,11 @@ export interface ZoneResult {
 }
 
 /**
- * Identify zone with cidade-first classification:
- * 1. Classify by cidade field (Aparecida checked BEFORE Goiânia to prevent substring match)
- * 2. If no cidade, use coordinates with geographic bounds
- * 3. Within each city, identify zone by: zona_eleitoral → bairro → coordinates
+ * Identify zone with strict anti-pollution classification:
+ * 1. cidade exacta decide a cidade
+ * 2. se cidade faltar, tenta zona_eleitoral explícita
+ * 3. coordenadas só classificam quando caem fora da área ambígua
+ * 4. se ainda houver dúvida, cai em unknown em vez de misturar Goiânia/Aparecida
  */
 export function identifyZone(params: {
   zona_eleitoral?: string | null;
@@ -292,9 +294,11 @@ export function identifyZone(params: {
 }): ZoneResult {
   const { zona_eleitoral, bairro, cidade, estado, latitude, longitude } = params;
 
-  const cat = classifyCidade(cidade, estado, latitude, longitude);
+  const cityCategoria = classifyCidade(cidade, estado, latitude, longitude);
+  const zonaCategoria = inferCategoriaFromZonaEleitoral(zona_eleitoral);
+  const categoria = cityCategoria !== "unknown" ? cityCategoria : zonaCategoria;
 
-  switch (cat) {
+  switch (categoria) {
     case "goiania":
       return identifyGoianiaZone({ zona_eleitoral, bairro, latitude, longitude });
     case "aparecida":
@@ -321,29 +325,28 @@ export function identifyZone(params: {
       break;
   }
 
-  // ── No cidade, no coords in bounds — try zona_eleitoral field ──
-  if (zona_eleitoral && zona_eleitoral.trim() && zona_eleitoral !== "Não identificada") {
-    const gzMatch = ZONAS_ELEITORAIS.find((z) => z.zona === zona_eleitoral);
-    if (gzMatch) return { zona: gzMatch.zona, nome: gzMatch.nome, cor: gzMatch.cor, eleitores: gzMatch.eleitores, method: "database", categoria: "goiania" };
-    const azMatch = ZONAS_APARECIDA.find((z) => z.zona === zona_eleitoral);
-    if (azMatch) return { zona: azMatch.zona, nome: azMatch.nome, cor: azMatch.cor, eleitores: azMatch.eleitores, method: "database", categoria: "aparecida" };
-  }
-
-  // Try coordinates with wider radius
   if (latitude && longitude) {
-    const goianiaResult = findNearestZone(latitude, longitude, GOIANIA_CENTROIDS, 12);
-    if (goianiaResult) {
-      const z = ZONAS_ELEITORAIS.find((zz) => zz.zona === goianiaResult);
-      if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates", categoria: "goiania" };
+    const inAparecida = isInBounds(latitude, longitude, APARECIDA_BOUNDS);
+    const inGoiania = isInBounds(latitude, longitude, GOIANIA_BOUNDS);
+
+    if (inGoiania && !inAparecida) {
+      const goianiaResult = findNearestZone(latitude, longitude, GOIANIA_CENTROIDS, 12);
+      if (goianiaResult) {
+        const z = ZONAS_ELEITORAIS.find((zz) => zz.zona === goianiaResult);
+        if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates", categoria: "goiania" };
+      }
     }
-    const aparecidaResult = findNearestZone(latitude, longitude, APARECIDA_CENTROIDS, 10);
-    if (aparecidaResult) {
-      const z = ZONAS_APARECIDA.find((zz) => zz.zona === aparecidaResult);
-      if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates", categoria: "aparecida" };
+
+    if (inAparecida && !inGoiania) {
+      const aparecidaResult = findNearestZone(latitude, longitude, APARECIDA_CENTROIDS, 10);
+      if (aparecidaResult) {
+        const z = ZONAS_APARECIDA.find((zz) => zz.zona === aparecidaResult);
+        if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates", categoria: "aparecida" };
+      }
     }
   }
 
-  if (cidade) {
+  if (cidade && (estado ? normalize(estado).includes("go") : true)) {
     return { zona: cidade, nome: cidade, cor: "#9CA3AF", eleitores: 0, method: "cidade_fallback", categoria: "interior" };
   }
 
