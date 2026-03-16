@@ -158,6 +158,7 @@ export function identifyZone(params: {
         const zoneData = ZONAS_ELEITORAIS.find((z) => z.zona === zona);
         return {
           zona,
+          nome: zoneData?.nome || "",
           cor: zoneData?.cor || "#888",
           eleitores: zoneData?.eleitores || 0,
           method: "bairro",
