@@ -22,7 +22,11 @@ export function DashboardLayout() {
   if (!session) return <Navigate to="/login" replace />;
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="relative flex min-h-screen w-full bg-background">
+      {/* Subtle ambient background — same neural net but very faded */}
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.08]">
+        <NeuralNetworkBackground />
+      </div>
       <div className="ambient-glow" />
       <AppSidebar />
       <main className="flex-1 min-w-0 pb-20 md:pb-0">
