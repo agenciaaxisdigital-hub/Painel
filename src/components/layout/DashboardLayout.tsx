@@ -1,7 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
-import NeuralNetworkBackground from "@/components/NeuralNetworkBackground";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -25,10 +24,6 @@ export function DashboardLayout() {
 
   return (
     <div className="relative flex min-h-screen w-full bg-background">
-      {/* Subtle ambient background — same neural net but very faded */}
-      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.08]">
-        <NeuralNetworkBackground />
-      </div>
       <div className="ambient-glow" />
       <AppSidebar />
       <main className="relative z-10 flex-1 min-w-0 pb-20 md:pb-0">
