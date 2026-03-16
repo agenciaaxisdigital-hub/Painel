@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { useVisitantes, useDeviceBreakdown, useTrafficOrigin, useTopCities, useTopPages } from "@/hooks/use-supabase-data";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { useVisitantes, useDeviceBreakdown } from "@/hooks/use-supabase-data";
 import { DateRangeSelector } from "@/components/shared/DateRangeSelector";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
