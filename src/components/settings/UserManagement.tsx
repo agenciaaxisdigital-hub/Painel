@@ -387,6 +387,37 @@ export default function UserManagement() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Rename User Dialog */}
+      <Dialog open={!!renameTarget} onOpenChange={(o) => { if (!o) { setRenameTarget(null); setNewUsername(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Nome de Usuário</DialogTitle>
+            <DialogDescription>
+              Altere o nome de <strong>{renameTarget?.username}</strong>. O login será atualizado automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleRenameSubmit} className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="new-username">Novo Nome</Label>
+              <Input id="new-username" placeholder="Ex: joao.silva"
+                value={newUsername} onChange={(e) => setNewUsername(e.target.value)} autoComplete="off" />
+              <p className="text-[11px] text-muted-foreground">
+                Login será: <span className="font-mono text-primary">{newUsername.toLowerCase().replace(/\s+/g, ".") || "..."}</span>
+              </p>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => { setRenameTarget(null); setNewUsername(""); }}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={renameUser.isPending}>
+                {renameUser.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Salvar
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
