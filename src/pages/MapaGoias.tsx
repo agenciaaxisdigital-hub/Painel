@@ -64,7 +64,7 @@ export default function MapaGoias() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-3 gap-3">
         <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Visitantes GO</span><div className="text-xl font-bold"><AnimatedNumber value={totalVisitantes} /></div></div>
         <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Formulários GO</span><div className="text-xl font-bold"><AnimatedNumber value={totalForms} /></div></div>
         <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Cliques GO</span><div className="text-xl font-bold"><AnimatedNumber value={totalClicks} /></div></div>

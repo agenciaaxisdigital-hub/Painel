@@ -48,9 +48,9 @@ export function VisitorDrawer({ visitor, onClose }: VisitorDrawerProps) {
         <div className="grid grid-cols-2 gap-3">
           {[
             { label: "Visitas", value: visitor.totalVisitas },
-            { label: "Zona Eleitoral", value: visitor.zonaEleitoral || "—", color: "text-primary" },
+            { label: "Zona Eleitoral", value: visitor.zonaEleitoral || "Aproximada", color: "text-primary" },
             { label: "Tempo Total", value: formatTime(visitor.tempoTotal) },
-            { label: "Bairro", value: visitor.bairro || "—" },
+            { label: "Bairro", value: visitor.bairro || "Aproximado" },
           ].map((item) => (
             <div key={item.label} className="rounded-lg bg-white/[0.03] p-3">
               <span className="text-[10px] text-muted-foreground">{item.label}</span>
