@@ -149,22 +149,25 @@ export function FullLocationDetail({ data, onCopy }: { data: LocationData; onCop
           <span className="text-muted-foreground shrink-0 w-28">Endereço Completo</span>
           {data.endereco_completo ? (
             <>
-              <span className="text-foreground/80 break-all">{data.endereco_completo}</span>
+              <span className="text-foreground/80 break-all flex-1">{data.endereco_completo}</span>
               <button onClick={() => copyText(data.endereco_completo!)} className="shrink-0 text-muted-foreground/40 hover:text-primary transition-colors">
                 <Copy className="h-3 w-3" />
               </button>
             </>
-          ) : hasCoords && !geocode.result ? (
-            <button onClick={() => geocode.fetchAddress(data.latitude!, data.longitude!)} disabled={geocode.loading}
-              className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors disabled:opacity-50">
-              {geocode.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <MapPinned className="h-3 w-3" />}
-              {geocode.loading ? "Buscando..." : "Buscar via GPS"}
-            </button>
           ) : geocode.result ? (
             <>
-              <span className="text-foreground/80 break-all">{geocode.result}</span>
+              <span className="text-foreground/80 break-all flex-1">{geocode.result}</span>
               <button onClick={() => copyText(geocode.result!)} className="shrink-0 text-muted-foreground/40 hover:text-primary transition-colors">
                 <Copy className="h-3 w-3" />
+              </button>
+            </>
+          ) : hasCoords ? (
+            <>
+              <span className="text-muted-foreground/40 flex-1">—</span>
+              <button onClick={() => geocode.fetchAddress(data.latitude!, data.longitude!)} disabled={geocode.loading}
+                className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors disabled:opacity-50 shrink-0">
+                {geocode.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <MapPinned className="h-3 w-3" />}
+                {geocode.loading ? "Buscando..." : "Buscar via GPS"}
               </button>
             </>
           ) : (
