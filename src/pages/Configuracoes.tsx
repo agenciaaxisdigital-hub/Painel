@@ -94,13 +94,19 @@ export default function Configuracoes() {
           <h3 className="text-sm font-medium">Registros por Tabela</h3>
         </div>
         {connection.isLoading ? <Skeleton className="h-20" /> : connection.data ? (
-          <div className="grid grid-cols-3 gap-3">
-            {Object.entries(connection.data.counts).map(([key, val]) => (
-              <div key={key} className="rounded-lg bg-white/[0.03] p-4 text-center">
-                <div className="text-2xl font-bold text-foreground">{val.toLocaleString("pt-BR")}</div>
-                <div className="text-xs text-muted-foreground mt-1">{key}</div>
-              </div>
-            ))}
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              {Object.entries(connection.data.counts).map(([key, val]) => (
+                <div key={key} className="rounded-lg bg-white/[0.03] p-4 text-center">
+                  <div className="text-2xl font-bold text-foreground">{val.toLocaleString("pt-BR")}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{key}</div>
+                </div>
+              ))}
+            </div>
+            <Button variant="outline" size="sm" onClick={handleCleanup} disabled={cleaning} className="gap-2">
+              {cleaning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              {cleaning ? "Limpando..." : "Remover registros sem localização"}
+            </Button>
           </div>
         ) : null}
       </motion.div>
