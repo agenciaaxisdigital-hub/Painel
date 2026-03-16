@@ -221,7 +221,7 @@ export function useTopCities(days: number) {
       const since = getSince(days);
       const { data } = await supabase.from("acessos_site").select("cidade").gte("criado_em", since).limit(1000);
       const counts: Record<string, number> = {};
-      (data || []).forEach((r) => { const c = r.cidade || "Desconhecida"; counts[c] = (counts[c] || 0) + 1; });
+      (data || []).forEach((r) => { if (r.cidade && r.cidade.trim()) { counts[r.cidade] = (counts[r.cidade] || 0) + 1; } });
       return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([cidade, visitantes]) => ({ cidade, visitantes }));
     },
     staleTime: 60_000,
