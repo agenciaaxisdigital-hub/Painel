@@ -428,7 +428,7 @@ export default function Interacoes() {
                 <div className="flex items-center gap-2 mt-3 text-[9px] text-muted-foreground">
                   <span>Menos</span>
                   {[0.1, 0.3, 0.5, 0.7, 1].map((i) => (
-                    <div key={i} className="h-3 w-6 rounded-sm" style={{ backgroundColor: `hsl(45, 93%, ${85 - i * 60}%)`, opacity: 0.4 + i * 0.6 }} />
+                    <div key={i} className="h-3 w-6 rounded-sm" style={{ backgroundColor: `hsl(341, 90%, ${65 - i * 25}%)`, opacity: 0.5 + i * 0.5 }} />
                   ))}
                   <span>Mais</span>
                 </div>
