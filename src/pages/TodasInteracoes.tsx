@@ -174,7 +174,7 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
           if (cidade) q = q.eq("cidade", cidade);
           if (dispositivo.length > 0) q = q.in("dispositivo", dispositivo.map((d) => d.toLowerCase()));
           const { data } = await q.limit(5000);
-          filterValidLocationRecords(data).forEach((r) => results.push(mapAcesso(r)));
+          (data || []).forEach((r) => results.push(mapAcesso(r)));
         })());
       }
 
