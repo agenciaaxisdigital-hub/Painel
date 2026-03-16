@@ -636,13 +636,6 @@ export default function ZonasGoiania() {
               "Interior": "bg-[#4DB8D4]/20 text-[#4DB8D4]",
             };
 
-            const regionConversions = ["goiania", "aparecida", "restante"]
-              .map((key) => {
-                const r = regions[key];
-                if (!r) return null;
-                return { nome: r.nome, cor: r.cor, visitors: r.visitors, forms: r.forms, total: r.total, conversao: r.visitors > 0 ? ((r.forms / r.visitors) * 100).toFixed(1) : "0" };
-              })
-              .filter(Boolean) as any[];
 
             return (
             <motion.div key="comparativo" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }} className="space-y-4">
