@@ -122,7 +122,7 @@ export default function ZonasGoiania() {
     const ws = XLSX.utils.json_to_sheet(sorted.map((z) => ({
       Zona: `${z.zona} Zona`, Nome: z.nome, Eleitores: z.eleitores, Visitantes: z.visitors,
       Formulários: z.forms, "Cliques WhatsApp": z.whatsapp, "Cliques Instagram": z.instagram,
-      "Cliques Facebook": z.facebook, "Total Cliques": z.clicks, "Penetração %": z.penetracao, "Conversão %": z.conversao,
+      "Cliques Facebook": z.facebook, "Total Cliques": z.clicks, "Acesso %": z.penetracao, "Conversão %": z.conversao,
     })));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Zonas");
@@ -154,7 +154,7 @@ export default function ZonasGoiania() {
             </span>
           )}
           <div className="flex gap-1">
-            {([["penetracao", "Penetração"], ["eleitores", "Eleitores"], ["zona", "Zona"]] as [SortField, string][]).map(([key, label]) => (
+            {([["penetracao", "Acesso"], ["eleitores", "Eleitores"], ["zona", "Zona"]] as [SortField, string][]).map(([key, label]) => (
               <button key={key} onClick={() => setSortBy(key)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === key ? "bg-primary text-primary-foreground" : "bg-white/[0.04] text-muted-foreground hover:text-foreground"}`}>
                 {label}
@@ -249,7 +249,7 @@ export default function ZonasGoiania() {
               <div><span className="text-xs text-muted-foreground">Formulários</span><div className="text-lg font-bold">{selectedData.forms}</div></div>
               <div><span className="text-xs text-muted-foreground">WhatsApp</span><div className="text-lg font-bold text-success">{selectedData.whatsapp}</div></div>
               <div><span className="text-xs text-muted-foreground">Instagram</span><div className="text-lg font-bold text-primary">{selectedData.instagram}</div></div>
-              <div><span className="text-xs text-muted-foreground">Penetração</span><div className="text-lg font-bold text-primary">{selectedData.penetracao}%</div></div>
+              <div><span className="text-xs text-muted-foreground">Acesso</span><div className="text-lg font-bold text-primary">{selectedData.penetracao}%</div></div>
               <div><span className="text-xs text-muted-foreground">Conversão</span><div className="text-lg font-bold">{selectedData.conversao}%</div></div>
             </div>
             {/* Identification methods */}
@@ -264,7 +264,7 @@ export default function ZonasGoiania() {
             )}
             <div className="rounded-lg bg-white/[0.03] p-3 text-xs text-foreground/80 leading-relaxed">
               <Target className="h-3.5 w-3.5 text-primary inline mr-1.5" />
-              A <strong>{selectedData.zona} Zona</strong> ({selectedData.nome}) tem {selectedData.eleitores.toLocaleString("pt-BR")} eleitores e penetração de {selectedData.penetracao}%.
+              A <strong>{selectedData.zona} Zona</strong> ({selectedData.nome}) tem {selectedData.eleitores.toLocaleString("pt-BR")} eleitores e acesso de {selectedData.penetracao}%.
               {selectedData.penetracao < avgPenetracao
                 ? " Zona abaixo da média — recomenda-se intensificar tráfego pago nesta região."
                 : " Performance acima da média. Manter estratégia atual."}
@@ -316,7 +316,7 @@ export default function ZonasGoiania() {
                 <th className="px-4 py-3 text-right font-medium">Forms</th>
                 <th className="px-4 py-3 text-right font-medium">WhatsApp</th>
                 <th className="px-4 py-3 text-right font-medium">Instagram</th>
-                <th className="px-4 py-3 text-right font-medium">Penetração</th>
+                <th className="px-4 py-3 text-right font-medium">Acesso</th>
                 <th className="px-4 py-3 text-right font-medium">Conversão</th>
                 <th className="px-4 py-3 text-left font-medium">Status</th>
               </tr>
