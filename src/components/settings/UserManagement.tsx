@@ -203,7 +203,7 @@ export default function UserManagement() {
                   <Input id="username" placeholder="Ex: joao.silva" value={username}
                     onChange={(e) => setUsername(e.target.value)} autoComplete="off" />
                   <p className="text-[11px] text-muted-foreground">
-                    Login será: <span className="font-mono text-primary">{username.toLowerCase().replace(/\s+/g, ".") || "..."}</span>
+                    Login será: <span className="font-mono text-primary">{normalizeUsername(username) || "..."}</span>
                   </p>
                 </div>
                 <div className="space-y-2">
