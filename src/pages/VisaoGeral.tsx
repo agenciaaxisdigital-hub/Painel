@@ -85,7 +85,7 @@ function useLocationQuality(days: number) {
 
       let gps = 0;
       let ip = 0;
-      filterValidLocationRecords(data).forEach((r) => {
+      (data || []).forEach((r) => {
         const precision = inferPrecision(r);
         if (precision === "GPS_PRECISO") gps++;
         else ip++;
