@@ -244,7 +244,7 @@ function useLastHourCount() {
         supabase.from("cliques_whatsapp").select("id, endereco_ip, latitude, longitude, cidade, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(5000),
         supabase.from("mensagens_contato").select("id, endereco_ip, latitude, longitude, cidade, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(5000),
       ]);
-      return filterValidLocationRecords(a.data).length + filterValidLocationRecords(c.data).length + filterValidLocationRecords(f.data).length;
+      return (a.data || []).length + (c.data || []).length + (f.data || []).length;
     },
     staleTime: 30_000,
     refetchInterval: 30_000,
