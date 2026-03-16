@@ -11,6 +11,7 @@ import { SarelliChat } from "@/components/sarelli/SarelliChat";
 export function DashboardLayout() {
   const { session, loading } = useAuth();
   const [sarelliOpen, setSarelliOpen] = useState(false);
+  const currentLocation = useLocation();
 
   if (loading) {
     return (
