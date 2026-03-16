@@ -33,12 +33,6 @@ export function KPICard({ titulo, valor, variacao, sparkline, tooltip, prefix, s
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{titulo}</span>
           <InfoTooltip text={tooltip} />
         </div>
-        {variacao !== 0 && (
-          <div className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium ${isPositive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-            {isPositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-            {Math.abs(variacao).toFixed(1)}%
-          </div>
-        )}
       </div>
 
       <div className="mt-3 flex items-end justify-between">
