@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ZONAS_ELEITORAIS, ZONAS_APARECIDA, TOTAL_ELEITORES_GOIANIA, TOTAL_ELEITORES_APARECIDA } from "@/lib/constants";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Target, Download, MapPin, Trophy, BarChart3, Crown } from "lucide-react";
+import { Target, Download, MapPin, Trophy, BarChart3 } from "lucide-react";
 import { format, subDays } from "date-fns";
 import * as XLSX from "xlsx";
 
