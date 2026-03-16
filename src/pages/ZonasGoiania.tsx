@@ -77,22 +77,26 @@ function useRegionDistribution(days: number) {
         const cidade = r.cidade ? norm(r.cidade) : "";
 
         // Identified as Aparecida zone
-        if (zone.cidade === "aparecida" && zone.zona !== "Aparecida de Goiânia" && APARECIDA_ZONE_SET.has(zone.zona)) {
+        if (zone.categoria === "aparecida" && APARECIDA_ZONE_SET.has(zone.zona)) {
           return { region: "aparecida", goianiaZona: null, aparecidaZona: zone.zona, cityName: null };
         }
         // Identified as Goiânia zone
-        if (zone.cidade === "goiania" && GOIANIA_ZONE_SET.has(zone.zona)) {
+        if (zone.categoria === "goiania" && GOIANIA_ZONE_SET.has(zone.zona)) {
           return { region: "goiania", goianiaZona: zone.zona, aparecidaZona: null, cityName: null };
         }
-        // City-level Aparecida
-        if (zone.method === "aparecida" || cidade === "aparecida de goiania" || cidade.includes("aparecida de goian")) {
+        // Aparecida category (unidentified zone)
+        if (zone.categoria === "aparecida") {
           return { region: "aparecida", goianiaZona: null, aparecidaZona: null, cityName: "Aparecida de Goiânia" };
         }
-        // Goiânia by city
-        if (cidade === "goiania" || cidade.includes("goiania")) {
+        // Goiânia category (unidentified zone)
+        if (zone.categoria === "goiania") {
           return { region: "goiania", goianiaZona: null, aparecidaZona: null, cityName: null };
         }
-        // Other city in Goiás
+        // Interior
+        if (zone.categoria === "interior") {
+          return { region: "restante", goianiaZona: null, aparecidaZona: null, cityName: r.cidade || "Desconhecida" };
+        }
+        // Other city in Goiás by raw cidade
         if (cidade) {
           return { region: "restante", goianiaZona: null, aparecidaZona: null, cityName: r.cidade || "Desconhecida" };
         }
