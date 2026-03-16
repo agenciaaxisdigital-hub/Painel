@@ -1,14 +1,14 @@
 // ============ ZONAS ELEITORAIS GOIÂNIA ============
 export const ZONAS_ELEITORAIS = [
-  { zona: "1ª", eleitores: 132598, cor: "#E8825C" },
-  { zona: "2ª", eleitores: 114960, cor: "#7BB5E0" },
-  { zona: "127ª", eleitores: 154000, cor: "#E8D44D" },
-  { zona: "133ª", eleitores: 134028, cor: "#E8A84D" },
-  { zona: "134ª", eleitores: 159000, cor: "#A8D44D" },
-  { zona: "135ª", eleitores: 120000, cor: "#B88CE0" },
-  { zona: "136ª", eleitores: 140000, cor: "#4D5BB8" },
-  { zona: "146ª", eleitores: 114000, cor: "#4DB86B" },
-  { zona: "147ª", eleitores: 118000, cor: "#4DB8D4" },
+  { zona: "1ª", nome: "Setor Bueno / Marista / Jardim Goiás", eleitores: 132598, cor: "#E8825C" },
+  { zona: "2ª", nome: "Centro / Norte Ferroviário / Vila Nova", eleitores: 114960, cor: "#7BB5E0" },
+  { zona: "127ª", nome: "Jardim Presidente / Pedro Ludovico Sul", eleitores: 154000, cor: "#E8D44D" },
+  { zona: "133ª", nome: "Faiçalville / Jardim Atlântico", eleitores: 134028, cor: "#E8A84D" },
+  { zona: "134ª", nome: "Vila Mutirão / Jardim Curitiba", eleitores: 159000, cor: "#A8D44D" },
+  { zona: "135ª", nome: "Jardim Europa / Vale dos Sonhos", eleitores: 120000, cor: "#B88CE0" },
+  { zona: "136ª", nome: "Setor Perim / Goiânia 2", eleitores: 140000, cor: "#4D5BB8" },
+  { zona: "146ª", nome: "Santa Genoveva / Parque Atheneu", eleitores: 114000, cor: "#4DB86B" },
+  { zona: "147ª", nome: "Caiçara / Morada do Sol", eleitores: 118000, cor: "#4DB8D4" },
 ] as const;
 
 export const TOTAL_ELEITORES_GOIANIA = 1_036_218;
