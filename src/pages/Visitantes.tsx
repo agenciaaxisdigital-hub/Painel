@@ -59,76 +59,34 @@ export default function Visitantes() {
         )}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* Devices Donut */}
-        <div className="glass-card p-5">
-          <h3 className="text-sm font-medium mb-3">Dispositivos</h3>
-          {devices.isLoading ? <Skeleton className="h-48" /> : devices.data && devices.data.length > 0 ? (
-            <>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={devices.data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={3} strokeWidth={0}>
-                      {devices.data.map((_, i) => <Cell key={i} fill={Object.values(DEVICE_COLORS)[i] || CHART_COLORS[i]} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ background: "hsl(240, 15%, 8%)", border: "1px solid hsl(240, 5%, 15%)", borderRadius: "8px", fontSize: "11px" }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="space-y-1 mt-2">
-                {devices.data.map((d, i) => (
-                  <div key={d.name} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: Object.values(DEVICE_COLORS)[i] }} />
-                      <span className="text-foreground/80">{d.name}</span>
-                    </div>
-                    <span className="tabular-nums text-muted-foreground">{d.percentage}%</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : <EmptyState description="Sem dados de dispositivos." />}
-        </div>
-
-        {/* Top Cities Bar */}
-        <div className="glass-card p-5">
-          <h3 className="text-sm font-medium mb-3">Top 10 Cidades</h3>
-          {cities.isLoading ? <Skeleton className="h-48" /> : cities.data && cities.data.length > 0 ? (
-            <div className="space-y-2">
-              {cities.data.map((c, i) => {
-                const max = cities.data![0].visitantes;
-                return (
-                  <div key={c.cidade} className="flex items-center gap-3 text-xs">
-                    <span className="w-36 truncate text-foreground/80">{c.cidade}</span>
-                    <div className="flex-1 h-2 rounded-full bg-white/[0.06]">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${(c.visitantes / max) * 100}%` }} transition={{ delay: i * 0.05 }}
-                        className="h-full rounded-full bg-primary" />
-                    </div>
-                    <span className="tabular-nums text-muted-foreground w-8 text-right">{c.visitantes}</span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : <EmptyState description="Sem dados de cidades." />}
-        </div>
-      </div>
-
-      {/* Top Pages */}
+      {/* Devices Chart */}
       <div className="glass-card p-5">
-        <h3 className="text-sm font-medium mb-3">Páginas Mais Visitadas</h3>
-        {pages.isLoading ? <Skeleton className="h-48" /> : pages.data && pages.data.length > 0 ? (
-          <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={pages.data} layout="vertical">
-                <XAxis type="number" stroke="hsl(240, 5%, 40%)" fontSize={11} />
-                <YAxis type="category" dataKey="pagina" stroke="hsl(240, 5%, 40%)" fontSize={10} width={120} />
-                <Tooltip contentStyle={{ background: "hsl(240, 15%, 8%)", border: "1px solid hsl(240, 5%, 15%)", borderRadius: "8px", fontSize: "11px" }} />
-                <Bar dataKey="visitas" fill="hsl(341, 90%, 65%)" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        <h3 className="text-sm font-medium mb-3">Dispositivos</h3>
+        {devices.isLoading ? <Skeleton className="h-48" /> : devices.data && devices.data.length > 0 ? (
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <div className="h-48 w-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={devices.data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={3} strokeWidth={0}>
+                    {devices.data.map((_, i) => <Cell key={i} fill={Object.values(DEVICE_COLORS)[i] || CHART_COLORS[i]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "hsl(240, 15%, 8%)", border: "1px solid hsl(240, 5%, 15%)", borderRadius: "8px", fontSize: "11px" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-1">
+              {devices.data.map((d, i) => (
+                <div key={d.name} className="flex items-center justify-between gap-6 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: Object.values(DEVICE_COLORS)[i] }} />
+                    <span className="text-foreground/80">{d.name}</span>
+                  </div>
+                  <span className="tabular-nums text-muted-foreground">{d.percentage}%</span>
+                </div>
+              ))}
+            </div>
           </div>
-        ) : <EmptyState description="Sem dados de páginas." />}
+        ) : <EmptyState description="Sem dados de dispositivos." />}
       </div>
 
       {/* Visitors Table */}
