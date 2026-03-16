@@ -37,8 +37,8 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: "comparativo", label: "Comparativo", icon: BarChart3 },
 ];
 
-const APARECIDA_ZONE_SET = new Set(ZONAS_APARECIDA.map((z) => z.zona));
-const GOIANIA_ZONE_SET = new Set(ZONAS_ELEITORAIS.map((z) => z.zona));
+const APARECIDA_ZONE_SET = new Set<string>(ZONAS_APARECIDA.map((z) => z.zona));
+const GOIANIA_ZONE_SET = new Set<string>(ZONAS_ELEITORAIS.map((z) => z.zona));
 
 function useRegionDistribution(days: number) {
   return useQuery({
