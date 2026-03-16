@@ -399,6 +399,36 @@ export function useRealtimeInvalidation() {
   }, [queryClient]);
 }
 
+// ==================== REGION COUNTS (MAPA GOIÁS) ====================
+export function useRegionCounts(days: number) {
+  return useQuery({
+    queryKey: ["region-counts", days],
+    queryFn: async () => {
+      const since = getSince(days);
+      const [vis, forms, clicks] = await Promise.all([
+        supabase.from("acessos_site").select("regiao_planejamento").gte("criado_em", since).or(BRASIL_FILTER).limit(1000),
+        supabase.from("mensagens_contato").select("regiao_planejamento").gte("criado_em", since).or(BRASIL_FILTER).limit(1000),
+        supabase.from("cliques_whatsapp").select("regiao_planejamento").gte("criado_em", since).or(BRASIL_FILTER).limit(1000),
+      ]);
+
+      const regions: Record<string, { visitantes: number; formularios: number; cliques: number }> = {};
+
+      const inc = (regiao: string | null, field: "visitantes" | "formularios" | "cliques") => {
+        const key = regiao && regiao.trim() ? regiao.trim() : "Não identificada";
+        if (!regions[key]) regions[key] = { visitantes: 0, formularios: 0, cliques: 0 };
+        regions[key][field]++;
+      };
+
+      (vis.data || []).forEach((r) => inc(r.regiao_planejamento, "visitantes"));
+      (forms.data || []).forEach((r) => inc(r.regiao_planejamento, "formularios"));
+      (clicks.data || []).forEach((r) => inc(r.regiao_planejamento, "cliques"));
+
+      return regions;
+    },
+    staleTime: 30_000,
+  });
+}
+
 // ==================== HELPERS ====================
 function aggregate(data: any[], field: string) {
   const counts: Record<string, number> = {};
