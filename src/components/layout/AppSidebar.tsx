@@ -14,7 +14,7 @@ const modules = [
   { path: "/interacoes", icon: Layers, label: "Interações" },
   { path: "/visitantes", icon: Users, label: "Visitantes" },
   { path: "/formularios", icon: FileText, label: "Formulários" },
-  { path: "/zonas", icon: MapPin, label: "Zonas Goiânia" },
+  { path: "/zonas", icon: MapPin, label: "Regiões Goiás" },
   { path: "/mapa-goias", icon: Map, label: "Mapa Goiás" },
   { path: "/exportar", icon: Download, label: "Exportar" },
   { path: "/configuracoes", icon: Settings, label: "Configurações" },
