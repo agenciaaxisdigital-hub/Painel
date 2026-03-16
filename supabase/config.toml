@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.listar-usuarios]
 verify_jwt = false
+
+[functions.gerenciar-usuario]
+verify_jwt = false
