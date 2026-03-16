@@ -405,7 +405,7 @@ export default function ZonasGoiania() {
   const totalGeral = data?.totalGeral || 0;
 
   const regionList = useMemo(() => {
-    return ["goiania", "aparecida", "restante", "nao_identificado"]
+    return ["goiania", "aparecida", "restante"]
       .map((key) => ({ key, ...regions[key] }))
       .filter((r) => r.nome);
   }, [regions]);
@@ -416,8 +416,7 @@ export default function ZonasGoiania() {
   const maxAparecidaVisitors = Math.max(1, ...sortedAparecidaZones.map((z) => z.visitors));
 
   const bestRegion = useMemo(() => {
-    const candidates = regionList.filter((r) => r.key !== "nao_identificado");
-    return candidates.sort((a, b) => (b?.total || 0) - (a?.total || 0))[0];
+    return regionList.sort((a, b) => (b?.total || 0) - (a?.total || 0))[0];
   }, [regionList]);
 
   const handleExport = () => {
