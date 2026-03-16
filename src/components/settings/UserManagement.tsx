@@ -162,6 +162,40 @@ export default function UserManagement() {
     onError: (err: Error) => toast.error(err.message || "Erro ao redefinir senha"),
   });
 
+  const renameUser = useMutation({
+    mutationFn: async ({ userId, newName }: { userId: string; newName: string }) => {
+      const token = await getToken();
+      if (!token) throw new Error("Não autenticado");
+
+      const { data, error } = await supabase.functions.invoke("gerenciar-usuario", {
+        body: { action: "rename", user_id: userId, new_username: newName },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (error) {
+        try {
+          const errorBody = JSON.parse(error.message);
+          throw new Error(errorBody.error || error.message);
+        } catch (parseErr) {
+          if (error.context && typeof error.context.json === 'function') {
+            const body = await error.context.json();
+            throw new Error(body?.error || error.message);
+          }
+          throw new Error(data?.error || error.message);
+        }
+      }
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Usuário renomeado");
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      setRenameTarget(null);
+      setNewUsername("");
+    },
+    onError: (err: Error) => toast.error(err.message || "Erro ao renomear"),
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return toast.error("Nome é obrigatório");
@@ -174,6 +208,13 @@ export default function UserManagement() {
     if (!resetTarget) return;
     if (newPassword.length < 6) return toast.error("Senha deve ter no mínimo 6 caracteres");
     resetPassword.mutate({ userId: resetTarget.user_id, password: newPassword });
+  };
+
+  const handleRenameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!renameTarget) return;
+    if (!newUsername.trim()) return toast.error("Nome não pode ser vazio");
+    renameUser.mutate({ userId: renameTarget.user_id, newName: newUsername.trim() });
   };
 
   return (
