@@ -2,11 +2,10 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { Users, Plus, Shield, ShieldCheck, Pencil, Loader2, Trash2, KeyRound, MoreVertical, CheckCircle, XCircle } from "lucide-react";
+import { Users, Plus, Shield, Loader2, Trash2, KeyRound, MoreVertical, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -22,18 +21,6 @@ type UserData = {
   email: string;
 };
 
-const cargoLabels: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
-  super_admin: { label: "Super Admin", variant: "default" },
-  admin: { label: "Admin", variant: "secondary" },
-  editor: { label: "Editor", variant: "outline" },
-};
-
-const cargoIcon = (cargo: string) => {
-  if (cargo === "super_admin") return <ShieldCheck className="h-3.5 w-3.5" />;
-  if (cargo === "admin") return <Shield className="h-3.5 w-3.5" />;
-  return <Pencil className="h-3.5 w-3.5" />;
-};
-
 async function getToken() {
   const { data: session } = await supabase.auth.getSession();
   return session?.session?.access_token;
@@ -45,7 +32,6 @@ export default function UserManagement() {
   const [open, setOpen] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [cargo, setCargo] = useState("editor");
 
   // Delete dialog
   const [deleteTarget, setDeleteTarget] = useState<UserData | null>(null);
@@ -75,7 +61,7 @@ export default function UserManagement() {
       if (!token) throw new Error("Não autenticado");
 
       const { data, error } = await supabase.functions.invoke("criar-usuario", {
-        body: { username, password, cargo },
+        body: { username, password },
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -89,7 +75,6 @@ export default function UserManagement() {
       setOpen(false);
       setUsername("");
       setPassword("");
-      setCargo("editor");
     },
     onError: (err: Error) => toast.error(err.message || "Erro ao criar usuário"),
   });
@@ -190,17 +175,6 @@ export default function UserManagement() {
                   <Input id="password" type="password" placeholder="Mínimo 6 caracteres" value={password}
                     onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cargo">Cargo</Label>
-                  <Select value={cargo} onValueChange={setCargo}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="editor">Editor</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="super_admin">Super Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <DialogFooter>
                   <DialogClose asChild><Button type="button" variant="outline">Cancelar</Button></DialogClose>
                   <Button type="submit" disabled={createUser.isPending}>
@@ -225,7 +199,6 @@ export default function UserManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Usuário</TableHead>
-                  <TableHead>Cargo</TableHead>
                   <TableHead className="hidden sm:table-cell">Criado em</TableHead>
                   <TableHead className="hidden sm:table-cell">Status</TableHead>
                   <TableHead className="w-[60px]">Ações</TableHead>
@@ -244,12 +217,6 @@ export default function UserManagement() {
                           </div>
                           <div className="text-[11px] text-muted-foreground font-mono">{u.email}</div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={cargoLabels[u.cargo]?.variant || "outline"} className="gap-1">
-                          {cargoIcon(u.cargo)}
-                          {cargoLabels[u.cargo]?.label || u.cargo}
-                        </Badge>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
                         {new Date(u.criado_em).toLocaleDateString("pt-BR")}
