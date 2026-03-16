@@ -1,4 +1,5 @@
-import { Copy, MapPin } from "lucide-react";
+import { useState } from "react";
+import { Copy, MapPin, Loader2, MapPinned } from "lucide-react";
 import { identifyZone, getLocationPrecision, PRECISION_CONFIG, type ZoneResult } from "@/lib/zone-identification";
 
 interface LocationData {
@@ -12,6 +13,30 @@ interface LocationData {
   longitude?: number | null;
   zona_eleitoral?: string | null;
   regiao_planejamento?: string | null;
+}
+
+// ── Reverse Geocoding Hook ──
+function useReverseGeocode() {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const fetchAddress = async (lat: number, lng: number) => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=pt-BR`,
+        { headers: { "User-Agent": "ChamaRosa/1.0" } }
+      );
+      const data = await res.json();
+      setResult(data.display_name || "Endereço não encontrado");
+    } catch {
+      setResult("Erro ao buscar endereço");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { loading, result, fetchAddress };
 }
 
 // ── Precision Badge ──
@@ -75,11 +100,14 @@ export function CompactLocation({ data }: { data: LocationData }) {
 export function FullLocationDetail({ data, onCopy }: { data: LocationData; onCopy?: (text: string) => void }) {
   const precision = getLocationPrecision(data);
   const zone = identifyZone(data);
+  const geocode = useReverseGeocode();
 
   const copyText = (text: string) => {
     navigator.clipboard.writeText(text);
     onCopy?.(text);
   };
+
+  const hasCoords = data.latitude != null && data.longitude != null;
 
   return (
     <div className="space-y-2">
@@ -89,8 +117,38 @@ export function FullLocationDetail({ data, onCopy }: { data: LocationData; onCop
       </div>
 
       <div className="space-y-1.5">
+        {/* Reverse geocoded address */}
+        {hasCoords && !data.endereco_completo && (
+          <div className="space-y-1">
+            {geocode.result ? (
+              <div className="flex items-start gap-2 text-[11px]">
+                <span className="text-muted-foreground shrink-0 w-28">Endereço (GPS)</span>
+                <span className="text-foreground/80 break-all">{geocode.result}</span>
+                <button onClick={() => copyText(geocode.result!)} className="shrink-0 text-muted-foreground/40 hover:text-primary transition-colors">
+                  <Copy className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => geocode.fetchAddress(data.latitude!, data.longitude!)}
+                disabled={geocode.loading}
+                className="flex items-center gap-1.5 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-[11px] font-medium text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+              >
+                {geocode.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <MapPinned className="h-3 w-3" />}
+                {geocode.loading ? "Buscando endereço..." : "Buscar Endereço Completo"}
+              </button>
+            )}
+          </div>
+        )}
+
         {data.endereco_completo && (
-          <DetailRow label="Endereço Completo" value={data.endereco_completo} />
+          <div className="flex items-start gap-2 text-[11px]">
+            <span className="text-muted-foreground shrink-0 w-28">Endereço Completo</span>
+            <span className="text-foreground/80 break-all">{data.endereco_completo}</span>
+            <button onClick={() => copyText(data.endereco_completo!)} className="shrink-0 text-muted-foreground/40 hover:text-primary transition-colors">
+              <Copy className="h-3 w-3" />
+            </button>
+          </div>
         )}
         {data.rua && <DetailRow label="Rua" value={data.rua} />}
         {data.bairro && (
@@ -109,10 +167,10 @@ export function FullLocationDetail({ data, onCopy }: { data: LocationData; onCop
         {data.estado && <DetailRow label="Estado" value={data.estado} />}
         {data.regiao_planejamento && <DetailRow label="Região de Planejamento" value={data.regiao_planejamento} />}
 
-        {data.latitude != null && data.longitude != null && (
+        {hasCoords && (
           <div className="flex items-start gap-2 text-[11px]">
             <span className="text-muted-foreground shrink-0 w-28">Coordenadas</span>
-            <span className="text-foreground/80 tabular-nums">{data.latitude.toFixed(6)}, {data.longitude.toFixed(6)}</span>
+            <span className="text-foreground/80 tabular-nums">{data.latitude!.toFixed(6)}, {data.longitude!.toFixed(6)}</span>
             <button onClick={() => copyText(`${data.latitude}, ${data.longitude}`)} className="shrink-0 text-muted-foreground/40 hover:text-primary transition-colors">
               <Copy className="h-3 w-3" />
             </button>
@@ -132,8 +190,8 @@ export function FullLocationDetail({ data, onCopy }: { data: LocationData; onCop
       </div>
 
       {/* Mini Map */}
-      {data.latitude != null && data.longitude != null && (
-        <MiniMap lat={data.latitude} lng={data.longitude} />
+      {hasCoords && (
+        <MiniMap lat={data.latitude!} lng={data.longitude!} />
       )}
     </div>
   );
