@@ -40,6 +40,10 @@ export default function UserManagement() {
   const [resetTarget, setResetTarget] = useState<UserData | null>(null);
   const [newPassword, setNewPassword] = useState("");
 
+  // Rename dialog
+  const [renameTarget, setRenameTarget] = useState<UserData | null>(null);
+  const [newUsername, setNewUsername] = useState("");
+
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
