@@ -63,15 +63,15 @@ export default function Formularios() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Formulários</h1>
-          <p className="text-sm text-muted-foreground">Submissões de formulário de contato do Site Principal</p>
+          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Formulários</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Submissões do Site Principal</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <DateRangeSelector selectedDays={days} onChange={setDays} />
-          <button onClick={handleExport} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors rose-glow">
+          <button onClick={handleExport} className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs md:text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors rose-glow">
             <Download className="h-4 w-4" /> Excel
           </button>
         </div>
