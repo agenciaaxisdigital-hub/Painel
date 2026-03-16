@@ -7,7 +7,7 @@ import { identifyZone } from "@/lib/zone-identification";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Target, Download, MapPin, Trophy, BarChart3, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { format, subDays } from "date-fns";
-import * as XLSX from "xlsx";
+import { mapRegiao, exportXlsx, exportFilename } from "@/lib/export-utils";
 
 interface RegionData {
   nome: string;
