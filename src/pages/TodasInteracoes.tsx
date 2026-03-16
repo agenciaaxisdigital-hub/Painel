@@ -419,8 +419,8 @@ export default function Interacoes() {
                       const cell = heatmap.data!.find((c) => c.dia === dia && c.hora === h);
                       const intensity = cell ? cell.valor / heatmapMax : 0;
                       return (
-                        <div key={h} className="flex-1 h-[18px] rounded-sm transition-colors" title={`${dia} ${h}h: ${cell?.valor || 0} cliques`}
-                          style={{ backgroundColor: intensity > 0 ? `hsl(45, 93%, ${85 - intensity * 60}%)` : "hsl(240, 5%, 10%)", opacity: intensity > 0 ? 0.4 + intensity * 0.6 : 0.3 }} />
+                        <div key={h} className="flex-1 h-[18px] rounded-sm transition-colors" title={`${dia} ${h}h: ${cell?.valor || 0} interações`}
+                          style={{ backgroundColor: intensity > 0 ? `hsl(341, 90%, ${65 - intensity * 25}%)` : "hsl(var(--muted))", opacity: intensity > 0 ? 0.5 + intensity * 0.5 : 0.3 }} />
                       );
                     })}
                   </div>
