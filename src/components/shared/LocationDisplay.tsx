@@ -180,7 +180,7 @@ export function FullLocationDetail({ data, onCopy }: { data: LocationData; onCop
             <span className="text-muted-foreground shrink-0 w-28">Zona Eleitoral</span>
             <span className="inline-flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: zone.cor }} />
-              <span className="font-medium" style={{ color: zone.cor }}>{zone.zona} Zona</span>
+              <span className="font-medium" style={{ color: zone.cor }}>{zone.zona} Zona — {zone.nome}</span>
               {zone.eleitores > 0 && <span className="text-muted-foreground/50">({zone.eleitores.toLocaleString("pt-BR")} eleitores)</span>}
             </span>
           </div>

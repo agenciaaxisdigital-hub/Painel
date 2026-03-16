@@ -116,6 +116,7 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 
 export interface ZoneResult {
   zona: string;
+  nome: string;
   cor: string;
   eleitores: number;
   method: "database" | "bairro" | "coordinates" | "aparecida" | "unknown";
@@ -142,6 +143,7 @@ export function identifyZone(params: {
     const zoneData = ZONAS_ELEITORAIS.find((z) => z.zona === zona_eleitoral);
     return {
       zona: zona_eleitoral,
+      nome: zoneData?.nome || "",
       cor: zoneData?.cor || ZONE_COLOR_MAP[zona_eleitoral] || "#888",
       eleitores: zoneData?.eleitores || 0,
       method: "database",
@@ -156,6 +158,7 @@ export function identifyZone(params: {
         const zoneData = ZONAS_ELEITORAIS.find((z) => z.zona === zona);
         return {
           zona,
+          nome: zoneData?.nome || "",
           cor: zoneData?.cor || "#888",
           eleitores: zoneData?.eleitores || 0,
           method: "bairro",
@@ -180,6 +183,7 @@ export function identifyZone(params: {
       const zoneData = ZONAS_ELEITORAIS.find((z) => z.zona === closestZone);
       return {
         zona: closestZone,
+        nome: zoneData?.nome || "",
         cor: zoneData?.cor || "#888",
         eleitores: zoneData?.eleitores || 0,
         method: "coordinates",
@@ -189,10 +193,10 @@ export function identifyZone(params: {
 
   // 4. Aparecida de Goiânia
   if (cidade && normalize(cidade) === normalize("Aparecida de Goiânia")) {
-    return { zona: "Aparecida de Goiânia", cor: "#9CA3AF", eleitores: 0, method: "aparecida" };
+    return { zona: "Aparecida de Goiânia", nome: "", cor: "#9CA3AF", eleitores: 0, method: "aparecida" };
   }
 
-  return { zona: "Não identificada", cor: "#6B7280", eleitores: 0, method: "unknown" };
+  return { zona: "Não identificada", nome: "", cor: "#6B7280", eleitores: 0, method: "unknown" };
 }
 
 /**
