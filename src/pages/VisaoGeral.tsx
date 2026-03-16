@@ -23,6 +23,7 @@ export default function VisaoGeral() {
   const connection = useConnectionStatus();
   const topCities = useTopCities(days);
   const topPages = useTopPages(days);
+  useRealtimeInvalidation();
 
   const c = counts.data;
   const v = variation.data;
