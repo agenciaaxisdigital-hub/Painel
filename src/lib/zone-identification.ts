@@ -323,11 +323,14 @@ function identifyGoianiaZone(params: {
     if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "database" as const, categoria: "goiania" as const };
   }
 
-  // 2. Bairro matching
+  // 2. Bairro matching — use includes for fuzzy match
   if (bairro && bairro.trim()) {
     const normalizedBairro = normalize(bairro);
     for (const [zona, neighborhoods] of Object.entries(GOIANIA_ZONE_NEIGHBORHOODS)) {
-      if (neighborhoods.some((n) => normalize(n) === normalizedBairro)) {
+      if (neighborhoods.some((n) => {
+        const nn = normalize(n);
+        return nn === normalizedBairro || normalizedBairro.includes(nn) || nn.includes(normalizedBairro);
+      })) {
         const z = ZONAS_ELEITORAIS.find((zz) => zz.zona === zona);
         if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "bairro" as const, categoria: "goiania" as const };
       }
