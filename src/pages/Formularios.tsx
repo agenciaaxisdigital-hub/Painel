@@ -4,20 +4,22 @@ import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { DateRangeSelector } from "@/components/shared/DateRangeSelector";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CompactLocation, FullLocationDetail, MiniMap } from "@/components/shared/LocationDisplay";
 import { useFormularios } from "@/hooks/use-supabase-data";
-import { ZONE_COLOR_MAP, EMPTY_STATE_MESSAGE } from "@/lib/constants";
-import { Download, Search, MapPin, ChevronDown, ChevronUp } from "lucide-react";
+import { EMPTY_STATE_MESSAGE } from "@/lib/constants";
+import { Download, Search, ChevronDown, ChevronUp, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format, parseISO, subDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell } from "recharts";
 import * as XLSX from "xlsx";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Formularios() {
   const [days, setDays] = useState(30);
   const [search, setSearch] = useState("");
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const formularios = useFormularios(days);
+  const { toast } = useToast();
 
   const data = formularios.data || [];
 
@@ -32,50 +34,34 @@ export default function Formularios() {
     return data.filter((f) => f.nome.toLowerCase().includes(s) || f.telefone.includes(s) || f.cidade?.toLowerCase().includes(s));
   }, [data, search]);
 
-  // Per-day chart
   const dailyData = useMemo(() => {
     const map: Record<string, number> = {};
-    data.forEach((s) => {
-      const day = format(parseISO(s.criado_em), "dd/MM");
-      map[day] = (map[day] || 0) + 1;
-    });
+    data.forEach((s) => { const day = format(parseISO(s.criado_em), "dd/MM"); map[day] = (map[day] || 0) + 1; });
     return Object.entries(map).slice(-14).map(([day, count]) => ({ day, count }));
   }, [data]);
 
-  // Per-city donut
   const cityData = useMemo(() => {
     const map: Record<string, number> = {};
-    data.forEach((s) => {
-      const c = s.cidade || "Desconhecida";
-      map[c] = (map[c] || 0) + 1;
-    });
-    return Object.entries(map)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .map(([name, value]) => ({ name, value }));
+    data.forEach((s) => { const c = s.cidade || "Desconhecida"; map[c] = (map[c] || 0) + 1; });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, value]) => ({ name, value }));
   }, [data]);
 
   const DONUT_COLORS = ["hsl(341, 90%, 65%)", "hsl(45, 93%, 47%)", "hsl(142, 71%, 45%)", "hsl(220, 70%, 55%)", "hsl(280, 70%, 60%)", "hsl(30, 80%, 55%)", "hsl(180, 60%, 50%)", "hsl(0, 70%, 60%)"];
 
-  // Calendar heatmap from real data
   const calendarData = useMemo(() => {
     const result: { date: string; count: number }[] = [];
     const counts: Record<string, number> = {};
-    data.forEach((s) => {
-      const d = format(parseISO(s.criado_em), "yyyy-MM-dd");
-      counts[d] = (counts[d] || 0) + 1;
-    });
-    for (let i = 90; i >= 0; i--) {
-      const date = format(subDays(new Date(), i), "yyyy-MM-dd");
-      result.push({ date, count: counts[date] || 0 });
-    }
+    data.forEach((s) => { const d = format(parseISO(s.criado_em), "yyyy-MM-dd"); counts[d] = (counts[d] || 0) + 1; });
+    for (let i = 90; i >= 0; i--) { const date = format(subDays(new Date(), i), "yyyy-MM-dd"); result.push({ date, count: counts[date] || 0 }); }
     return result;
   }, [data]);
 
   const handleExport = () => {
-    const ws = XLSX.utils.json_to_sheet(data.map((s) => ({
+    const ws = XLSX.utils.json_to_sheet(data.map((s: any) => ({
       Nome: s.nome, Telefone: s.telefone, Email: s.email || "", Mensagem: s.mensagem,
-      Cidade: s.cidade || "", Estado: s.estado || "", País: s.pais || "",
+      Cidade: s.cidade || "", Estado: s.estado || "", Bairro: s.bairro || "",
+      CEP: s.cep || "", "Endereço Completo": s.endereco_completo || "",
+      "Zona Eleitoral": s.zona_eleitoral || "", País: s.pais || "",
       Latitude: s.latitude, Longitude: s.longitude, IP: s.endereco_ip || "",
       Data: format(parseISO(s.criado_em), "dd/MM/yyyy HH:mm"), Lida: s.lida ? "Sim" : "Não",
     })));
@@ -101,9 +87,7 @@ export default function Formularios() {
 
       {/* Summary Cards */}
       {formularios.isLoading ? (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
-        </div>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
       ) : (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Total Formulários</span><div className="text-2xl font-bold"><AnimatedNumber value={data.length} /></div></div>
@@ -132,22 +116,25 @@ export default function Formularios() {
                 <tr className="border-b border-border text-muted-foreground">
                   <th className="px-4 py-3 text-left font-medium">Nome</th>
                   <th className="px-4 py-3 text-left font-medium">Telefone</th>
-                  <th className="px-4 py-3 text-left font-medium">Cidade</th>
-                  <th className="px-4 py-3 text-left font-medium">Estado</th>
+                  <th className="px-4 py-3 text-left font-medium">Localização</th>
                   <th className="px-4 py-3 text-left font-medium">Data</th>
                   <th className="px-4 py-3 text-center font-medium">Lida</th>
                   <th className="px-4 py-3 w-8"></th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.slice(0, 50).map((s) => (
+                {filtered.slice(0, 50).map((s: any) => (
                   <motion.tr key={s.id} layout className="border-b border-border/50">
-                    <td colSpan={7} className="p-0">
+                    <td colSpan={6} className="p-0">
                       <button onClick={() => setExpandedRow(expandedRow === s.id ? null : s.id)} className="flex w-full items-center hover:bg-white/[0.02] transition-colors text-left">
                         <span className="px-4 py-2.5 text-foreground/80 flex-1 min-w-[120px]">{s.nome}</span>
                         <span className="px-4 py-2.5 text-muted-foreground min-w-[120px]">{s.telefone}</span>
-                        <span className="px-4 py-2.5 text-foreground/70 min-w-[100px]">{s.cidade || "—"}</span>
-                        <span className="px-4 py-2.5 text-foreground/70 min-w-[60px]">{s.estado || "—"}</span>
+                        <span className="px-4 py-2.5 min-w-[150px]">
+                          <CompactLocation data={{
+                            cidade: s.cidade, estado: s.estado, bairro: (s as any).bairro,
+                            zona_eleitoral: (s as any).zona_eleitoral, latitude: s.latitude, longitude: s.longitude,
+                          }} />
+                        </span>
                         <span className="px-4 py-2.5 text-muted-foreground min-w-[100px]">{format(parseISO(s.criado_em), "dd/MM HH:mm")}</span>
                         <span className="px-4 py-2.5 text-center min-w-[50px]">
                           <span className={`rounded-full px-2 py-0.5 text-[10px] ${s.lida ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
@@ -157,28 +144,41 @@ export default function Formularios() {
                         <span className="px-4 py-2.5 w-8">{expandedRow === s.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}</span>
                       </button>
                       {expandedRow === s.id && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="border-t border-border/30 bg-white/[0.01] px-4 py-3">
-                          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 text-[10px]">
-                            <div><span className="text-muted-foreground">Email:</span> <span className="text-foreground/80">{s.email || "—"}</span></div>
-                            <div><span className="text-muted-foreground">IP:</span> <span className="text-foreground/80">{s.endereco_ip || "—"}</span></div>
-                            <div><span className="text-muted-foreground">País:</span> <span className="text-foreground/80">{s.pais || "—"}</span></div>
-                            <div><span className="text-muted-foreground">User Agent:</span> <span className="text-foreground/80 truncate block max-w-[200px]">{s.user_agent || "—"}</span></div>
-                            {s.latitude && s.longitude && (
-                              <>
-                                <div><span className="text-muted-foreground">Latitude:</span> <span className="text-foreground/80">{s.latitude}</span></div>
-                                <div><span className="text-muted-foreground">Longitude:</span> <span className="text-foreground/80">{s.longitude}</span></div>
-                              </>
-                            )}
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="border-t border-border/30 bg-white/[0.01] px-4 py-4">
+                          <div className="grid gap-4 md:grid-cols-2">
+                            {/* Location with map */}
+                            <FullLocationDetail
+                              data={{
+                                cidade: s.cidade, estado: s.estado, bairro: (s as any).bairro,
+                                cep: (s as any).cep, endereco_completo: (s as any).endereco_completo,
+                                rua: (s as any).rua, zona_eleitoral: (s as any).zona_eleitoral,
+                                regiao_planejamento: (s as any).regiao_planejamento,
+                                latitude: s.latitude, longitude: s.longitude,
+                              }}
+                              onCopy={() => toast({ title: "Copiado!" })}
+                            />
+
+                            {/* Form details */}
+                            <div className="space-y-2">
+                              <h4 className="text-[11px] font-semibold text-foreground/70 uppercase tracking-wider">Dados do Formulário</h4>
+                              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                <div><span className="text-muted-foreground">Email:</span> <span className="text-foreground/80">{s.email || "—"}</span></div>
+                                <div><span className="text-muted-foreground">IP:</span> <span className="text-foreground/80">{s.endereco_ip || "—"}</span></div>
+                                <div><span className="text-muted-foreground">País:</span> <span className="text-foreground/80">{s.pais || "—"}</span></div>
+                                <div><span className="text-muted-foreground">User Agent:</span> <span className="text-foreground/80 truncate block max-w-[200px]">{s.user_agent || "—"}</span></div>
+                              </div>
+                              <div className="mt-2 rounded-lg bg-white/[0.02] p-2">
+                                <span className="text-[10px] text-muted-foreground">Mensagem:</span>
+                                <p className="text-xs text-foreground/80 mt-1">{s.mensagem}</p>
+                              </div>
+                              {s.telefone && (
+                                <button onClick={() => { navigator.clipboard.writeText(s.telefone); toast({ title: "Telefone copiado!" }); }}
+                                  className="mt-2 flex items-center gap-1.5 rounded-lg bg-success/10 px-3 py-1.5 text-[11px] font-medium text-success hover:bg-success/20 transition-colors">
+                                  <Copy className="h-3 w-3" /> Copiar Telefone
+                                </button>
+                              )}
+                            </div>
                           </div>
-                          <div className="mt-2 rounded-lg bg-white/[0.02] p-2">
-                            <span className="text-[10px] text-muted-foreground">Mensagem:</span>
-                            <p className="text-xs text-foreground/80 mt-1">{s.mensagem}</p>
-                          </div>
-                          {s.latitude && s.longitude && (
-                            <a href={`https://maps.google.com/?q=${s.latitude},${s.longitude}`} target="_blank" rel="noopener" className="mt-2 inline-flex items-center gap-1 text-[10px] text-primary hover:underline">
-                              <MapPin className="h-3 w-3" /> Ver no mapa
-                            </a>
-                          )}
                         </motion.div>
                       )}
                     </td>
@@ -190,7 +190,7 @@ export default function Formularios() {
         </div>
       )}
 
-      {/* Insights Charts */}
+      {/* Charts */}
       {data.length > 0 && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
