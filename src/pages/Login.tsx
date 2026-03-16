@@ -33,8 +33,8 @@ export default function Login() {
 
   return (
     <div className="relative flex min-h-screen overflow-hidden">
-      {/* Vanta NET covers the ENTIRE screen */}
-      <VantaBackground />
+      {/* Neural network background covers the ENTIRE screen */}
+      <NeuralNetworkBackground />
       <div className="absolute inset-0 z-[1] bg-background/30" />
 
       {/* Left side — photo + info over Vanta */}
