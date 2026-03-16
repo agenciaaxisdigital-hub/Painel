@@ -370,8 +370,8 @@ function identifyAparecidaZone(params: {
   if (latitude && longitude) {
     const nearest = findNearestZone(latitude, longitude, APARECIDA_CENTROIDS, 10);
     if (nearest) {
-      const z = ZONAS_APARECIDA.find((z) => z.zona === nearest)!;
-      return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates", categoria: "aparecida" };
+      const z = ZONAS_APARECIDA.find((zz) => zz.zona === nearest);
+      if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "coordinates" as const, categoria: "aparecida" as const };
     }
   }
 
