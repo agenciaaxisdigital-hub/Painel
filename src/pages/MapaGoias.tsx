@@ -30,11 +30,9 @@ export default function MapaGoias() {
     const data = regionCounts.data || {};
     const definedNames = new Set(REGIOES_GOIAS.map((r) => r.nome) as unknown as string[]);
     return Object.entries(data)
-      .filter(([name]) => !definedNames.has(name) && name !== "Não identificada")
+      .filter(([name]) => !definedNames.has(name))
       .map(([nome, counts]) => ({ nome, cor: "#6B7280", ...counts }));
   }, [regionCounts.data]);
-
-  const naoIdentificada = regionCounts.data?.["Não identificada"] || { visitantes: 0, formularios: 0, cliques: 0 };
 
   const getValue = (r: { visitantes: number; formularios: number; cliques: number }) =>
     mode === "visitantes" ? r.visitantes : mode === "formularios" ? r.formularios : r.cliques;
