@@ -150,7 +150,7 @@ export default function VisaoGeral() {
       {/* Rankings */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <RankingCard title="Top Cidades" icon={<MapPin className="h-4 w-4 text-primary" />} data={topCities.data?.map((c) => ({ label: c.cidade, value: c.visitantes })) || []} loading={topCities.isLoading} />
-        <RankingCard title="Páginas Mais Acessadas" icon={<FileText className="h-4 w-4 text-secondary" />} data={topPages.data?.map((p) => ({ label: p.pagina, value: p.visitas })) || []} loading={topPages.isLoading} />
+        <RankingCard title="Páginas Mais Acessadas" icon={<FileText className="h-4 w-4 text-secondary" />} data={topPages.data?.map((p) => ({ label: p.pagina === "/" ? "Home" : p.pagina, value: p.visitas })) || []} loading={topPages.isLoading} />
       </div>
 
       <ActivityFeed />
