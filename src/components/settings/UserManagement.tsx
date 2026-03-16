@@ -22,18 +22,6 @@ type UserData = {
   email: string;
 };
 
-const cargoLabels: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
-  super_admin: { label: "Super Admin", variant: "default" },
-  admin: { label: "Admin", variant: "secondary" },
-  editor: { label: "Editor", variant: "outline" },
-};
-
-const cargoIcon = (cargo: string) => {
-  if (cargo === "super_admin") return <ShieldCheck className="h-3.5 w-3.5" />;
-  if (cargo === "admin") return <Shield className="h-3.5 w-3.5" />;
-  return <Pencil className="h-3.5 w-3.5" />;
-};
-
 async function getToken() {
   const { data: session } = await supabase.auth.getSession();
   return session?.session?.access_token;
