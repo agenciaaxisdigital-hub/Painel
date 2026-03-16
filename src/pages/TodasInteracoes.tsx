@@ -419,8 +419,8 @@ export default function Interacoes() {
                       const cell = heatmap.data!.find((c) => c.dia === dia && c.hora === h);
                       const intensity = cell ? cell.valor / heatmapMax : 0;
                       return (
-                        <div key={h} className="flex-1 h-[18px] rounded-sm transition-colors" title={`${dia} ${h}h: ${cell?.valor || 0} cliques`}
-                          style={{ backgroundColor: intensity > 0 ? `hsl(45, 93%, ${85 - intensity * 60}%)` : "hsl(240, 5%, 10%)", opacity: intensity > 0 ? 0.4 + intensity * 0.6 : 0.3 }} />
+                        <div key={h} className="flex-1 h-[18px] rounded-sm transition-colors" title={`${dia} ${h}h: ${cell?.valor || 0} interações`}
+                          style={{ backgroundColor: intensity > 0 ? `hsl(341, 90%, ${65 - intensity * 25}%)` : "hsl(var(--muted))", opacity: intensity > 0 ? 0.5 + intensity * 0.5 : 0.3 }} />
                       );
                     })}
                   </div>
@@ -428,7 +428,7 @@ export default function Interacoes() {
                 <div className="flex items-center gap-2 mt-3 text-[9px] text-muted-foreground">
                   <span>Menos</span>
                   {[0.1, 0.3, 0.5, 0.7, 1].map((i) => (
-                    <div key={i} className="h-3 w-6 rounded-sm" style={{ backgroundColor: `hsl(45, 93%, ${85 - i * 60}%)`, opacity: 0.4 + i * 0.6 }} />
+                    <div key={i} className="h-3 w-6 rounded-sm" style={{ backgroundColor: `hsl(341, 90%, ${65 - i * 25}%)`, opacity: 0.5 + i * 0.5 }} />
                   ))}
                   <span>Mais</span>
                 </div>
