@@ -110,23 +110,6 @@ export default function VisaoGeral() {
     </div>
   );
 }
-
-function QualityMetric({ icon, label, value, total, color }: { icon: React.ReactNode; label: string; value: number; total: number; color: string }) {
-  const pct = total > 0 ? ((value / total) * 100).toFixed(1) : "0";
-  return (
-    <div className="flex items-center gap-3 rounded-lg bg-white/[0.02] p-3">
-      {icon}
-      <div className="min-w-0 flex-1">
-        <div className="text-[10px] text-muted-foreground">{label}</div>
-        <div className="flex items-baseline gap-1.5">
-          <span className={`text-lg font-bold tabular-nums ${color}`}>{pct}%</span>
-          <span className="text-[10px] text-muted-foreground">({value})</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function RankingCard({ title, icon, data, loading }: { title: string; icon: React.ReactNode; data: { label: string; value: number }[]; loading: boolean }) {
   if (loading) return <Skeleton className="h-64 rounded-xl" />;
   const max = Math.max(1, ...data.map((d) => d.value));
