@@ -154,7 +154,7 @@ export default function ZonasGoiania() {
             </span>
           )}
           <div className="flex gap-1">
-            {([["penetracao", "Penetração"], ["eleitores", "Eleitores"], ["zona", "Zona"]] as [SortField, string][]).map(([key, label]) => (
+            {([["penetracao", "Acesso"], ["eleitores", "Eleitores"], ["zona", "Zona"]] as [SortField, string][]).map(([key, label]) => (
               <button key={key} onClick={() => setSortBy(key)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === key ? "bg-primary text-primary-foreground" : "bg-white/[0.04] text-muted-foreground hover:text-foreground"}`}>
                 {label}
