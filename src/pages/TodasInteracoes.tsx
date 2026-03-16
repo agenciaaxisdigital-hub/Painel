@@ -213,7 +213,16 @@ function useCities(days: number) {
   return useQuery({
     queryKey: ["interaction-cities", days],
     queryFn: async () => {
-      const since = subDays(new Date(), days).toISOString();
+      const now = new Date();
+      let since: string;
+      if (days === -1) {
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterdayStart = new Date(todayStart);
+        yesterdayStart.setDate(todayStart.getDate() - 1);
+        since = yesterdayStart.toISOString();
+      } else {
+        since = subDays(now, days).toISOString();
+      }
       const { data } = await supabase.from("acessos_site").select("cidade").gte("criado_em", since).limit(1000);
       const set = new Set<string>();
       (data || []).forEach((r) => { if (r.cidade) set.add(r.cidade); });
