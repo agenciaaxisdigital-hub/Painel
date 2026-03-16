@@ -183,6 +183,7 @@ export function identifyZone(params: {
       const zoneData = ZONAS_ELEITORAIS.find((z) => z.zona === closestZone);
       return {
         zona: closestZone,
+        nome: zoneData?.nome || "",
         cor: zoneData?.cor || "#888",
         eleitores: zoneData?.eleitores || 0,
         method: "coordinates",
