@@ -11,7 +11,7 @@ import { Download, Search, ChevronDown, ChevronUp, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format, parseISO, subDays } from "date-fns";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell } from "recharts";
-import * as XLSX from "xlsx";
+import { mapFormulario, exportXlsx, exportFilename } from "@/lib/export-utils";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Formularios() {
