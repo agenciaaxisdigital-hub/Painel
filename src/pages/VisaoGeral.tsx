@@ -97,28 +97,8 @@ export default function VisaoGeral() {
           <KPICard titulo="Cliques WhatsApp" valor={c.whatsapp} variacao={0} sparkline={[]} tooltip="Cliques no botão de WhatsApp." delay={2} />
           <KPICard titulo="Cliques Instagram" valor={c.instagram} variacao={0} sparkline={[]} tooltip="Cliques no botão de Instagram." delay={3} />
           <KPICard titulo="Cliques Facebook" valor={c.facebook} variacao={0} sparkline={[]} tooltip="Cliques no botão de Facebook." delay={4} />
-          <KPICard titulo="Taxa Conversão" valor={c.taxaConversao} variacao={0} sparkline={[]} tooltip="Formulários ÷ Visitantes em percentual." suffix="%" decimals={2} delay={5} />
         </div>
       ) : (
-        <EmptyState description="Aguardando dados do Site Principal." />
-      )}
-
-      {/* Location Quality Widget */}
-      {lq && lq.total > 0 && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Crosshair className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-medium">Qualidade da Localização</h3>
-            <span className="text-[10px] text-muted-foreground ml-auto">{lq.total} visitantes analisados</span>
-          </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <QualityMetric icon={<Crosshair className="h-3.5 w-3.5 text-success" />} label="GPS Preciso" value={lq.gps} total={lq.total} color="text-success" />
-            <QualityMetric icon={<Signal className="h-3.5 w-3.5 text-secondary" />} label="Apenas IP" value={lq.ipOnly} total={lq.total} color="text-secondary" />
-            <QualityMetric icon={<MapPin className="h-3.5 w-3.5 text-primary" />} label="Com Bairro" value={lq.withBairro} total={lq.total} color="text-primary" />
-            <QualityMetric icon={<Map className="h-3.5 w-3.5 text-blue-400" />} label="Zona Identificada" value={lq.withZona} total={lq.total} color="text-blue-400" />
-          </div>
-        </motion.div>
-      )}
 
       {/* Line Chart */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-5">
