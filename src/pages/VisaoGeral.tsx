@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { DateRangeSelector } from "@/components/shared/DateRangeSelector";
 import { useTableCounts, useVariation, useTimeSeries, useConnectionStatus, useTopCities, useTopPages } from "@/hooks/use-supabase-data";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, AlertTriangle, Database, MapPin, FileText, Crosshair, Signal, Map } from "lucide-react";
+import { CheckCircle, AlertTriangle, Database, MapPin, FileText } from "lucide-react";
 import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
