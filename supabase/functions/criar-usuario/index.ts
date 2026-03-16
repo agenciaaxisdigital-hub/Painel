@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { username },
+      user_metadata: { username: normalizedUsername },
     });
 
     if (createError) {
