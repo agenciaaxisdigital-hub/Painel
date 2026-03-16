@@ -7,7 +7,7 @@ import { identifyZone } from "@/lib/zone-identification";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Target, Download, MapPin, Trophy, BarChart3, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { format, subDays } from "date-fns";
-import * as XLSX from "xlsx";
+import { mapRegiao, exportXlsx, exportFilename } from "@/lib/export-utils";
 
 interface RegionData {
   nome: string;
@@ -430,27 +430,18 @@ export default function ZonasGoiania() {
 
   const handleExport = () => {
     const rows = [
-      ...regionList.map((r) => ({
-        Região: r.nome, Tipo: "Região", Visitantes: r.visitors, Formulários: r.forms,
-        WhatsApp: r.whatsapp, Instagram: r.instagram, Facebook: r.facebook, "Total Interações": r.total,
+      ...regionList.map((r) => mapRegiao({ nome: r.nome, tipo: "Região", visitors: r.visitors, forms: r.forms, whatsapp: r.whatsapp, instagram: r.instagram, facebook: r.facebook, total: r.total })),
+      ...sortedGoianiaZones.map((z) => mapRegiao({
+        nome: `${z.zona.includes("Zona") ? z.zona : z.zona + " Zona"} — ${z.nome}`,
+        tipo: "Zona Goiânia", visitors: z.visitors, forms: z.forms, whatsapp: z.whatsapp, instagram: z.instagram, facebook: z.facebook, total: z.total,
       })),
-      ...sortedGoianiaZones.map((z) => ({
-        Região: `${z.zona.includes("Zona") ? z.zona : z.zona + " Zona"} - ${z.nome}`, Tipo: "Zona Goiânia", Visitantes: z.visitors, Formulários: z.forms,
-        WhatsApp: z.whatsapp, Instagram: z.instagram, Facebook: z.facebook, "Total Interações": z.total,
+      ...sortedAparecidaZones.map((z) => mapRegiao({
+        nome: `${z.zona} — ${z.nome}`,
+        tipo: "Zona Aparecida", visitors: z.visitors, forms: z.forms, whatsapp: z.whatsapp, instagram: z.instagram, facebook: z.facebook, total: z.total,
       })),
-      ...sortedAparecidaZones.map((z) => ({
-        Região: `${z.zona} - ${z.nome}`, Tipo: "Zona Aparecida", Visitantes: z.visitors, Formulários: z.forms,
-        WhatsApp: z.whatsapp, Instagram: z.instagram, Facebook: z.facebook, "Total Interações": z.total,
-      })),
-      ...cities.map((c) => ({
-        Região: c.nome, Tipo: "Cidade Interior", Visitantes: c.visitors, Formulários: c.forms,
-        WhatsApp: c.whatsapp, Instagram: c.instagram, Facebook: c.facebook, "Total Interações": c.total,
-      })),
+      ...cities.map((c) => mapRegiao({ nome: c.nome, tipo: "Cidade Interior", visitors: c.visitors, forms: c.forms, whatsapp: c.whatsapp, instagram: c.instagram, facebook: c.facebook, total: c.total })),
     ];
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Regiões Goiás");
-    XLSX.writeFile(wb, `regioes_goias_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    exportXlsx(exportFilename("Regioes_Goias"), [{ name: "Regiões Goiás", data: rows }]);
   };
 
   return (

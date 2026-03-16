@@ -4,8 +4,7 @@ import { REGIOES_GOIAS } from "@/lib/constants";
 import { useRegionCounts } from "@/hooks/use-supabase-data";
 import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
 import { X, Download } from "lucide-react";
-import { format } from "date-fns";
-import * as XLSX from "xlsx";
+import { mapRegiaoGoias, exportXlsx, exportFilename } from "@/lib/export-utils";
 
 export default function MapaGoias() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
@@ -44,12 +43,9 @@ export default function MapaGoias() {
   const selectedData = selectedRegion ? allRegions.find((r) => r.nome === selectedRegion) : null;
 
   const handleExport = () => {
-    const ws = XLSX.utils.json_to_sheet(allRegions.map((r) => ({
-      Região: r.nome, Visitantes: r.visitantes, Formulários: r.formularios, Cliques: r.cliques,
-    })));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Regiões");
-    XLSX.writeFile(wb, `regioes_goias_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    exportXlsx(exportFilename("MapaGoias_Regioes"), [
+      { name: "Regiões de Planejamento", data: allRegions.map(mapRegiaoGoias) },
+    ]);
   };
 
   return (
