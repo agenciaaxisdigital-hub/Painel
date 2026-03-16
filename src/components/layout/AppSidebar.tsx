@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  BarChart3, Users, FileText, Layers, MousePointerClick, MapPin, Map, Download, Settings, LogOut, ChevronLeft, ChevronRight,
+  BarChart3, Users, FileText, Layers, MapPin, Map, Download, Settings, LogOut, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -13,8 +13,7 @@ const modules = [
   { path: "/", icon: BarChart3, label: "Visão Geral" },
   { path: "/visitantes", icon: Users, label: "Visitantes" },
   { path: "/formularios", icon: FileText, label: "Formulários" },
-  { path: "/interacoes", icon: Layers, label: "Todas Interações" },
-  { path: "/cliques", icon: MousePointerClick, label: "Cliques" },
+  { path: "/interacoes", icon: Layers, label: "Interações" },
   { path: "/zonas", icon: MapPin, label: "Zonas Goiânia" },
   { path: "/mapa-goias", icon: Map, label: "Mapa Goiás" },
   { path: "/exportar", icon: Download, label: "Exportar" },

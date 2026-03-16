@@ -2,16 +2,19 @@ import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { subDays, format, parseISO } from "date-fns";
+import { subDays, format, parseISO, getHours } from "date-fns";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import {
   Eye, Phone, Camera, Facebook, FileText, Search, Download, X, ChevronDown, ChevronRight,
-  Smartphone, Monitor, Tablet, Copy, ExternalLink, Flame, Filter,
+  Smartphone, Monitor, Tablet, Copy, ExternalLink, Filter,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedNumber } from "@/components/dashboard/AnimatedNumber";
-import { EMPTY_STATE_MESSAGE } from "@/lib/constants";
-import { CompactLocation, FullLocationDetail, PrecisionBadge } from "@/components/shared/LocationDisplay";
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import { EMPTY_STATE_MESSAGE, PLATFORM_COLORS } from "@/lib/constants";
+import { CompactLocation, FullLocationDetail } from "@/components/shared/LocationDisplay";
+import { useHourlyHeatmap } from "@/hooks/use-supabase-data";
 import * as XLSX from "xlsx";
 import { useToast } from "@/hooks/use-toast";
 
@@ -71,7 +74,6 @@ const TIPO_CONFIG: Record<InteractionType, { label: string; color: string; bgCol
 
 const PAGE_SIZE = 50;
 
-// ── Safe field extractor (handles columns that may not exist in TS types) ──
 function safeField(record: any, field: string): any {
   return record?.[field] ?? null;
 }
@@ -118,7 +120,7 @@ function mapClique(r: any): UnifiedInteraction {
   };
 }
 
-// ── Hook ──
+// ── Hooks ──
 function useInteractions(filters: { days: number; tipos: InteractionType[]; search: string; cidade: string; dispositivo: string[]; page: number }) {
   const { days, tipos, search, cidade, dispositivo, page } = filters;
   return useQuery({
@@ -228,7 +230,7 @@ function DeviceIcon({ device }: { device?: string | null }) {
 }
 
 // ── Main Component ──
-export default function TodasInteracoes() {
+export default function Interacoes() {
   const { toast } = useToast();
   const [days, setDays] = useState(7);
   const [tipos, setTipos] = useState<InteractionType[]>(["acesso", "whatsapp", "instagram", "facebook", "formulario"]);
@@ -238,6 +240,7 @@ export default function TodasInteracoes() {
   const [dispositivo, setDispositivo] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [heatmapPlatform, setHeatmapPlatform] = useState<string | undefined>(undefined);
 
   const handleSearch = useCallback((val: string) => {
     setSearchInput(val);
@@ -248,6 +251,7 @@ export default function TodasInteracoes() {
   const { data, isLoading } = useInteractions({ days, tipos, search, cidade, dispositivo, page });
   const cities = useCities(days);
   const lastHour = useLastHourCount();
+  const heatmap = useHourlyHeatmap(days, heatmapPlatform);
 
   const interactions = data?.interactions || [];
   const total = data?.total || 0;
@@ -255,6 +259,29 @@ export default function TodasInteracoes() {
   const allResults = data?.allResults || [];
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const activeFilterCount = (tipos.length < 5 ? 1 : 0) + (cidade ? 1 : 0) + (dispositivo.length > 0 ? 1 : 0) + (search ? 1 : 0);
+
+  // Derived analytics from clicks
+  const clickResults = allResults.filter((r) => ["whatsapp", "instagram", "facebook"].includes(r.tipo));
+
+  const peakHour = useMemo(() => {
+    const hours: Record<number, number> = {};
+    allResults.forEach((r) => { const h = getHours(parseISO(r.data_hora)); hours[h] = (hours[h] || 0) + 1; });
+    const sorted = Object.entries(hours).sort((a, b) => b[1] - a[1]);
+    return sorted[0] ? `${sorted[0][0]}h` : "—";
+  }, [allResults]);
+
+  const sectionData = useMemo(() => {
+    const sectionCounts: Record<string, { total: number; whatsapp: number; instagram: number; facebook: number }> = {};
+    clickResults.forEach((r) => {
+      const sec = r.secao_pagina || "Sem seção";
+      if (!sectionCounts[sec]) sectionCounts[sec] = { total: 0, whatsapp: 0, instagram: 0, facebook: 0 };
+      sectionCounts[sec].total++;
+      if (r.tipo in sectionCounts[sec]) (sectionCounts[sec] as any)[r.tipo]++;
+    });
+    return Object.entries(sectionCounts).sort((a, b) => b[1].total - a[1].total).map(([name, vals]) => ({ name, ...vals }));
+  }, [clickResults]);
+
+  const heatmapMax = useMemo(() => Math.max(1, ...(heatmap.data || []).map((h) => h.valor)), [heatmap.data]);
 
   const clearFilters = () => {
     setTipos(["acesso", "whatsapp", "instagram", "facebook", "formulario"]);
@@ -309,7 +336,7 @@ export default function TodasInteracoes() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Todas as Interações</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Interações</h1>
           <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
             <span>Exibindo <strong className="text-foreground">{total.toLocaleString("pt-BR")}</strong> interações</span>
             {(lastHour.data ?? 0) > 0 && (
@@ -321,7 +348,7 @@ export default function TodasInteracoes() {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleExportXlsx} className="flex items-center gap-1.5 rounded-lg bg-white/[0.04] border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
-            <Download className="h-3 w-3" /> Exportar {total} XLSX
+            <Download className="h-3 w-3" /> Exportar XLSX
           </button>
           <button onClick={handleExportCsv} className="flex items-center gap-1.5 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-xs text-primary hover:bg-primary/20 transition-colors">
             <Download className="h-3 w-3" /> Leads CSV
@@ -346,6 +373,102 @@ export default function TodasInteracoes() {
           );
         })}
       </div>
+
+      {/* Analytics Row: Section Breakdown + Heatmap */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Section Breakdown */}
+        {sectionData.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
+            <h3 className="text-sm font-medium mb-3">Cliques por Seção do Site</h3>
+            <div className="h-[220px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={sectionData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(240, 5%, 12%)" />
+                  <XAxis dataKey="name" stroke="hsl(240, 5%, 40%)" fontSize={10} />
+                  <YAxis stroke="hsl(240, 5%, 40%)" fontSize={10} />
+                  <Tooltip contentStyle={{ background: "hsl(240, 15%, 8%)", border: "1px solid hsl(240, 5%, 15%)", borderRadius: "8px", fontSize: "11px" }} />
+                  <Bar dataKey="whatsapp" name="WhatsApp" fill={PLATFORM_COLORS.whatsapp} stackId="a" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="instagram" name="Instagram" fill={PLATFORM_COLORS.instagram} stackId="a" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="facebook" name="Facebook" fill={PLATFORM_COLORS.facebook} stackId="a" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Hourly Heatmap */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium">Mapa de Calor por Hora</h3>
+            <div className="flex gap-1">
+              {[{ label: "Todos", value: undefined }, { label: "WhatsApp", value: "whatsapp" }, { label: "Instagram", value: "instagram" }, { label: "Facebook", value: "facebook" }].map((opt) => (
+                <button key={opt.label} onClick={() => setHeatmapPlatform(opt.value)}
+                  className={`rounded-lg px-3 py-1 text-[10px] font-medium transition-colors ${heatmapPlatform === opt.value ? "bg-primary text-primary-foreground" : "bg-white/[0.04] text-muted-foreground hover:text-foreground"}`}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {heatmap.isLoading ? <Skeleton className="h-[200px]" /> : heatmap.data ? (
+            <div className="overflow-x-auto">
+              <div className="min-w-[600px]">
+                <div className="flex gap-0.5 mb-1 pl-10">
+                  {Array.from({ length: 24 }, (_, h) => (
+                    <div key={h} className="flex-1 text-center text-[8px] text-muted-foreground">{h}</div>
+                  ))}
+                </div>
+                {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((dia) => (
+                  <div key={dia} className="flex gap-0.5 mb-0.5">
+                    <div className="w-10 text-right pr-2 text-[9px] text-muted-foreground leading-[18px]">{dia}</div>
+                    {Array.from({ length: 24 }, (_, h) => {
+                      const cell = heatmap.data!.find((c) => c.dia === dia && c.hora === h);
+                      const intensity = cell ? cell.valor / heatmapMax : 0;
+                      return (
+                        <div key={h} className="flex-1 h-[18px] rounded-sm transition-colors" title={`${dia} ${h}h: ${cell?.valor || 0} cliques`}
+                          style={{ backgroundColor: intensity > 0 ? `hsl(45, 93%, ${85 - intensity * 60}%)` : "hsl(240, 5%, 10%)", opacity: intensity > 0 ? 0.4 + intensity * 0.6 : 0.3 }} />
+                      );
+                    })}
+                  </div>
+                ))}
+                <div className="flex items-center gap-2 mt-3 text-[9px] text-muted-foreground">
+                  <span>Menos</span>
+                  {[0.1, 0.3, 0.5, 0.7, 1].map((i) => (
+                    <div key={i} className="h-3 w-6 rounded-sm" style={{ backgroundColor: `hsl(45, 93%, ${85 - i * 60}%)`, opacity: 0.4 + i * 0.6 }} />
+                  ))}
+                  <span>Mais</span>
+                </div>
+              </div>
+            </div>
+          ) : <EmptyState description="Sem dados para gerar o mapa de calor." />}
+        </motion.div>
+      </div>
+
+      {/* Extra metrics row */}
+      {clickResults.length > 0 && (
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+          <div className="glass-card p-3">
+            <span className="text-[10px] text-muted-foreground">Horário de Pico</span>
+            <div className="text-lg font-bold">{peakHour}</div>
+          </div>
+          <div className="glass-card p-3">
+            <span className="text-[10px] text-muted-foreground">Plataforma Líder</span>
+            <div className="text-lg font-bold capitalize">
+              {counts.whatsapp >= counts.instagram && counts.whatsapp >= counts.facebook ? "WhatsApp" :
+               counts.instagram >= counts.facebook ? "Instagram" : "Facebook"}
+            </div>
+          </div>
+          <div className="glass-card p-3">
+            <span className="text-[10px] text-muted-foreground">Total Cliques</span>
+            <div className="text-lg font-bold"><AnimatedNumber value={counts.whatsapp + counts.instagram + counts.facebook} /></div>
+          </div>
+          <div className="glass-card p-3">
+            <span className="text-[10px] text-muted-foreground">Taxa Clique/Acesso</span>
+            <div className="text-lg font-bold">
+              {counts.acesso > 0 ? (((counts.whatsapp + counts.instagram + counts.facebook) / counts.acesso) * 100).toFixed(1) : "0"}%
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="glass-card p-3">
