@@ -185,7 +185,7 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
           if (search) q = q.or(`nome.ilike.%${search}%,telefone.ilike.%${search}%,cidade.ilike.%${search}%,email.ilike.%${search}%`);
           if (cidade) q = q.eq("cidade", cidade);
           const { data } = await q.limit(5000);
-          filterValidLocationRecords(data).forEach((r) => results.push(mapFormulario(r)));
+          (data || []).forEach((r) => results.push(mapFormulario(r)));
         })());
       }
 
