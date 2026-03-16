@@ -224,7 +224,7 @@ function useCities(days: number) {
       } else {
         since = subDays(now, days).toISOString();
       }
-      const { data } = await supabase.from("acessos_site").select("cidade").gte("criado_em", since).limit(1000);
+      const { data } = await supabase.from("acessos_site").select("cidade").gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(1000);
       const set = new Set<string>();
       (data || []).forEach((r) => { if (r.cidade) set.add(r.cidade); });
       return Array.from(set).sort();
