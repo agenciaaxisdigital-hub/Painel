@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Database, Server, CheckCircle, AlertTriangle, Info, RefreshCw } from "lucide-react";
+import { Database, Server, CheckCircle, AlertTriangle, Info, RefreshCw, Trash2, Loader2 } from "lucide-react";
 import { useConnectionStatus } from "@/hooks/use-supabase-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import UserManagement from "@/components/settings/UserManagement";
 
 const tables = [
