@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Target, Download, MapPin, Trophy, BarChart3, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { mapRegiao, exportXlsx, exportFilename } from "@/lib/export-utils";
+import { filterValidLocationRecords } from "@/lib/location-validity";
 
 interface RegionData {
   nome: string;
@@ -46,19 +47,20 @@ function useRegionDistribution(days: number) {
     queryFn: async () => {
       const since = subDays(new Date(), days).toISOString();
       const BRASIL_FILTER = "pais.eq.Brasil,pais.is.null";
-      const SELECT_FIELDS = "zona_eleitoral, bairro, cidade, estado, latitude, longitude, cookie_visitante";
+      const VISITOR_FIELDS = "zona_eleitoral, bairro, cidade, estado, latitude, longitude, cookie_visitante, endereco_ip, cep, rua, endereco_completo, regiao_planejamento";
+      const CLICK_FIELDS = `${VISITOR_FIELDS}, tipo_clique`;
+      const FORM_FIELDS = "zona_eleitoral, bairro, cidade, estado, latitude, longitude, endereco_ip, cep, rua, endereco_completo, regiao_planejamento";
 
       const [acessos, cliques, mensagens] = await Promise.all([
-        supabase.from("acessos_site").select(SELECT_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
-        supabase.from("cliques_whatsapp").select(`${SELECT_FIELDS}, tipo_clique`).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
-        supabase.from("mensagens_contato").select(SELECT_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
+        supabase.from("acessos_site").select(VISITOR_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
+        supabase.from("cliques_whatsapp").select(CLICK_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
+        supabase.from("mensagens_contato").select(FORM_FIELDS).gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
       ]);
 
-      const allVisitantes = acessos.data || [];
-      const allCliques = cliques.data || [];
-      const allForms = mensagens.data || [];
+      const allVisitantes = filterValidLocationRecords(acessos.data);
+      const allCliques = filterValidLocationRecords(cliques.data);
+      const allForms = filterValidLocationRecords(mensagens.data);
 
-      // ═══ BUG 2 FIX: Build bairro lookup from visitantes by cookie ═══
       const bairroMap: Record<string, string> = {};
       const cidadeMap: Record<string, { cidade: string; estado: string | null }> = {};
       allVisitantes.forEach((r: any) => {
@@ -72,7 +74,6 @@ function useRegionDistribution(days: number) {
         }
       });
 
-      // Enrich cliques and forms with bairro/cidade from visitantes
       const enrich = (r: any) => ({
         ...r,
         bairro: r.bairro || (r.cookie_visitante ? bairroMap[r.cookie_visitante] : null) || null,

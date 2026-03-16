@@ -17,13 +17,14 @@ import { subDays } from "date-fns";
 import { ZONAS_ELEITORAIS, ZONAS_APARECIDA } from "@/lib/constants";
 import { identifyZone } from "@/lib/zone-identification";
 import { inferPrecision } from "@/components/shared/LocationDisplay";
+import { filterValidLocationRecords } from "@/lib/location-validity";
 
 function useGeographicBreakdown(days: number) {
   return useQuery({
     queryKey: ["geo-breakdown-visao-v2", days],
     queryFn: async () => {
       const since = subDays(new Date(), days).toISOString();
-      const FIELDS = "zona_eleitoral, bairro, cidade, estado, latitude, longitude";
+      const FIELDS = "zona_eleitoral, bairro, cidade, estado, latitude, longitude, endereco_ip, cep, rua, endereco_completo, regiao_planejamento";
       const FILTER = "pais.eq.Brasil,pais.is.null";
 
       const [acessos, cliques, mensagens] = await Promise.all([
@@ -33,9 +34,9 @@ function useGeographicBreakdown(days: number) {
       ]);
 
       const allRecords = [
-        ...(acessos.data || []),
-        ...(cliques.data || []),
-        ...(mensagens.data || []),
+        ...filterValidLocationRecords(acessos.data),
+        ...filterValidLocationRecords(cliques.data),
+        ...filterValidLocationRecords(mensagens.data),
       ];
 
       const goianiaZones: Record<string, number> = {};
@@ -79,12 +80,12 @@ function useLocationQuality(days: number) {
     queryFn: async () => {
       const since = subDays(new Date(), days).toISOString();
       const { data } = await supabase.from("acessos_site")
-        .select("latitude, longitude, bairro")
-        .gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(3000);
+        .select("latitude, longitude, bairro, endereco_ip, cidade, estado, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento")
+        .gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(5000);
 
       let gps = 0;
       let ip = 0;
-      (data || []).forEach((r) => {
+      filterValidLocationRecords(data).forEach((r) => {
         const precision = inferPrecision(r);
         if (precision === "GPS_PRECISO") gps++;
         else ip++;

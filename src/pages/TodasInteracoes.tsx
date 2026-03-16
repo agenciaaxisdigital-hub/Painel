@@ -18,6 +18,7 @@ import { CompactLocation, FullLocationDetail } from "@/components/shared/Locatio
 import { useHourlyHeatmap } from "@/hooks/use-supabase-data";
 import { mapInteracao, mapLeadCsv, exportXlsx, exportCsv, exportFilename } from "@/lib/export-utils";
 import { useToast } from "@/hooks/use-toast";
+import { filterValidLocationRecords } from "@/lib/location-validity";
 
 // ── Types ──
 type InteractionType = "acesso" | "whatsapp" | "instagram" | "facebook" | "formulario";
@@ -127,13 +128,11 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
   return useQuery({
     queryKey: ["todas-interacoes", days, tipos, search, cidade, dispositivo, page],
     queryFn: async () => {
-      // Calculate date range
       let since: string;
       let until: string | undefined;
       const now = new Date();
 
       if (days === -1) {
-        // "Ontem" — only yesterday
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const yesterdayStart = new Date(todayStart);
         yesterdayStart.setDate(todayStart.getDate() - 1);
@@ -147,7 +146,6 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
       const counts = { acesso: 0, whatsapp: 0, instagram: 0, facebook: 0, formulario: 0 };
       const queries: Promise<void>[] = [];
 
-      // Build count queries with date range
       const addDateFilter = (q: any) => {
         q = q.gte("criado_em", since);
         if (until) q = q.lt("criado_em", until);
@@ -155,14 +153,17 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
       };
 
       const countPromise = Promise.all([
-        addDateFilter(supabase.from("acessos_site").select("*", { count: "exact", head: true }).or("pais.eq.Brasil,pais.is.null")),
-        addDateFilter(supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).or("pais.eq.Brasil,pais.is.null")),
-        addDateFilter(supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).eq("tipo_clique", "whatsapp").or("pais.eq.Brasil,pais.is.null")),
-        addDateFilter(supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).eq("tipo_clique", "instagram").or("pais.eq.Brasil,pais.is.null")),
-        addDateFilter(supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).eq("tipo_clique", "facebook").or("pais.eq.Brasil,pais.is.null")),
+        addDateFilter(supabase.from("acessos_site").select("id, endereco_ip, latitude, longitude, cidade, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").or("pais.eq.Brasil,pais.is.null").limit(5000)),
+        addDateFilter(supabase.from("mensagens_contato").select("id, endereco_ip, latitude, longitude, cidade, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").or("pais.eq.Brasil,pais.is.null").limit(5000)),
+        addDateFilter(supabase.from("cliques_whatsapp").select("id, tipo_clique, endereco_ip, latitude, longitude, cidade, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").eq("tipo_clique", "whatsapp").or("pais.eq.Brasil,pais.is.null").limit(5000)),
+        addDateFilter(supabase.from("cliques_whatsapp").select("id, tipo_clique, endereco_ip, latitude, longitude, cidade, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").eq("tipo_clique", "instagram").or("pais.eq.Brasil,pais.is.null").limit(5000)),
+        addDateFilter(supabase.from("cliques_whatsapp").select("id, tipo_clique, endereco_ip, latitude, longitude, cidade, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").eq("tipo_clique", "facebook").or("pais.eq.Brasil,pais.is.null").limit(5000)),
       ]).then(([a, f, w, i, fb]) => {
-        counts.acesso = a.count ?? 0; counts.formulario = f.count ?? 0;
-        counts.whatsapp = w.count ?? 0; counts.instagram = i.count ?? 0; counts.facebook = fb.count ?? 0;
+        counts.acesso = filterValidLocationRecords(a.data).length;
+        counts.formulario = filterValidLocationRecords(f.data).length;
+        counts.whatsapp = filterValidLocationRecords(w.data).length;
+        counts.instagram = filterValidLocationRecords(i.data).length;
+        counts.facebook = filterValidLocationRecords(fb.data).length;
       });
 
       if (tipos.includes("acesso")) {
@@ -172,8 +173,8 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
           if (search) q = q.or(`cidade.ilike.%${search}%,endereco_ip.ilike.%${search}%,utm_campaign.ilike.%${search}%`);
           if (cidade) q = q.eq("cidade", cidade);
           if (dispositivo.length > 0) q = q.in("dispositivo", dispositivo.map((d) => d.toLowerCase()));
-          const { data } = await q.limit(500);
-          (data || []).forEach((r) => results.push(mapAcesso(r)));
+          const { data } = await q.limit(5000);
+          filterValidLocationRecords(data).forEach((r) => results.push(mapAcesso(r)));
         })());
       }
 
@@ -183,8 +184,8 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
           if (until) q = q.lt("criado_em", until);
           if (search) q = q.or(`nome.ilike.%${search}%,telefone.ilike.%${search}%,cidade.ilike.%${search}%,email.ilike.%${search}%`);
           if (cidade) q = q.eq("cidade", cidade);
-          const { data } = await q.limit(500);
-          (data || []).forEach((r) => results.push(mapFormulario(r)));
+          const { data } = await q.limit(5000);
+          filterValidLocationRecords(data).forEach((r) => results.push(mapFormulario(r)));
         })());
       }
 
@@ -196,8 +197,8 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
           if (clickTypes.length > 0 && clickTypes.length < 3) q = q.in("tipo_clique", clickTypes);
           if (search) q = q.or(`cidade.ilike.%${search}%,texto_botao.ilike.%${search}%,endereco_ip.ilike.%${search}%`);
           if (cidade) q = q.eq("cidade", cidade);
-          const { data } = await q.limit(500);
-          (data || []).forEach((r) => results.push(mapClique(r)));
+          const { data } = await q.limit(5000);
+          filterValidLocationRecords(data).forEach((r) => results.push(mapClique(r)));
         })());
       }
 
@@ -224,9 +225,9 @@ function useCities(days: number) {
       } else {
         since = subDays(now, days).toISOString();
       }
-      const { data } = await supabase.from("acessos_site").select("cidade").gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(1000);
+      const { data } = await supabase.from("acessos_site").select("cidade, endereco_ip, latitude, longitude, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(5000);
       const set = new Set<string>();
-      (data || []).forEach((r) => { if (r.cidade) set.add(r.cidade); });
+      filterValidLocationRecords(data).forEach((r) => { if (r.cidade) set.add(r.cidade); });
       return Array.from(set).sort();
     },
     staleTime: 120_000,
@@ -239,11 +240,11 @@ function useLastHourCount() {
     queryFn: async () => {
       const since = subDays(new Date(), 1 / 24).toISOString();
       const [a, c, f] = await Promise.all([
-        supabase.from("acessos_site").select("*", { count: "exact", head: true }).gte("criado_em", since).or("pais.eq.Brasil,pais.is.null"),
-        supabase.from("cliques_whatsapp").select("*", { count: "exact", head: true }).gte("criado_em", since).or("pais.eq.Brasil,pais.is.null"),
-        supabase.from("mensagens_contato").select("*", { count: "exact", head: true }).gte("criado_em", since).or("pais.eq.Brasil,pais.is.null"),
+        supabase.from("acessos_site").select("id, endereco_ip, latitude, longitude, cidade, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(5000),
+        supabase.from("cliques_whatsapp").select("id, endereco_ip, latitude, longitude, cidade, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(5000),
+        supabase.from("mensagens_contato").select("id, endereco_ip, latitude, longitude, cidade, estado, bairro, cep, rua, endereco_completo, zona_eleitoral, regiao_planejamento").gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").limit(5000),
       ]);
-      return (a.count ?? 0) + (c.count ?? 0) + (f.count ?? 0);
+      return filterValidLocationRecords(a.data).length + filterValidLocationRecords(c.data).length + filterValidLocationRecords(f.data).length;
     },
     staleTime: 30_000,
     refetchInterval: 30_000,
