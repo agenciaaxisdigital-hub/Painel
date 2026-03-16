@@ -350,7 +350,7 @@ export function identifyZone(params: {
     return { zona: cidade, nome: cidade, cor: "#9CA3AF", eleitores: 0, method: "cidade_fallback", categoria: "interior" };
   }
 
-  return { zona: "Não identificada", nome: "", cor: "#6B7280", eleitores: 0, method: "unknown", categoria: "unknown" };
+  return { zona: "Sem localização", nome: "", cor: "#6B7280", eleitores: 0, method: "unknown", categoria: "unknown" };
 }
 
 // ── Goiânia zone identification ──
@@ -363,7 +363,7 @@ function identifyGoianiaZone(params: {
   const { zona_eleitoral, bairro, latitude, longitude } = params;
 
   // 1. Direct from database
-  if (zona_eleitoral && zona_eleitoral.trim() && zona_eleitoral !== "Não identificada") {
+  if (zona_eleitoral && zona_eleitoral.trim() && zona_eleitoral !== "Sem localização") {
     const z = ZONAS_ELEITORAIS.find((zz) => zz.zona === zona_eleitoral);
     if (z) return { zona: z.zona, nome: z.nome, cor: z.cor, eleitores: z.eleitores, method: "database", categoria: "goiania" };
   }

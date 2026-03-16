@@ -81,8 +81,8 @@ export function ZoneBadge({ data, showEleitores = false }: { data: LocationData;
   const precision = inferPrecision(data);
   const isApprox = precision === "IP_APROXIMADO";
 
-  if (zone.zona === "Não identificada") {
-    return <span className="text-[10px] text-muted-foreground/50">Zona não identificada</span>;
+  if (zone.zona === "Sem localização") {
+    return <span className="text-[10px] text-muted-foreground/50">Sem localização</span>;
   }
 
   const displayLabel = zone.zona.includes("Zona Aparecida") || zone.categoria === "interior"

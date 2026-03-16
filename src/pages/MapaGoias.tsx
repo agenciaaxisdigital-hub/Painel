@@ -70,7 +70,7 @@ export default function MapaGoias() {
         <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Visitantes GO</span><div className="text-xl font-bold"><AnimatedNumber value={totalVisitantes} /></div></div>
         <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Formulários GO</span><div className="text-xl font-bold"><AnimatedNumber value={totalForms} /></div></div>
         <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Cliques GO</span><div className="text-xl font-bold"><AnimatedNumber value={totalClicks} /></div></div>
-        <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Não identificados</span><div className="text-xl font-bold"><AnimatedNumber value={getValue(naoIdentificada)} /></div></div>
+        <div className="glass-card p-4"><span className="text-xs text-muted-foreground">Sem localização</span><div className="text-xl font-bold"><AnimatedNumber value={getValue(naoIdentificada)} /></div></div>
       </div>
 
       {/* Regions Grid */}

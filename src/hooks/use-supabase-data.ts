@@ -433,7 +433,7 @@ export function useRegionCounts(days: number) {
       const regions: Record<string, { visitantes: number; formularios: number; cliques: number }> = {};
 
       const inc = (regiao: string | null, field: "visitantes" | "formularios" | "cliques") => {
-        const key = regiao && regiao.trim() ? regiao.trim() : "Não identificada";
+        const key = regiao && regiao.trim() ? regiao.trim() : "Sem localização";
         if (!regions[key]) regions[key] = { visitantes: 0, formularios: 0, cliques: 0 };
         regions[key][field]++;
       };

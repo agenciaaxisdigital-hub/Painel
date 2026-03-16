@@ -88,13 +88,13 @@ function useRegionDistribution(days: number) {
         goiania: { nome: "Goiânia", cor: "#E8825C", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 },
         aparecida: { nome: "Aparecida de Goiânia", cor: "#FF6B8A", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 },
         restante: { nome: "Restante de Goiás", cor: "#4DB8D4", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 },
-        nao_identificado: { nome: "Não Identificado", cor: "#6B7280", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 },
+        nao_identificado: { nome: "Sem Localização", cor: "#6B7280", visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0, clicks: 0, total: 0 },
       };
 
       // Zone counters — Goiânia
       const goianiaZoneCounts: Record<string, { visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number }> = {};
       ZONAS_ELEITORAIS.forEach((z) => { goianiaZoneCounts[z.zona] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 }; });
-      goianiaZoneCounts["Não identificada"] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
+      goianiaZoneCounts["Sem localização"] = { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
 
       // Zone counters — Aparecida
       const aparecidaZoneCounts: Record<string, { visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number }> = {};
@@ -130,7 +130,7 @@ function useRegionDistribution(days: number) {
 
         if (result.categoria === "goiania") {
           addToRegion("goiania", field);
-          const zona = result.zona in goianiaZoneCounts ? result.zona : "Não identificada";
+          const zona = result.zona in goianiaZoneCounts ? result.zona : "Sem localização";
           addToZone(goianiaZoneCounts, zona, field);
         } else if (result.categoria === "aparecida") {
           addToRegion("aparecida", field);
@@ -184,18 +184,18 @@ function useRegionDistribution(days: number) {
         };
       });
 
-      const goianiaNI = goianiaZoneCounts["Não identificada"];
+      const goianiaNI = goianiaZoneCounts["Sem localização"];
       if (goianiaNI && (goianiaNI.visitors + goianiaNI.forms + goianiaNI.whatsapp + goianiaNI.instagram + goianiaNI.facebook) > 0) {
         const clicks = goianiaNI.whatsapp + goianiaNI.instagram + goianiaNI.facebook;
         goianiaZones.push({
-          zona: "Não identificada", nome: "Zona não identificada", cor: "#E8825C", eleitores: 0,
+          zona: "Sem localização", nome: "Sem localização", cor: "#E8825C", eleitores: 0,
           visitors: goianiaNI.visitors, forms: goianiaNI.forms, whatsapp: goianiaNI.whatsapp, instagram: goianiaNI.instagram, facebook: goianiaNI.facebook,
           clicks, total: goianiaNI.visitors + goianiaNI.forms + clicks, penetracao: 0,
           conversao: goianiaNI.visitors > 0 ? parseFloat(((goianiaNI.forms / goianiaNI.visitors) * 100).toFixed(1)) : 0,
         });
       }
 
-      // Build zone arrays — Aparecida (NO "Não identificada" — every record assigned)
+      // Build zone arrays — Aparecida (every record assigned)
       const aparecidaZones: ZoneData[] = ZONAS_APARECIDA.map((z) => {
         const c = aparecidaZoneCounts[z.zona] || { visitors: 0, forms: 0, whatsapp: 0, instagram: 0, facebook: 0 };
         const clicks = c.whatsapp + c.instagram + c.facebook;
@@ -264,7 +264,7 @@ function ZoneRow({ z, i, maxVisitors, isSelected, onSelect }: {
 }) {
   const barPct = maxVisitors > 0 ? (z.visitors / maxVisitors) * 100 : 0;
   // BUG 1 FIX: For Goiânia zones like "1ª", append " Zona". For Aparecida zones already containing "Zona", use as-is.
-  const displayZona = z.zona === "Não identificada" ? z.zona : z.zona.includes("Zona") ? z.zona : `${z.zona} Zona`;
+  const displayZona = z.zona === "Sem localização" ? z.zona : z.zona.includes("Zona") ? z.zona : `${z.zona} Zona`;
 
   return (
     <div>
@@ -274,7 +274,7 @@ function ZoneRow({ z, i, maxVisitors, isSelected, onSelect }: {
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: z.cor }} />
             <span className="text-xs font-medium">{displayZona}</span>
-            {z.nome && z.zona !== "Não identificada" && <span className="text-[10px] text-muted-foreground">— {z.nome}</span>}
+            {z.nome && z.zona !== "Sem localização" && <span className="text-[10px] text-muted-foreground">— {z.nome}</span>}
           </div>
           <div className="flex items-center gap-3 text-[10px] tabular-nums">
             <span>{z.visitors} visit.</span>
@@ -332,7 +332,7 @@ function DebugPanel({ debug }: { debug: any }) {
       detail: `zonas=${debug.aparecidaZoneSum} região=${debug.aparecidaTotal}`,
     },
     {
-      label: "Aparecida zero Não identificada",
+      label: "Aparecida zero sem localização",
       pass: debug.aparecidaNaoIdentificada === 0,
       warn: debug.aparecidaNaoIdentificada > 0,
       detail: `count=${debug.aparecidaNaoIdentificada}`,
@@ -622,7 +622,7 @@ export default function ZonasGoiania() {
           {/* ═══ TAB: COMPARATIVO ═══ */}
           {activeTab === "comparativo" && (() => {
             const allItems: { nome: string; origem: string; cor: string; visitors: number; forms: number; whatsapp: number; instagram: number; facebook: number; total: number }[] = [
-              ...sortedGoianiaZones.filter(z => z.zona !== "Não identificada").map((z) => ({
+              ...sortedGoianiaZones.filter(z => z.zona !== "Sem localização").map((z) => ({
                 nome: z.zona.includes("Zona") ? `${z.zona} — ${z.nome}` : `${z.zona} Zona — ${z.nome}`, origem: "Goiânia", cor: z.cor,
                 visitors: z.visitors, forms: z.forms, whatsapp: z.whatsapp, instagram: z.instagram, facebook: z.facebook, total: z.total,
               })),
