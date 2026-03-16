@@ -43,11 +43,10 @@ export default function MapaGoias() {
   const selectedData = selectedRegion ? allRegions.find((r) => r.nome === selectedRegion) : null;
 
   const handleExport = () => {
-    const ws = XLSX.utils.json_to_sheet(allRegions.map((r) => ({
-      Região: r.nome, Visitantes: r.visitantes, Formulários: r.formularios, Cliques: r.cliques,
-    })));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Regiões");
+    exportXlsx(exportFilename("MapaGoias_Regioes"), [
+      { name: "Regiões de Planejamento", data: allRegions.map(mapRegiaoGoias) },
+    ]);
+  };
     XLSX.writeFile(wb, `regioes_goias_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
   };
 
