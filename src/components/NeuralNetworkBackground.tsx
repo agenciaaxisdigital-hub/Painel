@@ -1,5 +1,5 @@
-import { useRef, useMemo, useCallback } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useRef, useMemo, useCallback, useEffect } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 const NODE_COUNT = 120;
