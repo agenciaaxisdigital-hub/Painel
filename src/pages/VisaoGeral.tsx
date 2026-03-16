@@ -17,7 +17,7 @@ import { subDays } from "date-fns";
 import { ZONAS_ELEITORAIS, ZONAS_APARECIDA } from "@/lib/constants";
 import { identifyZone } from "@/lib/zone-identification";
 import { inferPrecision } from "@/components/shared/LocationDisplay";
-import { filterValidLocationRecords } from "@/lib/location-validity";
+
 
 function useGeographicBreakdown(days: number) {
   return useQuery({
