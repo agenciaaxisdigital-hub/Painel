@@ -21,9 +21,6 @@ export default function Visitantes() {
   const [selectedVisitor, setSelectedVisitor] = useState<any>(null);
   const visitantes = useVisitantes(days);
   const devices = useDeviceBreakdown(days);
-  const traffic = useTrafficOrigin(days);
-  const cities = useTopCities(days);
-  const pages = useTopPages(days);
 
   const data = visitantes.data || [];
   const uniqueCookies = useMemo(() => new Set(data.map((v) => v.cookie_visitante).filter(Boolean)).size, [data]);
