@@ -447,8 +447,12 @@ export function useRegionCounts(days: number) {
 // ==================== HELPERS ====================
 function aggregate(data: any[], field: string) {
   const counts: Record<string, number> = {};
-  data.forEach((r) => { const v = r[field] || "Desconhecido"; counts[v] = (counts[v] || 0) + 1; });
-  const total = data.length;
+  data.forEach((r) => {
+    const v = r[field];
+    if (!v || !v.trim()) return; // Skip empty/null values instead of labeling "Desconhecido"
+    counts[v] = (counts[v] || 0) + 1;
+  });
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
   return Object.entries(counts)
     .sort((a, b) => b[1] - a[1])
     .map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value, percentage: total > 0 ? ((value / total) * 100).toFixed(1) : "0" }));
