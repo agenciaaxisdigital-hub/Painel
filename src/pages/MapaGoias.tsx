@@ -117,29 +117,6 @@ export default function MapaGoias() {
         )}
       </AnimatePresence>
 
-      {/* Top Cities */}
-      <div className="glass-card p-5">
-        <h3 className="text-sm font-medium mb-3">Cidades com Mais Visitantes</h3>
-        {cities.data && cities.data.length > 0 ? (
-          <div className="space-y-2">
-            {cities.data.map((c, i) => {
-              const max = cities.data![0].visitantes;
-              return (
-                <div key={c.cidade} className="flex items-center gap-3 text-xs">
-                  <span className="w-40 truncate text-foreground/80">{c.cidade}</span>
-                  <div className="flex-1 h-2 rounded-full bg-white/[0.06]">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${(c.visitantes / max) * 100}%` }} transition={{ delay: i * 0.05 }}
-                      className="h-full rounded-full bg-primary" />
-                  </div>
-                  <span className="tabular-nums text-muted-foreground w-8 text-right">{c.visitantes}</span>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground text-center py-4">Aguardando dados de cidades.</p>
-        )}
-      </div>
 
       {/* Regions Table */}
       <div className="glass-card overflow-hidden">
