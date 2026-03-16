@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { Users, Plus, Shield, Loader2, Trash2, KeyRound, MoreVertical, CheckCircle } from "lucide-react";
+import { Users, Plus, Shield, Loader2, Trash2, KeyRound, MoreVertical, CheckCircle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,6 +39,10 @@ export default function UserManagement() {
   // Reset password dialog
   const [resetTarget, setResetTarget] = useState<UserData | null>(null);
   const [newPassword, setNewPassword] = useState("");
+
+  // Rename dialog
+  const [renameTarget, setRenameTarget] = useState<UserData | null>(null);
+  const [newUsername, setNewUsername] = useState("");
 
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users"],
@@ -158,6 +162,40 @@ export default function UserManagement() {
     onError: (err: Error) => toast.error(err.message || "Erro ao redefinir senha"),
   });
 
+  const renameUser = useMutation({
+    mutationFn: async ({ userId, newName }: { userId: string; newName: string }) => {
+      const token = await getToken();
+      if (!token) throw new Error("Não autenticado");
+
+      const { data, error } = await supabase.functions.invoke("gerenciar-usuario", {
+        body: { action: "rename", user_id: userId, new_username: newName },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (error) {
+        try {
+          const errorBody = JSON.parse(error.message);
+          throw new Error(errorBody.error || error.message);
+        } catch (parseErr) {
+          if (error.context && typeof error.context.json === 'function') {
+            const body = await error.context.json();
+            throw new Error(body?.error || error.message);
+          }
+          throw new Error(data?.error || error.message);
+        }
+      }
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Usuário renomeado");
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      setRenameTarget(null);
+      setNewUsername("");
+    },
+    onError: (err: Error) => toast.error(err.message || "Erro ao renomear"),
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return toast.error("Nome é obrigatório");
@@ -170,6 +208,13 @@ export default function UserManagement() {
     if (!resetTarget) return;
     if (newPassword.length < 6) return toast.error("Senha deve ter no mínimo 6 caracteres");
     resetPassword.mutate({ userId: resetTarget.user_id, password: newPassword });
+  };
+
+  const handleRenameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!renameTarget) return;
+    if (!newUsername.trim()) return toast.error("Nome não pode ser vazio");
+    renameUser.mutate({ userId: renameTarget.user_id, newName: newUsername.trim() });
   };
 
   return (
@@ -269,6 +314,10 @@ export default function UserManagement() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setRenameTarget(u); setNewUsername(u.username); }}
+                              className="gap-2 text-xs">
+                              <Pencil className="h-3.5 w-3.5" /> Editar Nome
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => { setResetTarget(u); setNewPassword(""); }}
                               className="gap-2 text-xs">
                               <KeyRound className="h-3.5 w-3.5" /> Redefinir Senha
@@ -333,6 +382,37 @@ export default function UserManagement() {
               <Button type="submit" disabled={resetPassword.isPending}>
                 {resetPassword.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Redefinir Senha
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename User Dialog */}
+      <Dialog open={!!renameTarget} onOpenChange={(o) => { if (!o) { setRenameTarget(null); setNewUsername(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Nome de Usuário</DialogTitle>
+            <DialogDescription>
+              Altere o nome de <strong>{renameTarget?.username}</strong>. O login será atualizado automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleRenameSubmit} className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="new-username">Novo Nome</Label>
+              <Input id="new-username" placeholder="Ex: joao.silva"
+                value={newUsername} onChange={(e) => setNewUsername(e.target.value)} autoComplete="off" />
+              <p className="text-[11px] text-muted-foreground">
+                Login será: <span className="font-mono text-primary">{newUsername.toLowerCase().replace(/\s+/g, ".") || "..."}</span>
+              </p>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => { setRenameTarget(null); setNewUsername(""); }}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={renameUser.isPending}>
+                {renameUser.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Salvar
               </Button>
             </DialogFooter>
           </form>
