@@ -399,7 +399,7 @@ export default function ZonasGoiania() {
                   <div className="flex items-center gap-2 mb-4">
                     <div className="h-3 w-3 rounded-full" style={{ backgroundColor: "#FF6B8A" }} />
                     <h3 className="text-sm font-bold">Aparecida de Goiânia — Resumo</h3>
-                    <span className="ml-auto text-[10px] text-muted-foreground">{TOTAL_ELEITORES_APARECIDA.toLocaleString("pt-BR")} eleitores • 3 zonas</span>
+                    <span className="ml-auto text-[10px] text-muted-foreground">{TOTAL_ELEITORES_APARECIDA.toLocaleString("pt-BR")} eleitores • 4 zonas</span>
                   </div>
                   <MetricGrid data={regions.aparecida} size="lg" />
                 </div>
