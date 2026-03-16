@@ -264,7 +264,7 @@ export default function ZonasGoiania() {
             )}
             <div className="rounded-lg bg-white/[0.03] p-3 text-xs text-foreground/80 leading-relaxed">
               <Target className="h-3.5 w-3.5 text-primary inline mr-1.5" />
-              A <strong>{selectedData.zona} Zona</strong> ({selectedData.nome}) tem {selectedData.eleitores.toLocaleString("pt-BR")} eleitores e penetração de {selectedData.penetracao}%.
+              A <strong>{selectedData.zona} Zona</strong> ({selectedData.nome}) tem {selectedData.eleitores.toLocaleString("pt-BR")} eleitores e acesso de {selectedData.penetracao}%.
               {selectedData.penetracao < avgPenetracao
                 ? " Zona abaixo da média — recomenda-se intensificar tráfego pago nesta região."
                 : " Performance acima da média. Manter estratégia atual."}
