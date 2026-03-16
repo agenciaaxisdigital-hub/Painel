@@ -179,7 +179,7 @@ function useInteractions(filters: { days: number; tipos: InteractionType[]; sear
 
       if (tipos.includes("formulario")) {
         queries.push((async () => {
-          let q = supabase.from("mensagens_contato").select("*").gte("criado_em", since).order("criado_em", { ascending: false });
+          let q = supabase.from("mensagens_contato").select("*").gte("criado_em", since).or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false });
           if (until) q = q.lt("criado_em", until);
           if (search) q = q.or(`nome.ilike.%${search}%,telefone.ilike.%${search}%,cidade.ilike.%${search}%,email.ilike.%${search}%`);
           if (cidade) q = q.eq("cidade", cidade);
