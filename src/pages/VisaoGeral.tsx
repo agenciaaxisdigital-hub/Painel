@@ -32,14 +32,14 @@ function useGeographicBreakdown(days: number) {
       ZONAS_APARECIDA.forEach((z) => { aparecidaZones[z.zona] = 0; });
       const otherCities: Record<string, number> = {};
 
-      const goianiaZoneSet = new Set(ZONAS_ELEITORAIS.map((z) => z.zona));
-      const aparecidaZoneSet = new Set(ZONAS_APARECIDA.map((z) => z.zona));
+      const goianiaZoneNames = ZONAS_ELEITORAIS.map((z) => z.zona as string);
+      const aparecidaZoneNames = ZONAS_APARECIDA.map((z) => z.zona as string);
 
       (data || []).forEach((r) => {
         const result = identifyZone(r);
-        if (result.categoria === "goiania" && goianiaZoneSet.has(result.zona)) {
+        if (result.categoria === "goiania" && goianiaZoneNames.includes(result.zona)) {
           goianiaZones[result.zona] = (goianiaZones[result.zona] || 0) + 1;
-        } else if (result.categoria === "aparecida" && aparecidaZoneSet.has(result.zona)) {
+        } else if (result.categoria === "aparecida" && aparecidaZoneNames.includes(result.zona)) {
           aparecidaZones[result.zona] = (aparecidaZones[result.zona] || 0) + 1;
         } else if (result.categoria === "interior" && result.zona) {
           otherCities[result.zona] = (otherCities[result.zona] || 0) + 1;
