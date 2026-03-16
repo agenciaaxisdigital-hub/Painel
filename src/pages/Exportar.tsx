@@ -39,7 +39,7 @@ export default function Exportar() {
       }
 
       if (selectedType === "visitantes" || selectedType === "todos") {
-        let query = supabase.from("acessos_site").select("*").order("criado_em", { ascending: false }).limit(1000);
+        let query = supabase.from("acessos_site").select("*").or("pais.eq.Brasil,pais.is.null").order("criado_em", { ascending: false }).limit(1000);
         if (since) query = query.gte("criado_em", since);
         const { data } = await query;
         if (data) {
