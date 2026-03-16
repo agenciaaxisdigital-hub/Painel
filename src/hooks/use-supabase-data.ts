@@ -335,25 +335,40 @@ export function useHourlyHeatmap(days: number, tipoClique?: string) {
     queryKey: ["hourly-heatmap", days, tipoClique],
     queryFn: async () => {
       const since = getSince(days);
-      let query = supabase.from("cliques_whatsapp").select("criado_em").gte("criado_em", since).or(BRASIL_FILTER).limit(1000);
-      if (tipoClique) query = query.eq("tipo_clique", tipoClique);
-      const { data } = await query;
+      const allDates: string[] = [];
+
+      if (!tipoClique) {
+        // "Todos": fetch visits + all clicks
+        const [visits, clicks] = await Promise.all([
+          supabase.from("acessos_site").select("criado_em").gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
+          supabase.from("cliques_whatsapp").select("criado_em").gte("criado_em", since).or(BRASIL_FILTER).limit(5000),
+        ]);
+        (visits.data || []).forEach((r) => allDates.push(r.criado_em));
+        (clicks.data || []).forEach((r) => allDates.push(r.criado_em));
+      } else {
+        // Platform-specific: only clicks of that type
+        const { data } = await supabase.from("cliques_whatsapp").select("criado_em")
+          .gte("criado_em", since).or(BRASIL_FILTER).eq("tipo_clique", tipoClique).limit(5000);
+        (data || []).forEach((r) => allDates.push(r.criado_em));
+      }
 
       const dias = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-      const grid: { dia: string; hora: number; valor: number }[] = [];
       const counts: Record<string, number> = {};
 
-      (data || []).forEach((r) => {
-        const d = new Date(r.criado_em);
+      allDates.forEach((criado_em) => {
+        const d = new Date(criado_em);
         const key = `${d.getDay()}-${d.getHours()}`;
         counts[key] = (counts[key] || 0) + 1;
       });
 
+      const grid: { dia: string; hora: number; valor: number }[] = [];
       for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
         for (let h = 0; h < 24; h++) {
           grid.push({ dia: dias[dayIdx], hora: h, valor: counts[`${dayIdx}-${h}`] || 0 });
         }
       }
+
+      console.log(`[Heatmap] ${tipoClique || "todos"}: ${allDates.length} registros, max=${Math.max(0, ...grid.map(g => g.valor))}`);
       return grid;
     },
     staleTime: 60_000,
