@@ -35,30 +35,50 @@ export default function NeuralNetworkBackground() {
         mouseControls: true,
         touchControls: true,
         gyroControls: false,
-        minHeight: window.innerHeight,
-        minWidth: window.innerWidth,
+        minHeight: 200,
+        minWidth: 200,
         scale: 1.0,
         scaleMobile: 1.0,
         color: 0xe8567a,
         backgroundColor: 0x0a0a0f,
-        points: 18,
-        maxDistance: 28,
-        spacing: 13,
+        points: 14,
+        maxDistance: 25,
+        spacing: 15,
         showDots: true,
       });
     }
 
     loadVanta();
 
+    // Force resize on window changes so canvas always fills container
+    const handleResize = () => {
+      if (vantaEffect.current?.resize) {
+        vantaEffect.current.resize();
+      }
+    };
+    window.addEventListener("resize", handleResize);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("resize", handleResize);
       if (vantaEffect.current) vantaEffect.current.destroy();
     };
   }, []);
 
   return (
     <>
-      <div ref={vantaRef} className="absolute inset-0 z-0" />
+      <div
+        ref={vantaRef}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          minHeight: "100vh",
+          minWidth: "100vw",
+        }}
+      />
       {/* Subtle pulsing glow orbs */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute rounded-full"
