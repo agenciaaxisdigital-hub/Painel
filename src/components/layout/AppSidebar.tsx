@@ -53,7 +53,7 @@ export function AppSidebar() {
         {/* Header */}
         <div className="flex h-16 items-center gap-3 px-4 border-b border-border">
           <div className="relative shrink-0">
-            <img src={chamaRosaLogo} alt="Chama Rosa" className="h-9 w-9 rounded-xl object-contain" />
+            <img src={chamaRosaLogo} alt="Painel" className="h-9 w-9 rounded-xl object-contain" />
             <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-sidebar bg-emerald-500 animate-pulse" />
           </div>
           {!collapsed && (

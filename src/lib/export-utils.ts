@@ -2,7 +2,7 @@ import { format, parseISO } from "date-fns";
 import * as XLSX from "xlsx";
 
 // ══════════════════════════════════════════════════════════════
-// CENTRAL EXPORT UTILITY — Chama Rosa Dashboard
+// CENTRAL EXPORT UTILITY — Painel Dashboard
 // All column names are standardized here. Any export in the app
 // MUST use these mappers to guarantee consistency.
 // ══════════════════════════════════════════════════════════════

@@ -1,6 +1,6 @@
-# Chama Rosa — Painel de Gestão
+# Painel — Gestão de Dados
 
-Painel de inteligência e gestão de dados da campanha política da Dra. Fernanda Sarelli.
+Painel de inteligência e gestão de dados da Dra. Fernanda Sarelli.
 
 ## Tecnologias
 

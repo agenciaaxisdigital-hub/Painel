@@ -179,7 +179,7 @@ export function SarelliChat({ open, onClose }: { open: boolean; onClose: () => v
                   </div>
                   <h4 className="font-display text-xl font-bold text-foreground mb-2">Olá! Sou a Fernanda Sarelli</h4>
                   <p className="text-sm text-muted-foreground max-w-[280px]">
-                    Sua assistente inteligente para análise de dados e estratégia da campanha Chama Rosa.
+                    Sua assistente inteligente para análise de dados e estratégia do Painel.
                   </p>
                 </motion.div>
               )}
