@@ -1,73 +1,125 @@
-# Welcome to your Lovable project
+# Chama Rosa — Painel de Gestão
 
-## Project info
+Painel de inteligência e gestão de dados da campanha política da Dra. Fernanda Sarelli.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Tecnologias
 
-## How can I edit this code?
+- **React 18** - Interface de usuário
+- **TypeScript** - Type safety
+- **Vite** - Build tool e dev server
+- **TailwindCSS** - Styling
+- **Shadcn/ui** - Component library
+- **Supabase** - Backend e banco de dados
+- **React Query** - Data fetching e caching
+- **Playwright** - E2E testing
+- **Vitest** - Unit testing
 
-There are several ways of editing your application.
+## Pré-requisitos
 
-**Use Lovable**
+- Node.js 18+ (recomendado: usar [nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
+- Bun (opcional, para gerenciamento de dependências)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Instalação
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
+# Clone o repositório
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
+# Instale as dependências
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# ou
+bun install
 ```
 
-**Edit a file directly in GitHub**
+## Variáveis de Ambiente
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Crie um arquivo `.env` na raiz do projeto com as variáveis necessárias:
 
-**Use GitHub Codespaces**
+```env
+VITE_SUPABASE_URL=<your_supabase_url>
+VITE_SUPABASE_ANON_KEY=<your_supabase_key>
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Desenvolvimento
 
-## What technologies are used for this project?
+Inicie o servidor de desenvolvimento:
 
-This project is built with:
+```bash
+npm run dev
+# ou
+bun dev
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+O servidor ficará disponível em `http://localhost:8080`
 
-## How can I deploy this project?
+## Build
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Para produção:
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+npm run build
+# ou
+bun run build
+```
 
-Yes, you can!
+Para development build:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```bash
+npm run build:dev
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Testes
+
+```bash
+# Rodar testes unitários
+npm run test
+
+# Modo watch
+npm run test:watch
+
+# E2E tests (Playwright)
+npx playwright test
+```
+
+## Lint
+
+```bash
+npm run lint
+```
+
+## Projeto
+
+### Estrutura
+
+```
+src/
+├── components/       # Componentes React
+├── pages/           # Páginas da aplicação
+├── contexts/        # React Contexts
+├── hooks/           # Custom hooks
+├── lib/             # Utilitários e constantes
+├── integrations/    # Integrações externas
+├── assets/          # Arquivos estáticos
+└── App.tsx          # Componente raiz
+```
+
+### Principais componentes
+
+- **Dashboard** - Visualização geral de dados
+- **Mapa Goiás** - Mapa interativo do estado
+- **Visitantes** - Gerenciamento de visitantes
+- **Formulários** - Submissão e gerenciamento
+- **Todas Interações** - Histórico completo
+
+## Convenções
+
+- Componentes em PascalCase
+- Props interface sufixo com `Props`
+- Arquivo de tipos: `index.ts` para barrels
+- Utilitários em `lib/`
+- Hooks em `hooks/`
+
+## Maintenance
+
+Este projeto é mantido pelo time de desenvolvimento. Para questões, features ou bugs, abra uma issue no repositório.
