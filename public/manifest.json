@@ -1,0 +1,17 @@
+{
+  "name": "Painel Dra. Fernanda Sarelli",
+  "short_name": "Painel",
+  "description": "Painel de inteligência e gestão de dados",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#ec4899",
+  "background_color": "#0f0f14",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

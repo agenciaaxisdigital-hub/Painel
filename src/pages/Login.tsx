@@ -1,27 +1,75 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import fernandaPhoto from "@/assets/fernanda-sarelli.jpeg";
-import NeuralNetworkBackground from "@/components/NeuralNetworkBackground";
+import Hyperspeed from "@/components/Hyperspeed";
 
+const hyperspeedPreset = {
+  onSpeedUp: () => {},
+  onSlowDown: () => {},
+  distortion: "turbulentDistortion",
+  length: 800,
+  roadWidth: 18,
+  islandWidth: 4,
+  lanesPerRoad: 3,
+  fov: 100,
+  fovSpeedUp: 140,
+  speedUp: 2,
+  carLightsFade: 0.4,
+  totalSideLightSticks: 40,
+  lightPairsPerRoadWay: 80,
+  shoulderLinesWidthPercentage: 0.05,
+  brokenLinesWidthPercentage: 0.1,
+  brokenLinesLengthPercentage: 0.5,
+  lightStickWidth: [0.12, 0.5],
+  lightStickHeight: [1.3, 1.7],
+  movingAwaySpeed: [60, 100],
+  movingCloserSpeed: [-120, -180],
+  carLightsLength: [800 * 0.04, 800 * 0.14],
+  carLightsRadius: [0.05, 0.14],
+  carWidthPercentage: [0.3, 0.5],
+  carShiftX: [-0.8, 0.8],
+  carFloorSeparation: [0, 5],
+  colors: {
+    roadColor: 0x080510,
+    islandColor: 0x0a0812,
+    background: 0x070510,
+    shoulderLines: 0x1a0a1a,
+    brokenLines: 0x1a0a1a,
+    leftCars: [0xec4899, 0xf9a8d4, 0xbe185d, 0xfda4af],
+    rightCars: [0xf43f5e, 0xff6b9d, 0xc026d3, 0xe879f9],
+    sticks: 0xf472b6,
+  },
+};
 
 export default function Login() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+
+  const [username, setUsername] = useState(() => localStorage.getItem("saved_user") || "");
+  const [password, setPassword] = useState(() => localStorage.getItem("saved_pass") || "");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(() => !!localStorage.getItem("saved_user"));
+
+  const preset = useMemo(() => hyperspeedPreset, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    if (remember) {
+      localStorage.setItem("saved_user", username);
+      localStorage.setItem("saved_pass", password);
+    } else {
+      localStorage.removeItem("saved_user");
+      localStorage.removeItem("saved_pass");
+    }
+
     const email = `${username.toLowerCase().replace(/\s+/g, ".")}@chamarosa.app`;
     const { error } = await signIn(email, password);
     if (error) {
@@ -33,150 +81,212 @@ export default function Login() {
   };
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden bg-background">
-      <NeuralNetworkBackground />
+    <div
+      className="min-h-[100dvh] flex flex-col items-center justify-center p-4 relative overflow-hidden"
+      style={{ background: "#070510" }}
+    >
+      <Hyperspeed effectOptions={preset} />
 
-      {/* Left side — photo + info over Vanta */}
-      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center z-10">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="relative flex flex-col items-center text-center px-12"
-        >
-          <div className="relative mb-8">
-            <div className="absolute -inset-2 rounded-full border-2 border-white/30 animate-pulse" />
-            <img
-              src={fernandaPhoto}
-              alt="Dra. Fernanda Sarelli"
-              className="h-52 w-52 rounded-full object-cover border-4 border-white/50 shadow-2xl"
-            />
-          </div>
-          <h1 className="font-display text-4xl font-bold text-white tracking-tight">
-            Dra. Fernanda Sarelli
-          </h1>
-          <p className="mt-2 text-sm font-semibold uppercase tracking-[0.25em] text-white/80">
-            Painel de Dados
-          </p>
-          <p className="mt-4 max-w-sm text-sm text-white/70 leading-relaxed">
-            Pré-candidata a Deputada Estadual por Goiás, com compromisso real com a defesa da mulher e da criança.
-          </p>
-          <div className="mt-8 flex items-center gap-6 text-white/60 text-xs">
-            <div className="text-center">
-              <span className="block text-2xl font-bold text-white">GO</span>
-              Estado
-            </div>
-            <div className="h-8 w-px bg-white/20" />
-            <div className="text-center">
-              <span className="block text-2xl font-bold text-white">2026</span>
-              Eleições
-            </div>
-          </div>
-        </motion.div>
-      </div>
+      {/* Vinheta radial */}
+      <div
+        className="absolute inset-0 z-[1] pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse at center, transparent 40%, rgba(7,5,16,0.5) 100%)",
+        }}
+      />
 
-      {/* Right side — login form over Vanta */}
-      <div className="relative flex flex-1 items-center justify-center p-6 z-10">
-
-        <motion.div
-          initial={{ opacity: 0, y: 30, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="relative z-10 w-full max-w-md"
-        >
-          {/* Mobile-only header with photo */}
-          <div className="mb-8 text-center lg:hidden">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="mx-auto mb-4"
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-sm space-y-6 relative z-10"
+      >
+        {/* Foto + nome */}
+        <div className="text-center space-y-3">
+          <div className="relative mx-auto w-28 h-28">
+            <div
+              className="absolute inset-0 rounded-full p-[3px]"
+              style={{ background: "linear-gradient(135deg, #ec4899, #fb7185)" }}
             >
-              <img
-                src={fernandaPhoto}
-                alt="Dra. Fernanda Sarelli"
-                className="mx-auto h-24 w-24 rounded-full object-cover border-3 border-primary/50 rose-glow"
-              />
-            </motion.div>
-            <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
+              <div className="w-full h-full rounded-full overflow-hidden bg-black">
+                <img
+                  src={fernandaPhoto}
+                  alt="Dra. Fernanda Sarelli"
+                  className="w-full h-full object-cover"
+                  loading="eager"
+                />
+              </div>
+            </div>
+            <div className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-black" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">
               Dra. Fernanda Sarelli
             </h1>
-            <p className="mt-1 text-xs uppercase tracking-[0.2em] text-primary font-medium">
+            <p
+              className="font-semibold text-pink-400 uppercase tracking-widest mt-1"
+              style={{ fontSize: "11px" }}
+            >
               Painel de Dados
             </p>
           </div>
+          <p className="text-white/40" style={{ fontSize: "11px" }}>
+            Acesso exclusivo da equipe
+          </p>
+        </div>
 
-          {/* Desktop header */}
-          <div className="mb-8 hidden lg:block">
-            <h2 className="font-display text-3xl font-bold tracking-tight text-foreground">
-              Painel de Inteligência
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Acesse o painel da campanha
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/[0.08] p-8 backdrop-blur-md bg-black/40 shadow-2xl shadow-black/50">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Usuário
-                </label>
-                <Input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="usuario"
-                  required
-                  className="bg-white/[0.03] border-white/[0.08] focus:border-primary/50"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Senha
-                </label>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    className="bg-white/[0.03] border-white/[0.08] focus:border-primary/50 pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {error && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-destructive">
-                  {error}
-                </motion.p>
-              )}
-
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full text-primary-foreground rose-glow"
-                style={{ background: "linear-gradient(135deg, hsl(341 90% 65%), hsl(350 80% 72%))" }}
+        {/* Form card */}
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 p-6 rounded-2xl"
+          style={{
+            background: "rgba(0,0,0,0.60)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow: "0 8px 32px hsl(340 82% 55% / 0.15)",
+          }}
+        >
+          {/* Usuário */}
+          <div className="space-y-1.5">
+            <label
+              className="block font-medium uppercase tracking-widest text-white/50"
+              style={{ fontSize: "11px" }}
+            >
+              Usuário
+            </label>
+            <div className="relative">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 w-4 h-4"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
               >
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Entrar
-              </Button>
-            </form>
-
-            <p className="mt-6 text-center text-xs text-muted-foreground/50">
-              Acesso restrito à equipe de campanha
-            </p>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Ex: Administrador"
+                required
+                autoCapitalize="none"
+                autoCorrect="off"
+                autoComplete="username"
+                className="w-full h-11 pl-10 pr-4 rounded-lg text-white placeholder:text-white/25 outline-none transition-colors"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  fontSize: "16px",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "rgba(236,72,153,0.50)")}
+                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.10)")}
+              />
+            </div>
           </div>
-        </motion.div>
-      </div>
+
+          {/* Senha */}
+          <div className="space-y-1.5">
+            <label
+              className="block font-medium uppercase tracking-widest text-white/50"
+              style={{ fontSize: "11px" }}
+            >
+              Senha
+            </label>
+            <div className="relative">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 w-4 h-4"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                autoComplete="current-password"
+                className="w-full h-11 pl-10 pr-10 rounded-lg text-white placeholder:text-white/25 outline-none transition-colors"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  fontSize: "16px",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "rgba(236,72,153,0.50)")}
+                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.10)")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Lembrar */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="remember"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="w-4 h-4 rounded cursor-pointer"
+              style={{ accentColor: "#ec4899" }}
+            />
+            <label htmlFor="remember" className="text-xs text-white/50 cursor-pointer select-none">
+              Lembrar meus dados
+            </label>
+          </div>
+
+          {/* Erro */}
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-sm text-red-400"
+            >
+              {error}
+            </motion.p>
+          )}
+
+          {/* Botão */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-11 rounded-lg font-semibold text-sm text-white transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 touch-manipulation"
+            style={{
+              background: "linear-gradient(to right, #ec4899, #fb7185)",
+              boxShadow: "0 4px 16px hsl(340 82% 55% / 0.30)",
+            }}
+          >
+            {loading ? (
+              <>
+                <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Entrando...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                Entrar
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Footer */}
+        <div className="text-center space-y-1">
+          <p className="text-white/25" style={{ fontSize: "10px" }}>
+            Pré-candidata a Deputada Estadual — GO 2026
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 }

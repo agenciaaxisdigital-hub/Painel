@@ -1,59 +1,88 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 240 20% 3%;
-    --foreground: 0 0% 90%;
+    /* Light Mode */
+    --background: 0 0% 100%;
+    --foreground: 220 20% 15%;
 
-    --card: 240 15% 6%;
-    --card-foreground: 0 0% 90%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 15%;
 
-    --popover: 240 15% 8%;
-    --popover-foreground: 0 0% 90%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 15%;
 
-    --primary: 341 90% 65%;
+    --primary: 340 82% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 45 93% 47%;
-    --secondary-foreground: 0 0% 5%;
+    --secondary: 340 30% 96%;
+    --secondary-foreground: 340 50% 40%;
 
-    --muted: 240 5% 15%;
-    --muted-foreground: 240 5% 64%;
+    --muted: 220 10% 96%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 341 90% 65%;
+    --accent: 340 82% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
+    --border: 220 10% 90%;
+    --input: 220 10% 90%;
+    --ring: 340 82% 55%;
 
-    --border: 240 5% 12%;
-    --input: 240 5% 15%;
-    --ring: 341 90% 65%;
+    --radius: 1rem;
 
-    --radius: 0.75rem;
-
-    --sidebar-background: 240 18% 5%;
-    --sidebar-foreground: 0 0% 85%;
-    --sidebar-primary: 341 90% 65%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 20% 15%;
+    --sidebar-primary: 340 82% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 341 90% 65%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 240 5% 10%;
-    --sidebar-ring: 341 90% 65%;
+    --sidebar-accent: 340 30% 96%;
+    --sidebar-accent-foreground: 340 50% 40%;
+    --sidebar-border: 220 10% 90%;
+    --sidebar-ring: 340 82% 55%;
+  }
 
-    --gold: 45 93% 47%;
-    --rose-glow: 341 90% 65%;
+  .dark {
+    /* Dark Mode */
+    --background: 240 10% 6%;
+    --foreground: 0 0% 95%;
 
-    --font-display: 'Space Grotesk', sans-serif;
-    --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --card: 240 10% 9%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 240 10% 9%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 340 82% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 8% 14%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 240 8% 14%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 340 82% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 8% 16%;
+    --input: 240 8% 16%;
+    --ring: 340 82% 60%;
+
+    --sidebar-background: 240 10% 7%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 340 82% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 8% 14%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 240 8% 16%;
+    --sidebar-ring: 340 82% 60%;
   }
 }
 
@@ -62,88 +91,62 @@
     @apply border-border;
   }
 
+  html {
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: var(--font-body);
-    font-feature-settings: 'cv11', 'ss01';
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    touch-action: manipulation;
+    overscroll-behavior-y: none;
   }
 
   h1, h2, h3 {
-    font-family: var(--font-display);
     @apply tracking-tight;
     letter-spacing: -0.025em;
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: hsl(341 90% 65% / 0.2);
-    border-radius: 10px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: hsl(341 90% 65% / 0.4);
+  /* Prevent iOS zoom on inputs */
+  input, textarea, select {
+    font-size: 16px !important;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply rounded-2xl;
-    background: linear-gradient(
-      135deg,
-      hsl(240 15% 6% / 0.8) 0%,
-      hsl(240 15% 8% / 0.6) 100%
-    );
-    backdrop-filter: blur(24px) saturate(1.5);
-    border: 1px solid hsl(0 0% 100% / 0.06);
-    box-shadow:
-      0 0 0 1px hsl(0 0% 0% / 0.2),
-      0 8px 40px -12px hsl(0 0% 0% / 0.5),
-      inset 0 1px 0 hsl(0 0% 100% / 0.04);
+    @apply rounded-2xl border border-border;
+    background: hsl(var(--card));
+    box-shadow: 0 1px 3px hsl(0 0% 0% / 0.08);
   }
 
   .glass-card-hover {
     @apply glass-card transition-all duration-300 ease-out;
   }
+
   .glass-card-hover:hover {
-    border-color: hsl(0 0% 100% / 0.1);
-    box-shadow:
-      0 0 0 1px hsl(0 0% 0% / 0.2),
-      0 16px 60px -12px hsl(341 90% 65% / 0.08),
-      0 4px 20px -4px hsl(0 0% 0% / 0.4),
-      inset 0 1px 0 hsl(0 0% 100% / 0.06);
+    box-shadow: 0 4px 20px hsl(340 82% 55% / 0.1);
     transform: translateY(-1px);
   }
 
   .rose-glow {
     box-shadow:
-      0 0 12px hsl(341 90% 65% / 0.15),
-      0 0 40px hsl(341 90% 65% / 0.06);
+      0 0 12px hsl(340 82% 55% / 0.2),
+      0 0 40px hsl(340 82% 55% / 0.08);
   }
 
-  .gold-text {
-    color: hsl(var(--gold));
-  }
-
-  .text-display {
-    font-family: var(--font-display);
-  }
-
-  .font-mono {
-    font-family: var(--font-mono);
-  }
-
-  .tabular-nums {
-    font-variant-numeric: tabular-nums;
-    font-family: var(--font-mono);
-    font-size: 0.92em;
+  .gradient-text-rose {
+    background: linear-gradient(135deg, #ec4899, #fb7185);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .ambient-glow {
@@ -154,48 +157,22 @@
     height: 60%;
     background: radial-gradient(
       ellipse at 70% 30%,
-      hsl(341 90% 65% / 0.03) 0%,
+      hsl(340 82% 55% / 0.04) 0%,
       transparent 60%
     );
     pointer-events: none;
     z-index: 0;
   }
-
-  /* Subtle noise texture overlay */
-  .noise-overlay::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    opacity: 0.015;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Gradient text utility */
-  .gradient-text-rose {
-    background: linear-gradient(135deg, hsl(341 90% 65%), hsl(341 90% 75%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .gradient-text-gold {
-    background: linear-gradient(135deg, hsl(45 93% 47%), hsl(45 93% 60%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
 }
 
 @layer utilities {
-  .animate-count-up {
-    animation: countUp 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  @keyframes countUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 
   @keyframes pulse-slow {
@@ -217,13 +194,14 @@
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
   }
-}
 
-/* Hide scrollbar for mobile nav */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
 }
