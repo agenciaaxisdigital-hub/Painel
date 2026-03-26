@@ -17,4 +17,19 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-supabase": ["@supabase/supabase-js"],
+          "vendor-query": ["@tanstack/react-query"],
+          "vendor-charts": ["recharts", "react-simple-maps"],
+          "vendor-ui": ["framer-motion", "lucide-react", "sonner", "vaul", "next-themes"],
+          "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
+          "vendor-xlsx": ["xlsx"],
+        },
+      },
+    },
+  },
 });
