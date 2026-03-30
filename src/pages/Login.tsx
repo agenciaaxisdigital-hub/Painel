@@ -70,8 +70,16 @@ export default function Login() {
       localStorage.removeItem("saved_pass");
     }
 
-    const email = `${username.toLowerCase().replace(/\s+/g, ".")}@chamarosa.app`;
-    const { error } = await signIn(email, password);
+    const email = `${username.toLowerCase().replace(/\s+/g, ".")}@sistema.local`;
+    let { error } = await signIn(email, password);
+    
+    // Fallback legacy
+    if (error) {
+      const legacyEmail = `${username.toLowerCase().replace(/\s+/g, ".")}@chamarosa.app`;
+      const fallbackAttempt = await signIn(legacyEmail, password);
+      error = fallbackAttempt.error;
+    }
+    
     if (error) {
       setError("Credenciais inválidas. Tente novamente.");
       setLoading(false);

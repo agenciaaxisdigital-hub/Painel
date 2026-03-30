@@ -26,14 +26,15 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Body JSON inválido" }, 400);
     }
 
-    const { username, password } = body;
-    const normalizedUsername = String(username || "").trim().toLowerCase().replace(/\s+/g, ".");
+    const { username, password, nome, senha, tipo } = body;
+    const finalUsername = String(nome || username || "").trim().toLowerCase().replace(/\s+/g, ".");
+    const finalPassword = String(senha || password || "");
 
-    if (!normalizedUsername) {
+    if (!finalUsername) {
       return jsonResponse({ error: "Nome de usuário é obrigatório" }, 400);
     }
 
-    if (!password || String(password).length < 6) {
+    if (!finalPassword || finalPassword.length < 6) {
       return jsonResponse({ error: "Senha deve ter no mínimo 6 caracteres" }, 400);
     }
 
@@ -75,9 +76,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    const email = `${normalizedUsername}@chamarosa.app`;
+    const email = `${finalUsername}@sistema.local`;
 
-    // Check if user already exists
+    // Check if user already exists in auth
     const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     
     if (listError) {
@@ -87,15 +88,20 @@ Deno.serve(async (req) => {
 
     const existing = listData?.users?.find((u: any) => u.email === email);
     if (existing) {
-      return jsonResponse({ error: `Usuário "${normalizedUsername}" já existe` }, 400);
+      // If user exists, try to update password
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(existing.id, { password: finalPassword });
+      if (updateError) {
+        return jsonResponse({ error: `Usuário "${finalUsername}" já existe e erro ao atualizar senha: ${updateError.message}` }, 400);
+      }
+      return jsonResponse({ success: true, message: `Usuário "${finalUsername}" já existia. Senha atualizada.` });
     }
 
     // Create user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password: String(password),
-      email_confirm: true,
-      user_metadata: { username: normalizedUsername },
+      password: finalPassword,
+      email_confirm: false,
+      user_metadata: { username: finalUsername, nome: nome || username },
     });
 
     if (createError) {
@@ -108,20 +114,22 @@ Deno.serve(async (req) => {
     }
 
     // Assign role in roles_painel
+    const finalCargo = tipo === "admin" ? "admin" : (isFirstUser ? "super_admin" : (tipo || "admin"));
+
     const { error: roleError } = await supabaseAdmin
       .from("roles_painel")
-      .insert({ user_id: newUser.user.id, cargo: isFirstUser ? "super_admin" : "admin" });
+      .insert({ user_id: newUser.user.id, cargo: finalCargo });
 
     if (roleError) {
       console.error("Role insert error:", roleError.message);
     }
 
-    console.log(`User created: ${normalizedUsername} (${newUser.user.id})`);
+    console.log(`User created: ${finalUsername} (${newUser.user.id})`);
 
     return jsonResponse({
       success: true,
-      message: `Usuário "${normalizedUsername}" criado com sucesso`,
-      login: { username: normalizedUsername, email },
+      message: `Usuário "${finalUsername}" criado com sucesso`,
+      login: { username: finalUsername, email },
     });
   } catch (err) {
     console.error("criar-usuario unexpected error:", err);
