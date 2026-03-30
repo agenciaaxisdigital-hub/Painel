@@ -26,11 +26,23 @@ const queryClient = new QueryClient({
   },
 });
 
+import VersionMonitor from "./components/VersionMonitor";
+import InstallPWA from "./components/InstallPWA";
+import { useOfflineSync } from "./hooks/useOfflineSync";
+
+function GlobalOfflineSync() {
+  useOfflineSync();
+  return null;
+}
+
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
+          <GlobalOfflineSync />
+          <InstallPWA />
+          <VersionMonitor />
           <Toaster />
           <Sonner />
           <BrowserRouter>
