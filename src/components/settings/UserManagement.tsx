@@ -75,6 +75,7 @@ export default function UserManagement() {
   const [open, setOpen] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [tipo, setTipo] = useState("editor");
 
   // Delete dialog
   const [deleteTarget, setDeleteTarget] = useState<UserData | null>(null);
@@ -100,13 +101,17 @@ export default function UserManagement() {
 
   const createUser = useMutation({
     mutationFn: async () => {
-      return callAdminFunction<{ message: string }>("criar-usuario", {
-        username: normalizeUsername(username),
-        password,
+      // Usa supabase.functions.invoke (padrão do projeto) — envia apenas nome, senha, tipo
+      const { data, error } = await supabase.functions.invoke("criar-usuario-painel", {
+        body: { nome: username.trim(), senha: password, tipo },
       });
+      if (error || data?.error) {
+        throw new Error(data?.error || error?.message || "Erro ao criar usuário");
+      }
+      return data as { message: string };
     },
     onSuccess: (data) => {
-      toast.success(data.message || "Usuário criado com sucesso");
+      toast.success(data?.message || "Usuário criado com sucesso");
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       setOpen(false);
       setUsername("");
@@ -218,22 +223,45 @@ export default function UserManagement() {
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label htmlFor="username">Nome de usuário</Label>
-                    <Input id="username" placeholder="Ex: joao.silva" value={username}
+                    <Label htmlFor="username">Nome completo *</Label>
+                    <Input id="username" placeholder="Ex: João da Silva" value={username}
                       onChange={(e) => setUsername(e.target.value)} autoComplete="off" />
                     <p className="text-[11px] text-muted-foreground">
-                      Login será: <span className="font-mono text-primary">{normalizeUsername(username) || "..."}</span>
+                      O login gerado será: <span className="font-mono text-primary">{normalizeUsername(username) || "..."}</span>
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Senha</Label>
+                    <Label htmlFor="password">Senha inicial *</Label>
                     <Input id="password" type="password" placeholder="Mínimo 6 caracteres" value={password}
                       onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
                   </div>
-                  <DialogFooter>
-                    <DialogClose asChild><Button type="button" variant="outline">Cancelar</Button></DialogClose>
-                    <Button type="submit" disabled={createUser.isPending}>
-                      {createUser.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  
+                  <div className="space-y-2">
+                    <Label>Permissão de Acesso *</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        type="button" 
+                        variant={tipo === "admin" ? "default" : "outline"}
+                        className="h-10 text-xs font-bold"
+                        onClick={() => setTipo("admin")}
+                      >
+                        <Shield className="h-3.5 w-3.5 mr-1" /> Administrador
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant={tipo === "editor" ? "default" : "outline"}
+                        className="h-10 text-xs font-bold"
+                        onClick={() => setTipo("editor")}
+                      >
+                        <Users className="h-3.5 w-3.5 mr-1" /> Editor
+                      </Button>
+                    </div>
+                  </div>
+
+                  <DialogFooter className="pt-2">
+                    <DialogClose asChild><Button type="button" variant="ghost">Cancelar</Button></DialogClose>
+                    <Button type="submit" disabled={createUser.isPending} className="gradient-primary">
+                      {createUser.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
                       Criar Usuário
                     </Button>
                   </DialogFooter>
